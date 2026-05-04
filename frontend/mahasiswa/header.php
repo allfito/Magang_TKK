@@ -38,7 +38,7 @@ $extraHead = $extraHead ?? '';
                 <a href="dashboard.php" class="nav-item <?= $activePage === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
                 <a href="kelompok.php" class="nav-item <?= $activePage === 'kelompok' ? 'active' : '' ?>">Kelompok</a>
                 <a href="pendaftaran.php" class="nav-item <?= $activePage === 'pendaftaran' ? 'active' : '' ?>">Pendaftaran</a>
-                <a href="profil.php" class="nav-item <?= $activePage === 'profil' ? 'active' : '' ?>">Profil</a>
+
             </nav>
             <div class="sidebar-footer">
                 <a href="../../backend/auth/logout.php" class="nav-item logout-btn">Logout</a>

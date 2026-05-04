@@ -43,7 +43,6 @@ switch ($type) {
         // Update all berkas for the given kelompok_id
         $stmt = $mysqli->prepare('UPDATE berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id SET ba.status_verifikasi = ? WHERE ak.kelompok_id = ?');
         $stmt->bind_param('si', $action, $id);
-        $stmt->execute();
         
         // Also update anggota_kelompok status_berkas
         $berkasStatus = ($action === 'disetujui') ? 'lengkap' : 'belum';
@@ -52,8 +51,6 @@ switch ($type) {
         $stmt2->execute();
         
         $redirectPage = 'verifikasi_berkas.php';
-        // Mock a statement to bypass the execute check below, since we already executed
-        $stmt = $mysqli->prepare('SELECT 1');
         break;
 
     case 'bukti':

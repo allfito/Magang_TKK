@@ -93,7 +93,7 @@ function getGroupsForLocationVerification(): array
 {
     $mysqli = dbKoordinator();
     $sql = "SELECT pl.id AS lokasi_id, k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
-            pl.perusahaan, pl.status_verifikasi, pl.created_at
+            pl.perusahaan, pl.bidang, pl.alamat, pl.nama_pimpinan, pl.telepon, pl.status_verifikasi, pl.created_at
             FROM pendaftaran_lokasi pl
             JOIN kelompok k ON pl.kelompok_id = k.id
             JOIN user u ON k.ketua_id = u.id

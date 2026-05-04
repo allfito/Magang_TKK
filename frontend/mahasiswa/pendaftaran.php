@@ -158,54 +158,23 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>Alamat <span style="color:#EA5455">*</span></label>
-                                            <input type="text" name="alamat" id="inp-alamat" placeholder="Alamat lengkap perusahaan"
-                                                oninput="debounceMapUpdate()" required>
+                                            <input type="text" name="alamat" id="inp-alamat" placeholder="Alamat lengkap perusahaan" required>
                                         </div>
                                     </div>
 
-                                    <!-- Google Maps Section -->
-                                    <div class="form-group" style="margin-top: 14px;">
-                                        <label>&#128205; Lokasi Magang di Google Maps <span
-                                                style="color:#EA5455">*</span></label>
-                                        <p style="font-size:12px;color:#778;margin-bottom:8px;">Cari lokasi perusahaan
-                                            tempat magang di peta, klik <strong>Temukan Lokasi</strong> atau ketik di
-                                            kolom pencarian untuk memperbarui peta.</p>
-
-                                        <!-- Search Bar -->
-                                        <div class="maps-search-bar">
-                                            <input type="text" id="maps-search-input"
-                                                placeholder="Cari lokasi di Google Maps..."
-                                                onkeydown="if(event.key==='Enter'){event.preventDefault();searchMaps();}">
-                                            <button type="button" class="btn btn-dark" onclick="searchMaps()">&#128269;
-                                                Cari</button>
-                                            <button type="button" class="btn-loc" onclick="getMyLocation()"
-                                                title="Gunakan lokasi saya">&#127759; Lokasi Saya</button>
-                                        </div>
-
-                                        <!-- Map Embed -->
-                                        <div class="maps-wrapper">
-                                            <iframe id="map-iframe"
-                                                src="https://maps.google.com/maps?q=Malang,+Jawa+Timur,+Indonesia&output=embed&z=13"
-                                                allowfullscreen loading="lazy"
-                                                referrerpolicy="no-referrer-when-downgrade">
-                                            </iframe>
-                                        </div>
-
-                                        <!-- Coordinate Fields -->
-                                        <div class="maps-coord-row">
-                                            <div class="form-group">
-                                                <label>Latitude</label>
-                                                <input type="text" name="latitude" id="inp-lat" placeholder="Contoh: -7.9666" readonly class="input-readonly">
+                                    <div class="form-row" style="margin-top: 15px;">
+                                        <div class="form-group" style="width: 100%;">
+                                            <label>Peta Lokasi</label>
+                                            <div style="margin-bottom: 8px; display: flex; gap: 8px;">
+                                                <input type="text" id="map-search" placeholder="Cari lokasi di peta..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                                <button type="button" id="btn-search-map" class="btn btn-dark" style="padding: 8px 15px;">Cari</button>
                                             </div>
-                                            <div class="form-group">
-                                                <label>Longitude</label>
-                                                <input type="text" name="longitude" id="inp-lng" placeholder="Contoh: 112.6326" readonly class="input-readonly">
-                                            </div>
+                                            <div id="map-container" style="width: 100%; height: 300px; border-radius: 8px; border: 1px solid #ddd; z-index: 1;"></div>
+                                            <small style="color: #6e6b7b; display: block; margin-top: 5px;">Klik pada peta untuk memilih lokasi, atau gunakan fitur pencarian di atas.</small>
                                         </div>
-                                        <p class="maps-pin-info" id="maps-pin-label">&#8505; Klik tombol
-                                            <span>Cari</span> atau <span>Lokasi Saya</span> untuk menyimpan koordinat
-                                            lokasi magang.</p>
                                     </div>
+
+
 
                                     <p id="err-1" style="color:#EA5455;font-size:12px;display:none;margin-bottom:8px;">
                                         &#9888; Harap isi semua field yang wajib diisi.</p>
@@ -222,7 +191,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <p>Perusahaan: <strong id="v-perusahaan"><?= htmlspecialchars($lokasi['perusahaan'] ?? '-') ?></strong></p>
                                         <p>Bidang: <strong id="v-bidang"><?= htmlspecialchars($lokasi['bidang'] ?? '-') ?></strong></p>
                                         <p>Alamat: <strong id="v-alamat"><?= htmlspecialchars($lokasi['alamat'] ?? '-') ?></strong></p>
-                                        <p>Koordinat: <strong id="v-koordinat"><?= htmlspecialchars(($lokasi['latitude'] ?? '') . ', ' . ($lokasi['longitude'] ?? 'Belum dicatat')) ?></strong></p>
                                     </div>
                                     <div>
                                         <p>Contact Person: <strong id="v-pimpinan"><?= htmlspecialchars($lokasi['nama_pimpinan'] ?? '-') ?></strong></p>
@@ -230,12 +198,14 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <p>Status: <?= stepBadge($step1Status) ?></p>
                                     </div>
                                 </div>
-                                <?php if ($lokasi && $lokasi['latitude'] && $lokasi['longitude']): ?>
-                                <div id="v-map-preview"
-                                    style="margin-top:14px;border-radius:10px;overflow:hidden;border:1.5px solid #DDEAF5;">
-                                    <iframe src="https://maps.google.com/maps?q=<?= $lokasi['latitude'] ?>,<?= $lokasi['longitude'] ?>&output=embed&z=15" width="100%" height="220" style="border:none;display:block" loading="lazy"></iframe>
+
+                                <div style="margin-top: 20px;">
+                                    <p style="margin-bottom: 5px; font-weight: 600;">Peta Lokasi:</p>
+                                    <div style="width: 100%; height: 250px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
+                                        <iframe id="v-map-frame" width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=<?= urlencode($lokasi['alamat'] ?? 'Indonesia') ?>&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
+                                    </div>
                                 </div>
-                                <?php endif; ?>
+
                                 <?php if ($step1Status === 'ditolak'): ?>
                                 <div style="margin-top:10px;">
                                     <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
@@ -547,80 +517,100 @@ unset($_SESSION['success'], $_SESSION['error']);
         </main>
     </div>
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // ===== Google Maps Helpers =====
-        let mapQuery = 'Malang, Jawa Timur, Indonesia';
-        let savedLat = '';
-        let savedLng = '';
-        let mapUpdateTimer = null;
+        // Update map when address changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const mapContainer = document.getElementById('map-container');
+            if (!mapContainer) return;
 
-        function updateMap(query) {
-            const iframe = document.getElementById('map-iframe');
-            if (!iframe || !query) return;
-            const encoded = encodeURIComponent(query);
-            iframe.src = `https://maps.google.com/maps?q=${encoded}&output=embed&z=15`;
-            mapQuery = query;
-        }
+            // Inisialisasi Peta (Leaflet dengan style Google Maps)
+            const map = L.map('map-container').setView([-2.5489, 118.0149], 5); // Default Indonesia
+            L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                attribution: '&copy; Google Maps',
+                maxZoom: 20
+            }).addTo(map);
 
-        function searchMaps() {
-            const searchInput = document.getElementById('maps-search-input');
-            const query = searchInput.value.trim() || document.getElementById('inp-alamat').value.trim();
-            if (!query) { alert('Masukkan nama lokasi atau alamat terlebih dahulu.'); return; }
+            // Fix map rendering issue when inside a container that might have sizing changes
+            setTimeout(() => { map.invalidateSize(); }, 500);
 
-            // Try Geocoding via Nominatim (free, no API key needed)
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        const { lat, lon, display_name } = data[0];
-                        savedLat = parseFloat(lat).toFixed(6);
-                        savedLng = parseFloat(lon).toFixed(6);
-                        document.getElementById('inp-lat').value = savedLat;
-                        document.getElementById('inp-lng').value = savedLng;
-                        document.getElementById('maps-pin-label').innerHTML =
-                            `&#128205; Lokasi ditemukan: <span>${display_name.substring(0, 60)}...</span>`;
-                        // Update map embed with coordinates
-                        const iframe = document.getElementById('map-iframe');
-                        iframe.src = `https://maps.google.com/maps?q=${savedLat},${savedLng}&output=embed&z=16`;
-                    } else {
-                        alert('Lokasi tidak ditemukan. Coba dengan kata kunci yang lebih spesifik.');
+            let marker = null;
+            const alamatInput = document.getElementById('inp-alamat');
+            const searchInput = document.getElementById('map-search');
+            const btnSearch = document.getElementById('btn-search-map');
+
+            // Fungsi untuk update marker
+            function setMarker(lat, lng, address) {
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng]).addTo(map);
+                }
+                map.setView([lat, lng], 16);
+                if (address && alamatInput) {
+                    alamatInput.value = address;
+                }
+            }
+
+            // Reverse Geocoding saat peta diklik
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                // Ambil alamat dari Nominatim
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const address = data.display_name;
+                        setMarker(lat, lng, address);
+                        if (searchInput) searchInput.value = address;
+                    })
+                    .catch(err => console.error("Geocoding error:", err));
+            });
+
+            // Pencarian Geocoding
+            function searchMap() {
+                const query = searchInput.value;
+                if (!query) return;
+
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const lat = data[0].lat;
+                            const lon = data[0].lon;
+                            const address = data[0].display_name;
+                            setMarker(lat, lon, address);
+                            if (alamatInput) alamatInput.value = address;
+                        } else {
+                            alert("Lokasi tidak ditemukan.");
+                        }
+                    })
+                    .catch(err => console.error("Search error:", err));
+            }
+
+            if (btnSearch) btnSearch.addEventListener('click', searchMap);
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchMap();
                     }
-                })
-                .catch(() => {
-                    // Fallback: update map by query string
-                    updateMap(query);
-                    document.getElementById('maps-pin-label').innerHTML =
-                        `&#128205; Peta diperbarui ke: <span>${query}</span> (koordinat tidak tersedia)`;
                 });
-        }
+            }
 
-        function getMyLocation() {
-            if (!navigator.geolocation) { alert('Browser Anda tidak mendukung Geolocation.'); return; }
-            navigator.geolocation.getCurrentPosition(
-                pos => {
-                    savedLat = pos.coords.latitude.toFixed(6);
-                    savedLng = pos.coords.longitude.toFixed(6);
-                    document.getElementById('inp-lat').value = savedLat;
-                    document.getElementById('inp-lng').value = savedLng;
-                    const iframe = document.getElementById('map-iframe');
-                    iframe.src = `https://maps.google.com/maps?q=${savedLat},${savedLng}&output=embed&z=16`;
-                    document.getElementById('maps-pin-label').innerHTML =
-                        `&#128205; Posisi Anda: <span>${savedLat}, ${savedLng}</span>`;
-                    // Populate search input
-                    document.getElementById('maps-search-input').value = `${savedLat}, ${savedLng}`;
-                },
-                err => { alert('Gagal mendapatkan lokasi: ' + err.message); }
-            );
-        }
-
-        function debounceMapUpdate() {
-            clearTimeout(mapUpdateTimer);
-            const alamat = document.getElementById('inp-alamat').value.trim();
-            if (!alamat) return;
-            // Sync search input with alamat
-            document.getElementById('maps-search-input').value = alamat;
-            mapUpdateTimer = setTimeout(() => updateMap(alamat), 900);
-        }
+            // Listen if user manually types in the main alamat field
+            if (alamatInput) {
+                alamatInput.addEventListener('change', function() {
+                    const val = this.value.trim();
+                    if(val !== '') {
+                        searchInput.value = val;
+                        searchMap();
+                    }
+                });
+            }
+        });
 
         // ===== Format tanggal hari ini =====
         function hariIni() {
@@ -644,19 +634,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 document.getElementById('v-telepon').textContent = telepon;
                 document.getElementById('v-alamat').textContent = alamat;
 
-                // Simpan koordinat & tampilkan peta mini di ringkasan
-                const lat = document.getElementById('inp-lat').value.trim();
-                const lng = document.getElementById('inp-lng').value.trim();
-                const koordinatText = lat && lng ? `${lat}, ${lng}` : 'Belum dicatat';
-                document.getElementById('v-koordinat').textContent = koordinatText;
 
-                const mapPreview = document.getElementById('v-map-preview');
-                if (lat && lng) {
-                    mapPreview.innerHTML = `<iframe src="https://maps.google.com/maps?q=${lat},${lng}&output=embed&z=15" width="100%" height="220" style="border:none;display:block" loading="lazy"></iframe>`;
-                } else {
-                    const q = encodeURIComponent(alamat);
-                    mapPreview.innerHTML = `<iframe src="https://maps.google.com/maps?q=${q}&output=embed&z=14" width="100%" height="220" style="border:none;display:block" loading="lazy"></iframe>`;
-                }
                 return true;
             }
             if (step === 2) {

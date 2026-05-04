@@ -18,8 +18,8 @@ $namaPimpinan = trim($_POST['nama_pimpinan'] ?? '');
 $bidang = trim($_POST['bidang'] ?? '');
 $telepon = trim($_POST['telepon'] ?? '');
 $alamat = trim($_POST['alamat'] ?? '');
-$latitude = trim($_POST['latitude'] ?? '');
-$longitude = trim($_POST['longitude'] ?? '');
+$latitude = '';
+$longitude = '';
 
 if ($perusahaan === '' || $namaPimpinan === '' || $bidang === '' || $telepon === '' || $alamat === '') {
     $_SESSION['error'] = 'Semua field lokasi magang harus diisi.';
