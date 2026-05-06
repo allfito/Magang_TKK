@@ -117,29 +117,26 @@ function hitungBebanDosen() {
     return beban;
 }
 
-function bukaModalPlot(btn, isEdit) {
+function bukaModalPlot(btn, isEdit, kelompokId) {
     const row = btn.closest('tr');
     currentPlotRow = row;
 
     const cells = row.querySelectorAll('td');
+    document.getElementById('plot-kelompok-id').value = kelompokId;
     document.getElementById('pKelompok').textContent = cells[0].textContent.trim();
     document.getElementById('pKetua').textContent    = cells[1].textContent.trim();
     document.getElementById('pAnggota').textContent  = cells[2].textContent.trim();
     document.getElementById('plot-error').style.display = 'none';
     document.getElementById('dosen-info-box').style.display = 'none';
 
-    const lokasiSel = document.getElementById('plot-lokasi');
     const dosenSel  = document.getElementById('plot-dosen');
 
     if (isEdit) {
-        const lokasiVal = cells[3].textContent.trim();
-        const dosenVal  = cells[4].textContent.trim();
-        setSelectByText(lokasiSel, lokasiVal);
-        setSelectByText(dosenSel, dosenVal);
+        const dosenVal  = cells[3].textContent.trim();
+        dosenSel.value = dosenVal;
         document.getElementById('plot-modal-title').textContent = 'Edit Plotting';
         tampilInfoDosen();
     } else {
-        lokasiSel.value = '';
         dosenSel.value  = '';
         document.getElementById('plot-modal-title').textContent = 'Plotting Kelompok';
     }
@@ -181,40 +178,6 @@ function setSelectByText(selectEl, text) {
     selectEl.value = '';
 }
 
-function simpanPlot() {
-    const lokasiVal = document.getElementById('plot-lokasi').value;
-    const dosenVal  = document.getElementById('plot-dosen').value;
-    const errEl     = document.getElementById('plot-error');
-
-    if (!lokasiVal || !dosenVal) {
-        errEl.style.display = 'block';
-        return;
-    }
-    errEl.style.display = 'none';
-    if (!currentPlotRow) return;
-
-    const cells = currentPlotRow.querySelectorAll('td');
-    cells[3].innerHTML = lokasiVal;
-    cells[3].className = 'col-lokasi';
-    cells[4].innerHTML = dosenVal;
-    cells[4].className = 'col-dosen';
-    cells[5].querySelector('.badge').className   = 'badge badge-success-status';
-    cells[5].querySelector('.badge').textContent = 'Selesai';
-
-    // Update tombol aksi
-    const aksiCell = cells[6];
-    aksiCell.className = 'aksi-plot-group';
-    aksiCell.innerHTML = `
-        <button class="btn-edit-plot" onclick="bukaModalPlot(this, true)">&#9998; Edit</button>
-        <button class="btn-detail-plot" onclick="bukaDetailKelompok(this)">Detail</button>
-    `;
-
-    document.getElementById('modal-plotting').classList.remove('open');
-    currentPlotRow = null;
-    showToast('Plotting berhasil disimpan!', 'success');
-    renderRekapDosen();
-}
-
 function tutupModalPlotBtn() {
     document.getElementById('modal-plotting').classList.remove('open');
 }
@@ -245,9 +208,8 @@ function bukaDetailKelompok(btn) {
     const nama   = cells[0].textContent.trim();
     const ketua  = cells[1].textContent.trim();
     const anggota = cells[2].textContent.trim();
-    const lokasi = cells[3].querySelector('em') ? '-' : cells[3].textContent.trim();
-    const dosen  = cells[4].querySelector('em') ? '-' : cells[4].textContent.trim();
-    const status = cells[5].querySelector('.badge').textContent.trim();
+    const dosen  = cells[3].querySelector('em') ? '-' : cells[3].textContent.trim();
+    const status = cells[4].querySelector('.badge').textContent.trim();
     const isSelesai = status === 'Selesai';
 
     document.getElementById('detail-modal-title').textContent = nama;
@@ -261,7 +223,6 @@ function bukaDetailKelompok(btn) {
         <div class="detail-info-grid">
             <div class="detail-info-block"><span class="detail-label">Ketua</span><span class="detail-val">${ketua}</span></div>
             <div class="detail-info-block"><span class="detail-label">Jml. Anggota</span><span class="detail-val">${anggota} orang</span></div>
-            <div class="detail-info-block"><span class="detail-label">Lokasi Magang</span><span class="detail-val">${lokasi}</span></div>
             <div class="detail-info-block"><span class="detail-label">Dosen Pembimbing</span><span class="detail-val">${dosen}</span></div>
             <div class="detail-info-block"><span class="detail-label">Status</span><span class="detail-val">
                 <span class="badge ${isSelesai ? 'badge-success-status' : 'badge-warning'}">${status}</span>
@@ -287,7 +248,7 @@ function lanjutPlotDariDetail() {
     const plotBtn   = isSelesai
         ? detailSourceRow.querySelector('.btn-edit-plot')
         : detailSourceRow.querySelector('.btn-plot');
-    if (plotBtn) bukaModalPlot(plotBtn, isSelesai);
+    if (plotBtn) plotBtn.click();
 }
 
 function tutupDetail() {
@@ -330,24 +291,28 @@ function filterTabelPlotting() {
 /* --------------------------------------------------
    REKAP DOSEN PEMBIMBING
    -------------------------------------------------- */
-const dosenList = [
-    'Dr. Budi Santoso, M.Kom',
-    'Ir. Siti Rahayu, M.T',
-    'Prof. Ahmad Fauzi, Ph.D',
-    'Dra. Rina Wulandari, M.Si',
-    'Dr. Hendra Kurniawan, M.Kom',
-    'Ir. Dewi Lestari, M.T',
-    'Dr. Fajar Nugroho, M.Sc',
-    'Drs. Yusuf Hidayat, M.Pd'
-];
-
 function renderRekapDosen() {
     const container = document.getElementById('dosen-rekap-grid');
     if (!container) return;
     const beban = hitungBebanDosen();
     const MAX   = 3;
 
-    container.innerHTML = dosenList.map(nama => {
+    const dosenNames = Object.keys(beban).filter(n => n && n !== '-' && n !== 'Belum ditentukan');
+    
+    const defaultDosen = [
+        'Dr. Budi Santoso, M.Kom',
+        'Ir. Siti Rahayu, M.T',
+        'Prof. Ahmad Fauzi, Ph.D',
+        'Dra. Rina Wulandari, M.Si',
+        'Dr. Hendra Kurniawan, M.Kom',
+        'Ir. Dewi Lestari, M.T',
+        'Dr. Fajar Nugroho, M.Sc',
+        'Drs. Yusuf Hidayat, M.Pd'
+    ];
+    
+    const allDosen = [...new Set([...defaultDosen, ...dosenNames])];
+
+    container.innerHTML = allDosen.map(nama => {
         const jml   = beban[nama] || 0;
         const pct   = Math.min((jml / MAX) * 100, 100);
         const warna = jml === 0 ? '#28C76F' : jml < MAX ? '#FF9F43' : '#EA5455';

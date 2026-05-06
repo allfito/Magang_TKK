@@ -53,6 +53,12 @@ switch ($type) {
         $redirectPage = 'verifikasi_berkas.php';
         break;
 
+    case 'berkas_satuan':
+        $stmt = $mysqli->prepare('UPDATE berkas_anggota SET status_verifikasi = ? WHERE id = ?');
+        $stmt->bind_param('si', $action, $id);
+        $redirectPage = 'verifikasi_berkas.php';
+        break;
+
     case 'bukti':
         $stmt = $mysqli->prepare('UPDATE bukti_diterima SET status_verifikasi = ? WHERE id = ?');
         $stmt->bind_param('si', $action, $id);

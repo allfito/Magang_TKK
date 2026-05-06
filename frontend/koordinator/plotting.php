@@ -37,7 +37,6 @@ $plottingSummary = getPlottingSummary();
                                     <th>Nama Kelompok</th>
                                     <th>Ketua</th>
                                     <th>Jml. Anggota</th>
-                                    <th>Lokasi Magang</th>
                                     <th>Dosen Pembimbing</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
@@ -55,14 +54,13 @@ $plottingSummary = getPlottingSummary();
                                             <td><?= htmlspecialchars($group['kelompok_nama']) ?></td>
                                             <td><?= htmlspecialchars($group['ketua_nama']) ?></td>
                                             <td><?= (int) $group['anggota_count'] ?></td>
-                                            <td class="col-lokasi"><?= $group['lokasi'] !== '' ? htmlspecialchars($group['lokasi']) : '<em class="belum">Belum diplot</em>' ?></td>
                                             <td class="col-dosen"><?= $group['dosen_pembimbing'] !== '' ? htmlspecialchars($group['dosen_pembimbing']) : '<em class="belum">Belum ditentukan</em>' ?></td>
                                             <td><span class="badge <?= $statusClass ?>"><?= $group['status'] === 'selesai' ? 'Selesai' : 'Menunggu' ?></span></td>
                                             <td class="aksi-plot-group">
                                                 <?php if ($group['status'] === 'selesai'): ?>
-                                                    <button class="btn-edit-plot" onclick="bukaModalPlot(this, true)">&#9998; Edit</button>
+                                                    <button class="btn-edit-plot" onclick="bukaModalPlot(this, true, <?= $group['kelompok_id'] ?>)">&#9998; Edit</button>
                                                 <?php else: ?>
-                                                    <button class="btn-plot" onclick="bukaModalPlot(this, false)">&#43; Plot</button>
+                                                    <button class="btn-plot" onclick="bukaModalPlot(this, false, <?= $group['kelompok_id'] ?>)">&#43; Plot</button>
                                                 <?php endif; ?>
                                                 <button class="btn-detail-plot" onclick="bukaDetailKelompok(this)">Detail</button>
                                             </td>

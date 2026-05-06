@@ -36,66 +36,66 @@
                 <h3 id="plot-modal-title">Plotting Kelompok</h3>
                 <button class="modal-close" onclick="tutupModalPlotBtn()">&times;</button>
             </div>
-            <div class="modal-body">
-                <div class="modal-info-strip">
-                    <div class="modal-info-item">
-                        <span class="modal-info-label">Kelompok</span>
-                        <span class="modal-info-val" id="pKelompok">-</span>
+            <form method="POST" action="../../backend/koordinator/plotting.php">
+                <input type="hidden" name="kelompok_id" id="plot-kelompok-id">
+                <div class="modal-body">
+                    <div class="modal-info-strip">
+                        <div class="modal-info-item">
+                            <span class="modal-info-label">Kelompok</span>
+                            <span class="modal-info-val" id="pKelompok">-</span>
+                        </div>
+                        <div class="modal-info-item">
+                            <span class="modal-info-label">Ketua</span>
+                            <span class="modal-info-val" id="pKetua">-</span>
+                        </div>
+                        <div class="modal-info-item">
+                            <span class="modal-info-label">Anggota</span>
+                            <span class="modal-info-val" id="pAnggota">-</span>
+                        </div>
                     </div>
-                    <div class="modal-info-item">
-                        <span class="modal-info-label">Ketua</span>
-                        <span class="modal-info-val" id="pKetua">-</span>
-                    </div>
-                    <div class="modal-info-item">
-                        <span class="modal-info-label">Anggota</span>
-                        <span class="modal-info-val" id="pAnggota">-</span>
-                    </div>
-                </div>
 
-                <!-- Lokasi Magang -->
-                <div class="plot-field">
-                    <label for="plot-lokasi">Lokasi Magang <span class="required">*</span></label>
-                    <select id="plot-lokasi" class="plot-select">
-                        <option value="">-- Pilih Lokasi --</option>
-                        <option>PT. Telkom Indonesia</option>
-                        <option>PT. Pertamina Digital</option>
-                        <option>CV. Nusantara Tech</option>
-                        <option>PT. XYZ Solusi Digital</option>
-                        <option>PT. Bank BRI Tbk</option>
-                        <option>CV. Kreatif Media</option>
-                        <option>PT. Astra International</option>
-                        <option>Dinas Kominfo Kota Malang</option>
-                    </select>
-                </div>
-
-                <!-- Dosen Pembimbing -->
-                <div class="plot-field">
-                    <label for="plot-dosen">Dosen Pembimbing <span class="required">*</span></label>
-                    <select id="plot-dosen" class="plot-select" onchange="tampilInfoDosen()">
-                        <option value="">-- Pilih Dosen Pembimbing --</option>
-                        <option>Dr. Budi Santoso, M.Kom</option>
-                        <option>Ir. Siti Rahayu, M.T</option>
-                        <option>Prof. Ahmad Fauzi, Ph.D</option>
-                        <option>Dra. Rina Wulandari, M.Si</option>
-                        <option>Dr. Hendra Kurniawan, M.Kom</option>
-                        <option>Ir. Dewi Lestari, M.T</option>
-                        <option>Dr. Fajar Nugroho, M.Sc</option>
-                        <option>Drs. Yusuf Hidayat, M.Pd</option>
-                    </select>
-                    <!-- Info beban dosen -->
-                    <div id="dosen-info-box" class="dosen-info-box" style="display:none;">
-                        <span class="dosen-info-icon">&#128100;</span>
-                        <span id="dosen-info-text"></span>
+                    <!-- Dosen Pembimbing -->
+                    <div class="plot-field">
+                        <label for="plot-dosen">Dosen Pembimbing <span class="required">*</span></label>
+                        <input type="text" id="plot-dosen" name="dosen_pembimbing" class="plot-select" list="dosen-list" placeholder="Ketik atau pilih dosen pembimbing..." oninput="tampilInfoDosen()" required>
+                        <datalist id="dosen-list">
+                            <?php 
+                            $defaultDosen = [
+                                'Dr. Budi Santoso, M.Kom',
+                                'Ir. Siti Rahayu, M.T',
+                                'Prof. Ahmad Fauzi, Ph.D',
+                                'Dra. Rina Wulandari, M.Si',
+                                'Dr. Hendra Kurniawan, M.Kom',
+                                'Ir. Dewi Lestari, M.T',
+                                'Dr. Fajar Nugroho, M.Sc',
+                                'Drs. Yusuf Hidayat, M.Pd'
+                            ];
+                            $allDosenList = $defaultDosen;
+                            if (isset($plottingSummary)) {
+                                foreach ($plottingSummary as $s) {
+                                    if (!in_array($s['dosen_pembimbing'], $allDosenList) && !empty($s['dosen_pembimbing'])) {
+                                        $allDosenList[] = $s['dosen_pembimbing'];
+                                    }
+                                }
+                            }
+                            foreach ($allDosenList as $d): ?>
+                                <option value="<?= htmlspecialchars($d) ?>">
+                            <?php endforeach; ?>
+                        </datalist>
+                        <!-- Info beban dosen -->
+                        <div id="dosen-info-box" class="dosen-info-box" style="display:none;">
+                            <span class="dosen-info-icon">&#128100;</span>
+                            <span id="dosen-info-text"></span>
+                        </div>
                     </div>
-                </div>
 
-                <p id="plot-error" style="color:#EA5455;font-size:12px;margin-top:4px;display:none;">Harap pilih lokasi
-                    dan dosen pembimbing.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-batal-modal" onclick="tutupModalPlotBtn()">Batal</button>
-                <button class="btn-setuju-modal" onclick="simpanPlot()">&#10003; Simpan Plotting</button>
-            </div>
+                    <p id="plot-error" style="color:#EA5455;font-size:12px;margin-top:4px;display:none;">Harap pilih dosen pembimbing.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-batal-modal" onclick="tutupModalPlotBtn()">Batal</button>
+                    <button type="submit" class="btn-setuju-modal">&#10003; Simpan Plotting</button>
+                </div>
+            </form>
         </div>
     </div>
 

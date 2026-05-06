@@ -15,11 +15,10 @@ if (!$userId || ($_SESSION['role'] ?? '') !== 'korbid') {
 }
 
 $kelompokId = (int) ($_POST['kelompok_id'] ?? 0);
-$lokasi = trim($_POST['lokasi'] ?? '');
 $dosenPembimbing = trim($_POST['dosen_pembimbing'] ?? '');
 
-if ($kelompokId <= 0 || $lokasi === '' || $dosenPembimbing === '') {
-    $_SESSION['error'] = 'Semua field plotting wajib diisi.';
+if ($kelompokId <= 0 || $dosenPembimbing === '') {
+    $_SESSION['error'] = 'Dosen pembimbing wajib diisi.';
     header('Location: ../../frontend/koordinator/plotting.php');
     exit;
 }
@@ -33,12 +32,12 @@ $result = $stmt->get_result();
 if ($result && $result->num_rows > 0) {
     // Update existing
     $row = $result->fetch_assoc();
-    $stmt = $mysqli->prepare('UPDATE plotting SET lokasi = ?, dosen_pembimbing = ? WHERE id = ?');
-    $stmt->bind_param('ssi', $lokasi, $dosenPembimbing, $row['id']);
+    $stmt = $mysqli->prepare('UPDATE plotting SET dosen_pembimbing = ? WHERE id = ?');
+    $stmt->bind_param('si', $dosenPembimbing, $row['id']);
 } else {
     // Insert new
-    $stmt = $mysqli->prepare('INSERT INTO plotting (kelompok_id, lokasi, dosen_pembimbing, created_at) VALUES (?, ?, ?, NOW())');
-    $stmt->bind_param('iss', $kelompokId, $lokasi, $dosenPembimbing);
+    $stmt = $mysqli->prepare('INSERT INTO plotting (kelompok_id, lokasi, dosen_pembimbing, created_at) VALUES (?, "", ?, NOW())');
+    $stmt->bind_param('is', $kelompokId, $dosenPembimbing);
 }
 
 if ($stmt->execute()) {

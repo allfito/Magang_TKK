@@ -136,6 +136,20 @@ function getGroupsForBerkasVerification(): array
     return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
+function getBerkasByGroup(int $kelompokId): array
+{
+    $mysqli = dbKoordinator();
+    $sql = "SELECT a.nama AS anggota_nama, a.nim, b.id AS berkas_id, b.jenis_berkas, b.file_path, b.status_verifikasi
+            FROM anggota_kelompok a
+            JOIN berkas_anggota b ON a.id = b.anggota_id
+            WHERE a.kelompok_id = ?
+            ORDER BY a.nama ASC, b.jenis_berkas ASC";
+    $stmt = $mysqli->prepare($sql);
+    $stmt->bind_param('i', $kelompokId);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
 function getGroupsForBuktiVerification(): array
 {
     $mysqli = dbKoordinator();
