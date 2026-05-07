@@ -1,6 +1,7 @@
 <?php include 'header.php'; ?>
 <?php
-$plottingGroups = getGroupsForPlotting();
+$sortBy = $_GET['sort'] ?? 'nama_a';
+$plottingGroups = getGroupsForPlotting($sortBy);
 $plottingSummary = getPlottingSummary();
 ?>
 
@@ -25,6 +26,16 @@ $plottingSummary = getPlottingSummary();
                             onclick="filterStatus('selesai', this)">Selesai</button>
                         <button class="plot-filter-btn" id="filter-menunggu"
                             onclick="filterStatus('menunggu', this)">Belum Diplot</button>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+                        <label for="sort-plotting" style="font-size: 13px; font-weight: 600; color: #334155; white-space: nowrap;">Urutkan:</label>
+                        <select id="sort-plotting" onchange="changeSortPage(this.value)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none;">
+                            <option value="nama_a" <?= $sortBy === 'nama_a' ? 'selected' : '' ?>>📖 Nama Kelompok (A-Z)</option>
+                            <option value="nama_z" <?= $sortBy === 'nama_z' ? 'selected' : '' ?>>📖 Nama Kelompok (Z-A)</option>
+                            <option value="ketua_a" <?= $sortBy === 'ketua_a' ? 'selected' : '' ?>>👤 Nama Ketua (A-Z)</option>
+                            <option value="ketua_z" <?= $sortBy === 'ketua_z' ? 'selected' : '' ?>>👤 Nama Ketua (Z-A)</option>
+                            <option value="status_selesai" <?= $sortBy === 'status_selesai' ? 'selected' : '' ?>>✅ Status Sudah Diplot</option>
+                        </select>
                     </div>
                 </div>
 

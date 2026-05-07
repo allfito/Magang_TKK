@@ -55,6 +55,8 @@ $isVerifikasiPage = in_array($currentPage, ['verifikasi_lokasi.php', 'verifikasi
                 </div>
 
                 <a href="plotting.php" class="nav-item <?= $currentPage === 'plotting.php' ? 'active' : '' ?>" id="nav-plotting">Plotting</a>
+
+                <a href="data_lengkap.php" class="nav-item <?= $currentPage === 'data_lengkap.php' ? 'active' : '' ?>" id="nav-data-lengkap">Data Lengkap</a>
             </nav>
 
             <div class="sidebar-footer">

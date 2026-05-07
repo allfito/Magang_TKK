@@ -1,5 +1,8 @@
 <?php include 'header.php'; ?>
-<?php $buktiList = getGroupsForBuktiVerification(); ?>
+<?php 
+    $sortBy = $_GET['sort'] ?? 'tanggal_terbaru';
+    $buktiList = getGroupsForBuktiVerification($sortBy); 
+?>
 
             <!-- PAGE: Verifikasi Bukti Diterima -->
             <div id="page-verifikasi-bukti" class="page active">
@@ -7,6 +10,21 @@
                     <h1>Verifikasi Bukti Diterima</h1>
                     <span class="page-subtitle">Periksa dan setujui bukti penerimaan magang yang diajukan kelompok</span>
                 </div>
+                
+                <!-- Sort Controls -->
+                <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
+                    <label for="sort-select" style="font-size: 13px; font-weight: 600; color: #334155;">Urutkan:</label>
+                    <select id="sort-select" onchange="changeSortPage(this.value)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none;">
+                        <option value="tanggal_terbaru" <?= $sortBy === 'tanggal_terbaru' ? 'selected' : '' ?>>📅 Tanggal Terbaru</option>
+                        <option value="tanggal_terlama" <?= $sortBy === 'tanggal_terlama' ? 'selected' : '' ?>>📅 Tanggal Terlama</option>
+                        <option value="nama_a" <?= $sortBy === 'nama_a' ? 'selected' : '' ?>>📖 Nama Kelompok (A-Z)</option>
+                        <option value="nama_z" <?= $sortBy === 'nama_z' ? 'selected' : '' ?>>📖 Nama Kelompok (Z-A)</option>
+                        <option value="ketua_a" <?= $sortBy === 'ketua_a' ? 'selected' : '' ?>>👤 Nama Ketua (A-Z)</option>
+                        <option value="ketua_z" <?= $sortBy === 'ketua_z' ? 'selected' : '' ?>>👤 Nama Ketua (Z-A)</option>
+                        <option value="status_menunggu" <?= $sortBy === 'status_menunggu' ? 'selected' : '' ?>>⏳ Status Menunggu Duluan</option>
+                    </select>
+                </div>
+                
                 <div class="card">
                     <div class="card-body p-0">
                         <table class="table">

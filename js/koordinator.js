@@ -99,6 +99,17 @@ function tolakRow(btn) {
 }
 
 /* --------------------------------------------------
+   SORT PAGE (Dropdown pengurutan)
+   -------------------------------------------------- */
+function changeSortPage(sortValue) {
+    // Debug: console.log('Sort value:', sortValue);
+    const url = new URL(window.location);
+    url.searchParams.set('sort', sortValue);
+    // Debug: console.log('New URL:', url.toString());
+    window.location.href = url.toString();
+}
+
+/* --------------------------------------------------
    MODAL PLOTTING - Lokasi + Dosen Pembimbing
    -------------------------------------------------- */
 let currentPlotRow   = null;

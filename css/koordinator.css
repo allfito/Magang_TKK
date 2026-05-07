@@ -1121,3 +1121,58 @@ html {
     color: #AABBCC;
     font-style: italic;
 }
+
+/* =====================
+   KELOMPOK DROPDOWN (Verifikasi Berkas)
+   ===================== */
+.grupo-dropdown[open] {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+}
+
+.grupo-dropdown summary:hover {
+    background: linear-gradient(90deg, #EFF6FF 0%, #EBF4FF 100%) !important;
+}
+
+.grupo-dropdown[open] summary {
+    background: linear-gradient(90deg, #EFF6FF 0%, #EBF4FF 100%) !important;
+    border-bottom: 1px solid #BFDBFE;
+}
+
+.grupo-dropdown summary i.fa-chevron-down {
+    transition: transform 0.3s ease;
+}
+
+.grupo-dropdown[open] summary i.fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+/* =====================
+   MAHASISWA DROPDOWN (Verifikasi Berkas)
+   ===================== */
+.mahasiswa-dropdown {
+    margin: 0;
+    border: none;
+}
+
+.mahasiswa-dropdown summary {
+    transition: all 0.2s ease;
+}
+
+.mahasiswa-dropdown summary:hover {
+    background-color: #E8F1F7 !important;
+    padding-left: 20px;
+}
+
+.mahasiswa-dropdown summary i.fa-chevron-down {
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.mahasiswa-dropdown[open] summary {
+    background-color: #EFF6FF !important;
+}
+
+.mahasiswa-dropdown[open] summary i.fa-chevron-down {
+    transform: rotate(180deg);
+}
