@@ -50,6 +50,7 @@ if ($kelompokId) {
 }
 
 $berkasData = [];
+$berkasFilePaths = [];
 $berkasUploadDate = null;
 if ($kelompokId) {
     $bStmt = $mysqli->prepare('SELECT ba.anggota_id, ba.jenis_berkas, ba.file_path, ba.created_at FROM berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id WHERE ak.kelompok_id = ?');
@@ -57,6 +58,7 @@ if ($kelompokId) {
     $bStmt->execute();
     foreach ($bStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $bRow) {
         $berkasData[$bRow['anggota_id']][$bRow['jenis_berkas']] = basename($bRow['file_path']);
+        $berkasFilePaths[$bRow['anggota_id']][$bRow['jenis_berkas']] = $bRow['file_path'];
         // Track latest upload date
         if (!$berkasUploadDate || $bRow['created_at'] > $berkasUploadDate) {
             $berkasUploadDate = $bRow['created_at'];
@@ -119,17 +121,28 @@ unset($_SESSION['success'], $_SESSION['error']);
 ?>
 
 
-            <div class="card pendaftaran-card">
-                <div class="card-header dark">
-                    <h3>Form Pendaftaran Magang</h3>
-                </div>
-                <div class="card-body p-0" style="padding: 25px; background: white;">
 
-                    <div id="accordion">
+            <div id="accordion">
 
                         <!-- Tahap 1 -->
                         <div class="tahap-container active" id="step-1">
-                            <div class="t-header <?= $step1Done ? 't-header-white' : 't-header-dark' ?>" id="header-1">Tahap 1 : Lokasi magang <?= $step1Done ? '&#10003; (selesai)' : '' ?></div>
+                            <div class="t-header t-header-dark tahap-hdr-flex" id="header-1">
+                                <div class="tahap-hdr-left">
+                                    <div class="tahap-hdr-icon">
+                                        <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    </div>
+                                    Tahap 1 : Lokasi magang <?= $step1Done ? '&#10003;' : '' ?>
+                                </div>
+                                <?php if ($step1Done): ?>
+                                <span class="tahap-status-pill pill-<?= $step1Status === 'disetujui' ? 'success' : ($step1Status === 'ditolak' ? 'danger' : 'warning') ?>">
+                                    <?php if ($step1Status === 'disetujui'): ?>
+                                    <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    Disetujui
+                                    <?php elseif ($step1Status === 'ditolak'): ?>Ditolak
+                                    <?php else: ?>Menunggu Verifikasi<?php endif; ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
 
                             <!-- Form -->
                             <div class="t-body t-form" id="form-1" style="<?= $step1Done ? 'display:none;' : '' ?>">
@@ -185,41 +198,109 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <!-- Completed -->
-                            <div class="t-body t-completed" id="completed-1" style="<?= $step1Done ? '' : 'display: none;' ?>">
-                                <div class="completed-grid">
-                                    <div>
-                                        <p>Perusahaan: <strong id="v-perusahaan"><?= htmlspecialchars($lokasi['perusahaan'] ?? '-') ?></strong></p>
-                                        <p>Bidang: <strong id="v-bidang"><?= htmlspecialchars($lokasi['bidang'] ?? '-') ?></strong></p>
-                                        <p>Alamat: <strong id="v-alamat"><?= htmlspecialchars($lokasi['alamat'] ?? '-') ?></strong></p>
+                            <div id="completed-1" style="<?= $step1Done ? '' : 'display:none;' ?>">
+                                <div class="lokasi-completed-wrap">
+                                    <!-- 3-column info grid -->
+                                    <div class="lokasi-info-grid">
+                                        <!-- Card 1 -->
+                                        <div class="info-card">
+                                            <div class="info-card-title">
+                                                <div class="info-card-icon-wrap"><svg viewBox="0 0 24 24" fill="#4A6D8C" width="16" height="16"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg></div>
+                                                Informasi Perusahaan &amp; Lokasi
+                                            </div>
+                                            <div class="info-row-item">
+                                                <svg class="info-row-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12z"/></svg>
+                                                <span class="info-row-label">Perusahaan</span>
+                                                <span class="info-row-value" id="v-perusahaan"><?= htmlspecialchars($lokasi['perusahaan'] ?? '-') ?></span>
+                                            </div>
+                                            <div class="info-row-item">
+                                                <svg class="info-row-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.85.5 13.5.5c-1.36 0-2.5 1.14-2.5 2.5H6c-1.1 0-2 .9-2 2v13h18V8c0-1.1-.9-2-2-2z"/></svg>
+                                                <span class="info-row-label">Bidang</span>
+                                                <span class="info-row-value" id="v-bidang"><?= htmlspecialchars($lokasi['bidang'] ?? '-') ?></span>
+                                            </div>
+                                            <div class="info-row-item">
+                                                <svg class="info-row-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                                <span class="info-row-label">Alamat</span>
+                                                <span class="info-row-value" id="v-alamat"><?= htmlspecialchars($lokasi['alamat'] ?? '-') ?></span>
+                                            </div>
+                                        </div>
+                                        <!-- Card 2 -->
+                                        <div class="info-card">
+                                            <div class="info-card-title">
+                                                <div class="info-card-icon-wrap"><svg viewBox="0 0 24 24" fill="#4A6D8C" width="16" height="16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                                                Kontak
+                                            </div>
+                                            <div class="info-field-item">
+                                                <span class="info-field-label">Contact Person</span>
+                                                <span class="info-field-value" id="v-pimpinan"><?= htmlspecialchars($lokasi['nama_pimpinan'] ?? '-') ?></span>
+                                            </div>
+                                            <div class="info-field-item">
+                                                <span class="info-field-label">Telepon</span>
+                                                <span class="info-field-value" id="v-telepon"><?= htmlspecialchars($lokasi['telepon'] ?? '-') ?></span>
+                                            </div>
+                                        </div>
+                                        <!-- Card 3 -->
+                                        <div class="info-card">
+                                            <div class="info-card-title">
+                                                <div class="info-card-icon-wrap"><svg viewBox="0 0 24 24" fill="#4A6D8C" width="16" height="16"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg></div>
+                                                Informasi Tambahan
+                                            </div>
+                                            <div class="info-field-item">
+                                                <span class="info-field-label">Tanggal Disetujui</span>
+                                                <span class="info-field-value"><?php
+                                                    $tgl = '-';
+                                                    if ($step1Status === 'disetujui' && !empty($lokasi['updated_at'])) {
+                                                        $bn = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                                                        $dt = new DateTime($lokasi['updated_at']);
+                                                        $tgl = $dt->format('j') . ' ' . $bn[(int)$dt->format('n')-1] . ' ' . $dt->format('Y');
+                                                    } echo $tgl; ?></span>
+                                            </div>
+                                            <div class="info-field-item">
+                                                <span class="info-field-label">Catatan</span>
+                                                <span class="info-field-value"><?= htmlspecialchars($lokasi['catatan'] ?? '-') ?></span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p>Contact Person: <strong id="v-pimpinan"><?= htmlspecialchars($lokasi['nama_pimpinan'] ?? '-') ?></strong></p>
-                                        <p>Telepon: <strong id="v-telepon"><?= htmlspecialchars($lokasi['telepon'] ?? '-') ?></strong></p>
-                                        <p>Status: <?= stepBadge($step1Status) ?></p>
+                                    <!-- Map -->
+                                    <div class="lokasi-map-section">
+                                        <a href="https://maps.google.com/?q=<?= urlencode($lokasi['alamat'] ?? '') ?>" target="_blank" class="btn-google-maps">
+                                            Buka di Google Maps
+                                            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                                        </a>
+                                        <iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" style="display:block;"
+                                            src="https://maps.google.com/maps?q=<?= urlencode($lokasi['alamat'] ?? 'Indonesia') ?>&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
                                     </div>
-                                </div>
-
-                                <div style="margin-top: 20px;">
-                                    <p style="margin-bottom: 5px; font-weight: 600;">Peta Lokasi:</p>
-                                    <div style="width: 100%; height: 250px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
-                                        <iframe id="v-map-frame" width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=<?= urlencode($lokasi['alamat'] ?? 'Indonesia') ?>&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
+                                    <?php if ($step1Status === 'ditolak'): ?>
+                                    <div style="margin-top:16px;">
+                                        <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
+                                            <input type="hidden" name="type" value="lokasi">
+                                            <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
+                                        </form>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
-
-                                <?php if ($step1Status === 'ditolak'): ?>
-                                <div style="margin-top:10px;">
-                                    <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
-                                        <input type="hidden" name="type" value="lokasi">
-                                        <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
-                                    </form>
-                                </div>
-                                <?php endif; ?>
                             </div>
                         </div>
 
                         <!-- Tahap 2 -->
                         <div class="tahap-container <?= $step2Open ? 'active' : 'locked' ?>" id="step-2">
-                            <div class="t-header <?= $step2Done ? 't-header-white' : ($step2Open ? 't-header-dark' : 't-header-white') ?>" id="header-2">Tahap 2 : Proposal Kelompok <?= $step2Done ? '&#10003; (selesai)' : '' ?></div>
+                            <div class="t-header <?= $step2Open ? 't-header-dark' : 't-header-white' ?> tahap-hdr-flex" id="header-2">
+                                <div class="tahap-hdr-left">
+                                    <div class="tahap-hdr-icon">
+                                        <svg viewBox="0 0 24 24" fill="<?= $step2Open ? 'white' : '#4A6D8C' ?>" width="16" height="16"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                                    </div>
+                                    Tahap 2 : Proposal Kelompok <?= $step2Done ? '&#10003;' : '' ?>
+                                </div>
+                                <?php if ($step2Done): ?>
+                                <span class="tahap-status-pill pill-<?= $step2Status === 'disetujui' ? 'success' : ($step2Status === 'ditolak' ? 'danger' : 'warning') ?>">
+                                    <?php if ($step2Status === 'disetujui'): ?>
+                                    <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    Disetujui
+                                    <?php elseif ($step2Status === 'ditolak'): ?>Ditolak
+                                    <?php else: ?>Menunggu Verifikasi<?php endif; ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
 
                             <div class="t-body t-form" id="form-2" style="<?= ($step2Open && !$step2Done) ? '' : 'display: none;' ?>">
                                 <form class="profile-form" id="form-el-2" method="POST" action="../../backend/mahasiswa/proposal.php" enctype="multipart/form-data">
@@ -247,28 +328,55 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 </form>
                             </div>
 
-                            <div class="t-body t-completed" id="completed-2" style="<?= $step2Done ? '' : 'display: none;' ?>">
-                                <div class="completed-grid">
-                                    <div>
-                                        <p>Judul Proposal: <strong id="v-judul"><?= htmlspecialchars($proposal['judul'] ?? '-') ?></strong></p>
-                                        <p>File: <strong id="v-file-proposal"><?= htmlspecialchars(basename($proposal['file_path'] ?? '-')) ?></strong></p>
-                                        <p>Status: <?= stepBadge($step2Status) ?></p>
+                            <div id="completed-2" style="<?= $step2Done ? '' : 'display: none;' ?>">
+                                <div class="lokasi-completed-wrap">
+                                    <div class="lokasi-info-grid" style="grid-template-columns: 1fr;">
+                                        <div class="info-card">
+                                            <div class="info-card-title">
+                                                <div class="info-card-icon-wrap"><svg viewBox="0 0 24 24" fill="#4A6D8C" width="16" height="16"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
+                                                Detail Proposal
+                                            </div>
+                                            <div class="info-field-item">
+                                                <span class="info-field-label">Judul Proposal</span>
+                                                <span class="info-field-value" id="v-judul"><?= htmlspecialchars($proposal['judul'] ?? '-') ?></span>
+                                            </div>
+                                            <div class="info-field-item">
+                                                <span class="info-field-label">File</span>
+                                                <span class="info-field-value" id="v-file-proposal"><?= htmlspecialchars(basename($proposal['file_path'] ?? '-')) ?></span>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <?php if ($step2Status === 'ditolak'): ?>
+                                    <div style="margin-top:14px;">
+                                        <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
+                                            <input type="hidden" name="type" value="proposal">
+                                            <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
+                                        </form>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
-                                <?php if ($step2Status === 'ditolak'): ?>
-                                <div style="margin-top:10px;">
-                                    <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
-                                        <input type="hidden" name="type" value="proposal">
-                                        <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
-                                    </form>
-                                </div>
-                                <?php endif; ?>
                             </div>
                         </div>
 
                         <!-- Tahap 3 -->
                         <div class="tahap-container <?= $step3Open ? 'active' : 'locked' ?>" id="step-3">
-                            <div class="t-header <?= $step3Done ? 't-header-white' : ($step3Open ? 't-header-dark' : 't-header-white') ?>" id="header-3">Tahap 3 : Berkas Anggota <?= $step3Done ? '&#10003; (selesai)' : '' ?></div>
+                            <div class="t-header <?= $step3Open ? 't-header-dark' : 't-header-white' ?> tahap-hdr-flex" id="header-3">
+                                <div class="tahap-hdr-left">
+                                    <div class="tahap-hdr-icon">
+                                        <svg viewBox="0 0 24 24" fill="<?= $step3Open ? 'white' : '#4A6D8C' ?>" width="16" height="16"><path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/></svg>
+                                    </div>
+                                    Tahap 3 : Berkas Anggota <?= $step3Done ? '&#10003;' : '' ?>
+                                </div>
+                                <?php if ($step3Done): ?>
+                                <span class="tahap-status-pill pill-<?= $step3Status === 'disetujui' ? 'success' : ($step3Status === 'ditolak' ? 'danger' : 'warning') ?>">
+                                    <?php if ($step3Status === 'disetujui'): ?>
+                                    <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    Disetujui
+                                    <?php elseif ($step3Status === 'ditolak'): ?>Ditolak
+                                    <?php else: ?>Menunggu Verifikasi<?php endif; ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
 
                             <div class="t-body t-form" id="form-3" style="<?= ($step3Open && !$step3Done) ? '' : 'display: none;' ?>">
                                 <form class="profile-form" id="form-el-3" method="POST" action="../../backend/mahasiswa/berkas.php" enctype="multipart/form-data">
@@ -375,51 +483,100 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <!-- Completed -->
-                            <div class="t-body t-completed" id="completed-3" style="<?= $step3Done ? '' : 'display: none;' ?>">
-                                <div id="v-berkas-summary">
-                                    <?php if ($step3Done && $kelompokId): ?>
-                                        <?php
-                                        $berkasLabels = [
-                                            'formulir' => 'Formulir',
-                                            'ktm' => 'Scan KTM',
-                                            'transkrip' => 'Transkrip Nilai',
-                                            'pas_foto' => 'Pas Foto',
-                                            'cv' => 'CV'
-                                        ];
-                                        foreach ($anggotaList as $anggota):
-                                            $aBerkas = $berkasData[$anggota['id']] ?? [];
-                                            $uploadedCount = count($aBerkas);
-                                            $totalBerkas = 5;
-                                            $iconColor = $uploadedCount === $totalBerkas ? '#28C76F' : ($uploadedCount > 0 ? '#FF9F43' : '#EA5455');
-                                            $icon = $uploadedCount === $totalBerkas ? '&#10003;' : ($uploadedCount > 0 ? '&#9888;' : '&#10007;');
-                                        ?>
-                                        <div class="berkas-member-card">
-                                            <div class="berkas-member-header">
-                                                <div>
-                                                    <span style="color:<?= $iconColor ?>;font-weight:700;"><?= $icon ?> <?= htmlspecialchars($anggota['nama']) ?></span>
-                                                    <em style="color:rgba(255,255,255,0.6);font-size:12px;margin-left:4px;">(<?= ucfirst(htmlspecialchars($anggota['peran'])) ?>)</em>
-                                                </div>
-                                                <span class="berkas-count" style="color:<?= $iconColor ?>"><?= $uploadedCount ?>/<?= $totalBerkas ?> berkas</span>
-                                            </div>
-                                            <div class="berkas-file-list">
-                                                <?php foreach ($aBerkas as $jenis => $filename): ?>
-                                                <div class="berkas-file-item">
-                                                    &#128196; <?= $berkasLabels[$jenis] ?? $jenis ?>: <?= htmlspecialchars($filename) ?>
-                                                </div>
-                                                <?php endforeach; ?>
-                                                <?php if (empty($aBerkas)): ?>
-                                                <div class="berkas-file-item" style="font-style:italic;opacity:0.6;">Belum ada berkas diupload</div>
-                                                <?php endif; ?>
+                            <div id="completed-3" style="<?= $step3Done ? '' : 'display: none;' ?>">
+                                <div class="lokasi-completed-wrap" style="padding: 16px 24px 20px;">
+                                <?php if ($step3Done && $kelompokId): ?>
+                                <?php
+                                $berkasOrder = ['formulir', 'ktm', 'transkrip', 'pas_foto', 'cv'];
+                                $berkasLabelsFull = [
+                                    'formulir' => 'Formulir Pendaftaran',
+                                    'ktm'      => 'Scan KTM',
+                                    'transkrip'=> 'Transkrip Nilai',
+                                    'pas_foto' => 'Pas Foto',
+                                    'cv'       => 'CV',
+                                ];
+                                $bakColors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#A29BFE','#FECA57','#74B9FF','#FD79A8'];
+                                ?>
+                                <div class="bak-accordion">
+                                <?php foreach ($anggotaList as $idx => $anggota):
+                                    $aBerkas = $berkasData[$anggota['id']] ?? [];
+                                    $aFilePaths = $berkasFilePaths[$anggota['id']] ?? [];
+                                    $uploadedCount = count($aBerkas);
+                                    $totalBerkas = 5;
+                                    $pct = ($uploadedCount / $totalBerkas) * 100;
+                                    $cColor = $uploadedCount === $totalBerkas ? '#28C76F' : ($uploadedCount > 0 ? '#FF9F43' : '#EA5455');
+                                    $avColor = $bakColors[$idx % count($bakColors)];
+                                    $isFirst = ($idx === 0);
+                                ?>
+                                <div class="bak-item">
+                                    <div class="bak-hdr" onclick="toggleBak(<?= $anggota['id'] ?>)">
+                                        <div class="bak-avatar" style="background:<?= $avColor ?>">
+                                            <?= strtoupper(mb_substr($anggota['nama'], 0, 1)) ?>
+                                        </div>
+                                        <div class="bak-meta">
+                                            <div class="bak-name-row">
+                                                <span class="bak-name"><?= htmlspecialchars($anggota['nama']) ?></span>
+                                                <span class="bak-role-badge"><?= ucfirst(htmlspecialchars($anggota['peran'])) ?></span>
                                             </div>
                                         </div>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
+                                        <div class="bak-right">
+                                            <div class="bak-progress-info">
+                                                <span class="bak-count-text" style="color:<?= $cColor ?>"><?= $uploadedCount ?>/<?= $totalBerkas ?> berkas</span>
+                                                <div class="bak-progress-bar"><div class="bak-progress-fill" style="width:<?= $pct ?>%;background:<?= $cColor ?>"></div></div>
+                                            </div>
+                                            <div class="bak-chevron" id="bak-chevron-<?= $anggota['id'] ?>">
+                                                <svg viewBox="0 0 24 24" fill="#7B8FA1" width="18" height="18"><path id="bak-chvpath-<?= $anggota['id'] ?>" d="<?= $isFirst ? 'M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z' : 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z' ?>"/></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bak-body" id="bak-body-<?= $anggota['id'] ?>" style="<?= $isFirst ? '' : 'display:none;' ?>">
+                                        <div class="bak-body-inner">
+                                            <p class="bak-body-label">Berkas yang Diperlukan (<?= $totalBerkas ?>)</p>
+                                            <div class="bak-grid">
+                                            <?php foreach ($berkasOrder as $num => $jenis):
+                                                $hasFile = isset($aBerkas[$jenis]);
+                                                $filePath = $aFilePaths[$jenis] ?? '';
+                                                $fileUrl  = '../../' . $filePath;
+                                            ?>
+                                                <div class="bak-card">
+                                                    <div class="bak-card-icon">
+                                                        <svg viewBox="0 0 24 24" fill="#7C83FD" width="22" height="22"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                                                    </div>
+                                                    <div class="bak-card-name"><?= ($num+1) . '. ' . $berkasLabelsFull[$jenis] ?></div>
+                                                    <?php if ($hasFile): ?>
+                                                    <div class="bak-card-status bak-status-ok">
+                                                        <svg viewBox="0 0 24 24" fill="#28C76F" width="13" height="13"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                                        Diunggah
+                                                    </div>
+                                                    <a href="<?= htmlspecialchars($fileUrl) ?>" target="_blank" class="bak-card-action bak-action-view">
+                                                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                                                        Lihat File
+                                                    </a>
+                                                    <?php else: ?>
+                                                    <div class="bak-card-status bak-status-pending">
+                                                        <svg viewBox="0 0 24 24" fill="#A0B2C0" width="13" height="13"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+                                                        Belum diunggah
+                                                    </div>
+                                                    <span class="bak-card-action bak-action-upload">
+                                                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                                                        Upload
+                                                    </span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                                <?php endforeach; ?>
+                                </div><!-- /bak-accordion -->
 
                                 <?php if ($berkasUploadFormatted): ?>
-                                <p style="margin-top:14px;font-weight:700;font-size:14px;">Tanggal Upload: <strong><?= $berkasUploadFormatted ?></strong></p>
+                                <div class="bak-footer">
+                                    <svg viewBox="0 0 24 24" fill="#7B8FA1" width="15" height="15"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                                    Tanggal Upload Terakhir: <strong><?= $berkasUploadFormatted ?></strong>
+                                </div>
                                 <?php endif; ?>
-                                <p style="margin-top:6px;font-size:14px;">Status: &nbsp;<?= stepBadge($step3Status) ?></p>
 
                                 <?php if ($berkasStatus === 'menunggu' || $berkasStatus === 'ditolak'): ?>
                                 <div style="margin-top:14px;display:flex;gap:10px;">
@@ -432,12 +589,30 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     <?php endif; ?>
                                 </div>
                                 <?php endif; ?>
-                            </div>
-                        </div>
+                                <?php endif; ?>
+                                </div><!-- /lokasi-completed-wrap -->
+                            </div><!-- /completed-3 -->
+                        </div><!-- /step-3 -->
 
                         <!-- Tahap 4 -->
                         <div class="tahap-container <?= $step4Open ? 'active' : 'locked' ?>" id="step-4">
-                            <div class="t-header <?= $step4Done ? 't-header-white' : ($step4Open ? 't-header-dark' : 't-header-white') ?>" id="header-4">Tahap 4 : Bukti Diterima <?= $step4Done ? '&#10003; (selesai)' : '' ?></div>
+                            <div class="t-header <?= $step4Open ? 't-header-dark' : 't-header-white' ?> tahap-hdr-flex" id="header-4">
+                                <div class="tahap-hdr-left">
+                                    <div class="tahap-hdr-icon">
+                                        <svg viewBox="0 0 24 24" fill="<?= $step4Open ? 'white' : '#4A6D8C' ?>" width="16" height="16"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.85.5 13.5.5c-1.36 0-2.5 1.14-2.5 2.5H6c-1.1 0-2 .9-2 2v13h18V8c0-1.1-.9-2-2-2zm-8 12H6v-2h6v2zm2-6H6v-2h8v2zm2-4H6V8h10v2z"/></svg>
+                                    </div>
+                                    Tahap 4 : Bukti Diterima <?= $step4Done ? '&#10003;' : '' ?>
+                                </div>
+                                <?php if ($step4Done): ?>
+                                <span class="tahap-status-pill pill-<?= $step4Status === 'disetujui' ? 'success' : ($step4Status === 'ditolak' ? 'danger' : 'warning') ?>">
+                                    <?php if ($step4Status === 'disetujui'): ?>
+                                    <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    Disetujui
+                                    <?php elseif ($step4Status === 'ditolak'): ?>Ditolak
+                                    <?php else: ?>Menunggu Verifikasi<?php endif; ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
 
                             <div class="t-body t-form" id="form-4" style="<?= ($step4Open && !$step4Done) ? '' : 'display: none;' ?>">
                                 <form class="profile-form" id="form-el-4" method="POST" action="../../backend/mahasiswa/bukti_diterima.php" enctype="multipart/form-data">
@@ -467,28 +642,52 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 </form>
                             </div>
 
-                            <div class="t-body t-completed" id="completed-4" style="<?= $step4Done ? '' : 'display: none;' ?>">
-                                <div class="completed-grid">
-                                    <div>
-                                        <p>Tempat Diterima: <strong id="v-tempat"><?= htmlspecialchars($bukti['tempat_diterima'] ?? '-') ?></strong></p>
-                                        <p>File: <strong id="v-file-bukti"><?= htmlspecialchars(basename($bukti['file_path'] ?? '-')) ?></strong></p>
-                                        <p>Status: <?= stepBadge($step4Status) ?></p>
+                            <div id="completed-4" style="<?= $step4Done ? '' : 'display: none;' ?>">
+                                <div class="lokasi-completed-wrap">
+                                    <div class="lokasi-info-grid" style="grid-template-columns: 1fr;">
+                                        <div class="info-card">
+                                            <div class="info-card-title">
+                                                <div class="info-card-icon-wrap"><svg viewBox="0 0 24 24" fill="#4A6D8C" width="16" height="16"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.85.5 13.5.5c-1.36 0-2.5 1.14-2.5 2.5H6c-1.1 0-2 .9-2 2v13h18V8c0-1.1-.9-2-2-2zm-8 12H6v-2h6v2zm2-6H6v-2h8v2zm2-4H6V8h10v2z"/></svg></div>
+                                                Detail Bukti Diterima
+                                            </div>
+                                            <div class="info-field-item">
+                                                <span class="info-field-label">Tempat Diterima</span>
+                                                <span class="info-field-value" id="v-tempat"><?= htmlspecialchars($bukti['tempat_diterima'] ?? '-') ?></span>
+                                            </div>
+                                            <div class="info-field-item">
+                                                <span class="info-field-label">File Surat</span>
+                                                <span class="info-field-value" id="v-file-bukti"><?= htmlspecialchars(basename($bukti['file_path'] ?? '-')) ?></span>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <?php if ($step4Status === 'ditolak'): ?>
+                                    <div style="margin-top:14px;">
+                                        <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
+                                            <input type="hidden" name="type" value="bukti">
+                                            <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
+                                        </form>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
-                                <?php if ($step4Status === 'ditolak'): ?>
-                                <div style="margin-top:10px;">
-                                    <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
-                                        <input type="hidden" name="type" value="bukti">
-                                        <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
-                                    </form>
-                                </div>
-                                <?php endif; ?>
                             </div>
                         </div>
 
                         <!-- Tahap 5 -->
                         <div class="tahap-container <?= $step5Open ? 'active' : 'locked' ?>" id="step-5">
-                            <div class="t-header <?= $step5Done ? 't-header-white' : ($step5Open ? 't-header-dark' : 't-header-white') ?>" id="header-5">Tahap 5 : Plotting Dosen <?= $step5Done ? '&#10003; (selesai)' : '' ?></div>
+                            <div class="t-header <?= $step5Open ? 't-header-dark' : 't-header-white' ?> tahap-hdr-flex" id="header-5">
+                                <div class="tahap-hdr-left">
+                                    <div class="tahap-hdr-icon">
+                                        <svg viewBox="0 0 24 24" fill="<?= $step5Open ? 'white' : '#4A6D8C' ?>" width="16" height="16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                    </div>
+                                    Tahap 5 : Plotting Dosen <?= $step5Done ? '&#10003;' : '' ?>
+                                </div>
+                                <?php if ($step5Done): ?>
+                                <span class="tahap-status-pill pill-success">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    Selesai
+                                </span>
+                                <?php endif; ?>
+                            </div>
 
                             <div class="t-body t-form" id="form-5" style="<?= ($step5Open && !$step5Done) ? '' : 'display: none;' ?>">
                                 <?php if (!$step5Done): ?>
@@ -510,8 +709,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
                         </div>
 
-                    </div>
-                </div>
             </div>
 
         </main>
@@ -734,12 +931,8 @@ unset($_SESSION['success'], $_SESSION['error']);
             const currentForm = document.getElementById(`form-${current}`);
             const currentCompleted = document.getElementById(`completed-${current}`);
 
-            // Tandai header selesai
-            currentHeader.classList.remove('t-header-dark');
-            currentHeader.classList.add('t-header-white');
-            if (!currentHeader.innerText.includes('(selesai)')) {
-                currentHeader.innerText = currentHeader.innerText + ' ✓ (selesai)';
-            }
+            // Keep header dark (matches Tahap 1 style - header stays dark when done)
+            // No class change needed since t-header-dark is correct for done state
 
             // Sembunyikan form, tampilkan ringkasan
             if (currentForm) currentForm.style.display = 'none';
@@ -755,6 +948,22 @@ unset($_SESSION['success'], $_SESSION['error']);
                 if (nextHeader) { nextHeader.classList.remove('t-header-white'); nextHeader.classList.add('t-header-dark'); }
                 if (nextForm) nextForm.style.display = 'block';
                 nextContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        /* ===== Tahap 3: Berkas Accordion Toggle ===== */
+        function toggleBak(id) {
+            const body = document.getElementById('bak-body-' + id);
+            const chvPath = document.getElementById('bak-chvpath-' + id);
+            if (!body) return;
+            const isOpen = body.style.display !== 'none';
+            body.style.display = isOpen ? 'none' : 'block';
+            if (chvPath) {
+                // Up chevron when open, down when closed
+                chvPath.setAttribute('d', isOpen
+                    ? 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z'
+                    : 'M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z'
+                );
             }
         }
     </script>

@@ -45,18 +45,49 @@ if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
+// Function to validate file based on extension and MIME type
+function validateFileType($filename, $mimeType) {
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    
+    // Allowed extensions
+    $allowedExtensions = ['pdf', 'jpeg', 'jpg', 'png'];
+    
+    // MIME type whitelist (allowing variations)
+    $allowedMimes = [
+        'application/pdf',
+        'application/x-pdf',
+        'image/jpeg',
+        'image/jpg',
+        'image/png'
+    ];
+    
+    return in_array($ext, $allowedExtensions, true) && in_array($mimeType, $allowedMimes, true);
+}
+
 foreach ($anggotaList as $index => $anggota) {
     foreach ($types as $type) {
         $fieldName = "berkas_{$index}_{$type}";
-        if (!isset($_FILES[$fieldName]) || $_FILES[$fieldName]['error'] !== UPLOAD_ERR_OK) {
+        
+        // Skip if field not provided or has error
+        if (!isset($_FILES[$fieldName]) || $_FILES[$fieldName]['error'] === UPLOAD_ERR_NO_FILE) {
+            continue;
+        }
+        
+        // Handle upload errors
+        if ($_FILES[$fieldName]['error'] !== UPLOAD_ERR_OK) {
             continue;
         }
 
         $file = $_FILES[$fieldName];
-        $allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-        $maxSize = 2 * 1024 * 1024;
+        $maxSize = 2 * 1024 * 1024; // 2MB
 
-        if (!in_array($file['type'], $allowedTypes, true) || $file['size'] > $maxSize) {
+        // Validate file size
+        if ($file['size'] > $maxSize) {
+            continue;
+        }
+
+        // Validate file type
+        if (!validateFileType($file['name'], $file['type'])) {
             continue;
         }
 
@@ -77,21 +108,23 @@ foreach ($anggotaList as $index => $anggota) {
             $row = $result->fetch_assoc();
             $update = $mysqli->prepare('UPDATE berkas_anggota SET file_path = ?, status_verifikasi = "menunggu", created_at = NOW() WHERE id = ?');
             $update->bind_param('si', $relativePath, $row['id']);
-            $update->execute();
+            if ($update->execute()) {
+                $uploaded++;
+            }
         } else {
             $insert = $mysqli->prepare('INSERT INTO berkas_anggota (anggota_id, jenis_berkas, file_path, status_verifikasi, created_at) VALUES (?, ?, ?, "menunggu", NOW())');
             $insert->bind_param('iss', $anggota['id'], $type, $relativePath);
-            $insert->execute();
+            if ($insert->execute()) {
+                $uploaded++;
+            }
         }
-
-        $uploaded++;
     }
 }
 
 if ($uploaded > 0) {
     $_SESSION['success'] = "Berhasil mengunggah $uploaded berkas.";
 } else {
-    $_SESSION['error'] = 'Tidak ada berkas yang berhasil diunggah.';
+    $_SESSION['error'] = 'Tidak ada berkas yang berhasil diunggah. Pastikan Anda memilih file dengan format yang benar (PDF, JPEG, PNG).';
 }
 
 header('Location: ../../frontend/mahasiswa/pendaftaran.php');

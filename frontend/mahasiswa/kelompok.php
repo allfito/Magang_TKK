@@ -60,13 +60,13 @@ require __DIR__ . '/header.php';
             <?php if ($existingKelompok): ?>
             <!-- Existing Kelompok View -->
             <div class="card">
-                <div class="card-header light"
+                <div class="card-header dark"
                     style="display:flex; align-items:center; justify-content:space-between; padding: 20px 28px;">
                     <div>
-                        <h3 style="font-size:18px; font-weight:700; color:#1C334D; margin-bottom:4px;">
+                        <h3 style="font-size:18px; font-weight:700; margin-bottom:4px;">
                             Anggota Kelompok
                         </h3>
-                        <p style="font-size:13px; color:#7B8FA1; margin:0;">
+                        <p style="font-size:13px; color:rgba(255,255,255,0.7); margin:0;">
                             Kelompok sudah terdaftar
                         </p>
                     </div>
@@ -97,16 +97,16 @@ require __DIR__ . '/header.php';
             <?php else: ?>
             <!-- Create New Kelompok -->
             <div class="card">
-                <div class="card-header light"
+                <div class="card-header dark"
                     style="display:flex; align-items:center; justify-content:space-between; padding: 20px 28px;">
                     <div>
-                        <h3 style="font-size:18px; font-weight:700; color:#1C334D; margin-bottom:4px;">Anggota Kelompok
+                        <h3 style="font-size:18px; font-weight:700; margin-bottom:4px;">Anggota Kelompok
                         </h3>
-                        <p style="font-size:13px; color:#7B8FA1; margin:0;">Minimal 3 orang, Maksimal 4 orang anggota.
+                        <p style="font-size:13px; color:rgba(255,255,255,0.7); margin:0;">Minimal 3 orang, Maksimal 4 orang anggota.
                         </p>
                     </div>
                     <button class="btn-tambah" id="btn-open-modal">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
                             <path
                                 d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                         </svg>
