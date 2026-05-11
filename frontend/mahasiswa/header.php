@@ -23,16 +23,8 @@ $extraHead = $extraHead ?? '';
 <body>
     <div class="dashboard-layout">
         <aside class="sidebar">
-            <a class="logo-container">
-                <div class="logo-icons">
-                    <div class="logo-icon y"></div>
-                    <div class="logo-icon b"></div>
-                    <div class="logo-icon c"></div>
-                </div>
-                <div class="logo-text-inner">
-                    <span class="logo-text-jti">JTI</span>
-                    <span class="logo-text-desc">JURUSAN<br>TEKNOLOGI<br>INFORMASI</span>
-                </div>
+            <a class="logo-container" style="display: flex; justify-content: center; align-items: center; padding: 20px 0;">
+                <img src="../../assets/logo-jti-new.svg" alt="Logo JTI" style="max-width: 80%; height: auto;">
             </a>
             <nav class="sidebar-nav">
                 <a href="dashboard.php" class="nav-item <?= $activePage === 'dashboard' ? 'active' : '' ?>">Dashboard</a>

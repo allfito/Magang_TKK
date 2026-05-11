@@ -13,25 +13,17 @@ $user = currentMahasiswa();
 $existingKelompok = null;
 $existingAnggota = [];
 
-$stmt = $mysqli->prepare('SELECT k.id, k.nama, k.status FROM kelompok k WHERE k.ketua_id = ? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT k.id, k.nama FROM kelompok k WHERE k.ketua_user_id = ? LIMIT 1');
 $stmt->bind_param('i', $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 if ($result && $result->num_rows > 0) {
     $existingKelompok = $result->fetch_assoc();
-} else {
-    $stmt = $mysqli->prepare('SELECT k.id, k.nama, k.status FROM anggota_kelompok ak JOIN kelompok k ON ak.kelompok_id = k.id WHERE ak.mahasiswa_id = ? LIMIT 1');
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result && $result->num_rows > 0) {
-        $existingKelompok = $result->fetch_assoc();
-    }
 }
 
 if ($existingKelompok) {
     $kelompokId = $existingKelompok['id'];
-    $stmt = $mysqli->prepare('SELECT nama, nim, no_tlp, peran, status_berkas FROM anggota_kelompok WHERE kelompok_id = ? ORDER BY peran ASC, created_at ASC');
+    $stmt = $mysqli->prepare('SELECT m.nama, m.nim, m.no_tlp, ak.peran, ak.status_berkas FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
     $stmt->bind_param('i', $kelompokId);
     $stmt->execute();
     $existingAnggota = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -64,7 +56,7 @@ require __DIR__ . '/header.php';
                     style="display:flex; align-items:center; justify-content:space-between; padding: 20px 28px;">
                     <div>
                         <h3 style="font-size:18px; font-weight:700; margin-bottom:4px;">
-                            Anggota Kelompok
+                            <?= htmlspecialchars($existingKelompok['nama']) ?>
                         </h3>
                         <p style="font-size:13px; color:rgba(255,255,255,0.7); margin:0;">
                             Kelompok sudah terdaftar
@@ -115,6 +107,10 @@ require __DIR__ . '/header.php';
                 </div>
 
                 <div class="card-body">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; font-weight:600; margin-bottom:8px;">Nama Kelompok <span style="color:#EA5455">*</span></label>
+                        <input type="text" id="input-nama-kelompok" placeholder="Masukkan nama kelompok..." style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                    </div>
                     <div class="member-grid" id="member-grid">
                         <!-- Slot 1: Ketua -->
                         <div class="member-grid-slot" id="slot-0">
@@ -270,8 +266,15 @@ require __DIR__ . '/header.php';
 
         // ── Submit group ──
         function submitGroup() {
-            if (memberCount < 2) {
-                alert('Minimal 2 anggota (ketua + 1 anggota)');
+            const namaKelompok = document.getElementById('input-nama-kelompok').value.trim();
+            if (!namaKelompok) {
+                alert('Nama kelompok wajib diisi!');
+                document.getElementById('input-nama-kelompok').focus();
+                return;
+            }
+
+            if (memberCount < 3) {
+                alert('Minimal 3 anggota (ketua + 2 anggota)');
                 return;
             }
 
@@ -289,7 +292,7 @@ require __DIR__ . '/header.php';
 
             // Populate hidden form
             const container = document.getElementById('form-anggota-container');
-            container.innerHTML = '';
+            container.innerHTML = `<input type="hidden" name="nama_kelompok" value="${namaKelompok}">`;
 
             members.forEach((member, index) => {
                 container.innerHTML += `

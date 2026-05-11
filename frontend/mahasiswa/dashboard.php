@@ -17,7 +17,7 @@ $userId = (int) $_SESSION['user_id'];
 $kelompok = null;
 $kelompokId = null;
 $isKetua = false;
-$stmt = $mysqli->prepare('SELECT k.id, k.nama, k.status, k.ketua_id, u.nama AS ketua_nama FROM kelompok k JOIN user u ON k.ketua_id = u.id WHERE k.ketua_id = ? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT k.id, k.nama, k.ketua_user_id, u.nama AS ketua_nama FROM kelompok k JOIN user u ON k.ketua_user_id = u.id WHERE k.ketua_user_id = ? LIMIT 1');
 $stmt->bind_param('i', $userId);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -25,22 +25,12 @@ if ($result && $result->num_rows > 0) {
     $kelompok = $result->fetch_assoc();
     $kelompokId = $kelompok['id'];
     $isKetua = true;
-} else {
-    // Cek sebagai anggota
-    $stmt = $mysqli->prepare('SELECT k.id, k.nama, k.status, k.ketua_id, u.nama AS ketua_nama FROM anggota_kelompok ak JOIN kelompok k ON ak.kelompok_id = k.id JOIN user u ON k.ketua_id = u.id WHERE ak.mahasiswa_id = ? LIMIT 1');
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result && $result->num_rows > 0) {
-        $kelompok = $result->fetch_assoc();
-        $kelompokId = $kelompok['id'];
-    }
 }
 
 // Get anggota list
 $anggotaList = [];
 if ($kelompokId) {
-    $stmt = $mysqli->prepare('SELECT ak.nama, ak.nim, ak.peran, ak.status_berkas FROM anggota_kelompok ak WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
+    $stmt = $mysqli->prepare('SELECT m.nama, m.nim, ak.peran, ak.status_berkas FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
     $stmt->bind_param('i', $kelompokId);
     $stmt->execute();
     $anggotaList = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -118,9 +108,9 @@ require __DIR__ . '/header.php';
 
             <!-- Welcome Card -->
             <div class="welcome-card">
-                <img src="../../assets/profile.png" alt="Profile" class="profile-img">
+                <img src="../../assets/default-avatar.svg" alt="Profile" class="profile-img">
                 <div class="welcome-text">
-                    <h2>Selamat datang, <?= $userName ?></h2>
+                    <h2>Selamat Datang, <?= $userName ?></h2>
                     <p><?= $userEmail ?></p>
                 </div>
             </div>
@@ -136,7 +126,6 @@ require __DIR__ . '/header.php';
                         <p>Kelompok: <?= htmlspecialchars($kelompok['nama']) ?></p>
                         <p>Ketua Kelompok: <?= htmlspecialchars($kelompok['ketua_nama']) ?><?= $isKetua ? ' (anda)' : '' ?></p>
                         <p>Jumlah anggota: <?= count($anggotaList) ?> orang</p>
-                        <p>Status Kelompok: <span class="badge badge-dark"><?= htmlspecialchars(ucfirst($kelompok['status'])) ?></span></p>
                     </div>
                     <div class="kel-action">
                         <button class="btn btn-dark" onclick="window.location.href='kelompok.php'">Kelola Kelompok</button>

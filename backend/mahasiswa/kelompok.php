@@ -14,9 +14,16 @@ if (!$userId || ($_SESSION['role'] ?? '') !== 'mahasiswa') {
 }
 
 $anggota = $_POST['anggota'] ?? [];
+$namaKelompok = trim($_POST['nama_kelompok'] ?? '');
 
-if (!is_array($anggota) || count($anggota) < 2 || count($anggota) > 4) {
-    $_SESSION['error'] = 'Kelompok harus terdiri dari 2 sampai 4 anggota.';
+if ($namaKelompok === '') {
+    $_SESSION['error'] = 'Nama kelompok wajib diisi.';
+    header('Location: ../../frontend/mahasiswa/kelompok.php');
+    exit;
+}
+
+if (!is_array($anggota) || count($anggota) < 3 || count($anggota) > 4) {
+    $_SESSION['error'] = 'Kelompok harus terdiri dari 3 sampai 4 anggota.';
     header('Location: ../../frontend/mahasiswa/kelompok.php');
     exit;
 }
@@ -38,13 +45,13 @@ foreach ($anggota as $index => $member) {
     ];
 }
 
-if (count($anggotaValid) < 2) {
-    $_SESSION['error'] = 'Setidaknya ketua dan satu anggota harus diisi dengan lengkap.';
+if (count($anggotaValid) < 3) {
+    $_SESSION['error'] = 'Setidaknya ketua dan dua anggota harus diisi dengan lengkap.';
     header('Location: ../../frontend/mahasiswa/kelompok.php');
     exit;
 }
 
-$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_id = ? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
 $stmt->bind_param('i', $userId);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -54,13 +61,12 @@ if ($result && $result->num_rows > 0) {
     exit;
 }
 
-// Auto-generate nama kelompok from ketua name
-$namaKelompok = 'Kelompok ' . $anggotaValid[0]['nama'];
+// Use the submitted nama kelompok
+// $namaKelompok is already populated and validated above
 
 $mysqli->begin_transaction();
 try {
-    // Set status langsung "aktif" karena tidak perlu verifikasi
-    $stmt = $mysqli->prepare('INSERT INTO kelompok (nama, ketua_id, status, created_at) VALUES (?, ?, "aktif", NOW())');
+    $stmt = $mysqli->prepare('INSERT INTO kelompok (nama, ketua_user_id, created_at) VALUES (?, ?, NOW())');
     $stmt->bind_param('si', $namaKelompok, $userId);
     if (! $stmt->execute()) {
         throw new RuntimeException('Gagal membuat kelompok: ' . $stmt->error);
@@ -70,14 +76,31 @@ try {
 
     foreach ($anggotaValid as $index => $member) {
         $peran = $index === 0 ? 'ketua' : 'anggota';
-        $mahasiswaId = $index === 0 ? $userId : null;
-        $email = ''; // email not required
+        $email = ''; // email not provided in form
 
-        $insert = $mysqli->prepare('INSERT INTO anggota_kelompok (kelompok_id, mahasiswa_id, nama, nim, email, no_tlp, peran, status_berkas, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, "pending", NOW())');
-        $insert->bind_param('iisssss', $kelompokId, $mahasiswaId, $member['nama'], $member['nim'], $email, $member['no_tlp'], $peran);
+        // Check if mahasiswa exists
+        $stmtMahasiswa = $mysqli->prepare('SELECT id FROM mahasiswa WHERE nim = ?');
+        $stmtMahasiswa->bind_param('s', $member['nim']);
+        $stmtMahasiswa->execute();
+        $resMahasiswa = $stmtMahasiswa->get_result();
+        
+        if ($resMahasiswa && $resMahasiswa->num_rows > 0) {
+            $mahasiswaId = $resMahasiswa->fetch_assoc()['id'];
+        } else {
+            // Insert new mahasiswa
+            $stmtInsertMhs = $mysqli->prepare('INSERT INTO mahasiswa (nim, nama, no_tlp, created_at) VALUES (?, ?, ?, NOW())');
+            $stmtInsertMhs->bind_param('sss', $member['nim'], $member['nama'], $member['no_tlp']);
+            if (! $stmtInsertMhs->execute()) {
+                throw new RuntimeException('Gagal menyimpan biodata mahasiswa: ' . $stmtInsertMhs->error);
+            }
+            $mahasiswaId = $stmtInsertMhs->insert_id;
+        }
+
+        $insert = $mysqli->prepare('INSERT INTO anggota_kelompok (kelompok_id, mahasiswa_id, peran, status_berkas, created_at) VALUES (?, ?, ?, "pending", NOW())');
+        $insert->bind_param('iis', $kelompokId, $mahasiswaId, $peran);
 
         if (! $insert->execute()) {
-            throw new RuntimeException('Gagal menyimpan anggota: ' . $insert->error);
+            throw new RuntimeException('Gagal menyimpan relasi anggota: ' . $insert->error);
         }
     }
 

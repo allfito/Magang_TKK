@@ -69,7 +69,7 @@ function getGroupsPendingVerification(): array
                 ELSE 'Info Kelompok'
             END AS jenis_verifikasi
             FROM kelompok k
-            JOIN user u ON k.ketua_id = u.id
+            JOIN user u ON k.ketua_user_id = u.id
             WHERE EXISTS(SELECT 1 FROM pendaftaran_lokasi pl WHERE pl.kelompok_id = k.id AND pl.status_verifikasi = 'menunggu')
                OR EXISTS(SELECT 1 FROM proposal pr WHERE pr.kelompok_id = k.id AND pr.status_verifikasi = 'menunggu')
                OR EXISTS(SELECT 1 FROM anggota_kelompok a JOIN berkas_anggota b ON a.id = b.anggota_id WHERE a.kelompok_id = k.id AND b.status_verifikasi = 'menunggu')
@@ -117,10 +117,11 @@ function getGroupsForLocationVerification(string $sortBy = 'tanggal_terbaru'): a
     }
     
     $sql = "SELECT pl.id AS lokasi_id, k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
-            pl.perusahaan, pl.bidang, pl.alamat, pl.nama_pimpinan, pl.telepon, pl.status_verifikasi, pl.created_at
+            p.nama AS perusahaan, p.bidang, p.alamat, p.nama_pimpinan, p.telepon, pl.status_verifikasi, pl.created_at
             FROM pendaftaran_lokasi pl
+            JOIN perusahaan p ON pl.perusahaan_id = p.id
             JOIN kelompok k ON pl.kelompok_id = k.id
-            JOIN user u ON k.ketua_id = u.id
+            JOIN user u ON k.ketua_user_id = u.id
             ORDER BY " . $orderBy;
     
     $result = $mysqli->query($sql);
@@ -158,7 +159,7 @@ function getGroupsForProposalVerification(string $sortBy = 'tanggal_terbaru'): a
             pr.file_path, pr.status_verifikasi, pr.created_at
             FROM proposal pr
             JOIN kelompok k ON pr.kelompok_id = k.id
-            JOIN user u ON k.ketua_id = u.id
+            JOIN user u ON k.ketua_user_id = u.id
             ORDER BY " . $orderBy;
     
     $result = $mysqli->query($sql);
@@ -204,7 +205,7 @@ function getGroupsForBerkasVerification(string $sortBy = 'tanggal_terbaru'): arr
             FROM anggota_kelompok a
             JOIN berkas_anggota b ON a.id = b.anggota_id
             JOIN kelompok k ON a.kelompok_id = k.id
-            JOIN user u ON k.ketua_id = u.id
+            JOIN user u ON k.ketua_user_id = u.id
             GROUP BY k.id, k.nama, u.id, u.nama
             ORDER BY " . $orderBy;
     
@@ -215,11 +216,12 @@ function getGroupsForBerkasVerification(string $sortBy = 'tanggal_terbaru'): arr
 function getBerkasByGroup(int $kelompokId): array
 {
     $mysqli = dbKoordinator();
-    $sql = "SELECT a.nama AS anggota_nama, a.nim, b.id AS berkas_id, b.jenis_berkas, b.file_path, b.status_verifikasi
+    $sql = "SELECT m.nama AS anggota_nama, m.nim, a.id AS anggota_id, b.id AS berkas_id, b.jenis_berkas, b.file_path, b.status_verifikasi
             FROM anggota_kelompok a
+            JOIN mahasiswa m ON a.mahasiswa_id = m.id
             JOIN berkas_anggota b ON a.id = b.anggota_id
             WHERE a.kelompok_id = ?
-            ORDER BY a.nama ASC, b.jenis_berkas ASC";
+            ORDER BY m.nama ASC, b.jenis_berkas ASC";
     $stmt = $mysqli->prepare($sql);
     $stmt->bind_param('i', $kelompokId);
     $stmt->execute();
@@ -254,10 +256,11 @@ function getGroupsForBuktiVerification(string $sortBy = 'tanggal_terbaru'): arra
     }
     
     $sql = "SELECT bd.id AS bukti_id, k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
-            bd.tempat_diterima, bd.file_path, bd.status_verifikasi, bd.created_at
+            p.nama AS tempat_diterima, bd.file_path, bd.status_verifikasi, bd.created_at
             FROM bukti_diterima bd
+            JOIN perusahaan p ON bd.perusahaan_id = p.id
             JOIN kelompok k ON bd.kelompok_id = k.id
-            JOIN user u ON k.ketua_id = u.id
+            JOIN user u ON k.ketua_user_id = u.id
             ORDER BY " . $orderBy;
     
     $result = $mysqli->query($sql);
@@ -281,19 +284,22 @@ function getGroupsForPlotting(string $sortBy = 'nama_a'): array
             $orderBy = "u.nama DESC";
             break;
         case 'status_selesai':
-            $orderBy = "CASE WHEN p.id IS NULL THEN 1 ELSE 0 END ASC, k.nama ASC";
+            $orderBy = "CASE WHEN pl.id IS NULL THEN 1 ELSE 0 END ASC, k.nama ASC";
             break;
     }
     
     $sql = "SELECT k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
-            COALESCE(p.lokasi, '') AS lokasi, COALESCE(p.dosen_pembimbing, '') AS dosen_pembimbing,
+            COALESCE(per.nama, '') AS lokasi, COALESCE(d.nama, '') AS dosen_pembimbing,
             COUNT(a.id) AS anggota_count,
-            CASE WHEN p.id IS NULL THEN 'menunggu' ELSE 'selesai' END AS status
+            CASE WHEN pl.id IS NULL THEN 'menunggu' ELSE 'selesai' END AS status
             FROM kelompok k
-            LEFT JOIN plotting p ON k.id = p.kelompok_id
+            LEFT JOIN plotting pl ON k.id = pl.kelompok_id
+            LEFT JOIN dosen d ON pl.dosen_id = d.id
+            LEFT JOIN pendaftaran_lokasi plok ON k.id = plok.kelompok_id
+            LEFT JOIN perusahaan per ON plok.perusahaan_id = per.id
             LEFT JOIN anggota_kelompok a ON a.kelompok_id = k.id
-            JOIN user u ON k.ketua_id = u.id
-            GROUP BY k.id, k.nama, u.id, u.nama, p.lokasi, p.dosen_pembimbing, p.id
+            JOIN user u ON k.ketua_user_id = u.id
+            GROUP BY k.id, k.nama, u.id, u.nama, per.nama, d.nama, pl.id
             ORDER BY " . $orderBy;
     
     $result = $mysqli->query($sql);
@@ -303,9 +309,10 @@ function getGroupsForPlotting(string $sortBy = 'nama_a'): array
 function getPlottingSummary(): array
 {
     $mysqli = dbKoordinator();
-    $sql = "SELECT p.dosen_pembimbing, COUNT(*) AS jumlah_kelompok
+    $sql = "SELECT d.nama AS dosen_pembimbing, COUNT(*) AS jumlah_kelompok
             FROM plotting p
-            GROUP BY p.dosen_pembimbing
+            JOIN dosen d ON p.dosen_id = d.id
+            GROUP BY d.nama
             ORDER BY jumlah_kelompok DESC";
     $result = $mysqli->query($sql);
     return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
@@ -352,22 +359,24 @@ function getCompleteGroupsData(string $sortBy = 'nama_a'): array
                 k.id AS kelompok_id,
                 k.nama AS kelompok_nama,
                 COUNT(DISTINCT a.id) AS jumlah_mhs,
-                GROUP_CONCAT(DISTINCT a.nama ORDER BY a.nama SEPARATOR ', ') AS nama_mahasiswa,
-                GROUP_CONCAT(DISTINCT a.nim ORDER BY a.nama SEPARATOR ', ') AS nim,
-                GROUP_CONCAT(DISTINCT a.no_tlp ORDER BY a.nama SEPARATOR ', ') AS no_hp,
-                COALESCE(MAX(pl.perusahaan), '-') AS lokasi_magang,
-                COALESCE(MAX(pl.alamat), '-') AS alamat_lengkap,
-                COALESCE(MAX(pl.latitude), '') AS latitude,
-                COALESCE(MAX(pl.longitude), '') AS longitude,
+                GROUP_CONCAT(DISTINCT m.nama ORDER BY m.nama SEPARATOR ', ') AS nama_mahasiswa,
+                GROUP_CONCAT(DISTINCT m.nim ORDER BY m.nama SEPARATOR ', ') AS nim,
+                GROUP_CONCAT(DISTINCT m.no_tlp ORDER BY m.nama SEPARATOR ', ') AS no_hp,
+                COALESCE(MAX(per.nama), '-') AS lokasi_magang,
+                COALESCE(MAX(per.alamat), '-') AS alamat_lengkap,
+                COALESCE(MAX(per.latitude), '') AS latitude,
+                COALESCE(MAX(per.longitude), '') AS longitude,
                 COALESCE(MAX(p.status_verifikasi), 'belum_upload') AS status_proposal,
                 MAX(u.nama) AS ketua_nama,
                 MAX(u.no_tlp) AS kontak_ketua,
                 MAX(u.email) AS email_ketua
             FROM kelompok k
             LEFT JOIN anggota_kelompok a ON k.id = a.kelompok_id
+            LEFT JOIN mahasiswa m ON a.mahasiswa_id = m.id
             LEFT JOIN pendaftaran_lokasi pl ON k.id = pl.kelompok_id
+            LEFT JOIN perusahaan per ON pl.perusahaan_id = per.id
             LEFT JOIN proposal p ON k.id = p.kelompok_id
-            JOIN user u ON k.ketua_id = u.id
+            JOIN user u ON k.ketua_user_id = u.id
             GROUP BY k.id, k.nama
             ORDER BY " . $orderBy;
     
@@ -381,4 +390,12 @@ function generateGoogleMapsLink(string $latitude, string $longitude): string
         return '-';
     }
     return "https://maps.google.com/?q={$latitude},{$longitude}";
+}
+
+function getAllDosen(): array
+{
+    $mysqli = dbKoordinator();
+    $sql = "SELECT nama FROM dosen ORDER BY nama ASC";
+    $result = $mysqli->query($sql);
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }

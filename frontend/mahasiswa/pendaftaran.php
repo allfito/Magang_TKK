@@ -9,8 +9,8 @@ require __DIR__ . '/header.php';
 $mysqli = require __DIR__ . '/../../backend/database.php';
 $userId = (int) $_SESSION['user_id'];
 $kelompokId = null;
-$stmt = $mysqli->prepare('SELECT k.id FROM kelompok k LEFT JOIN anggota_kelompok ak ON ak.kelompok_id = k.id AND ak.mahasiswa_id = ? WHERE k.ketua_id = ? OR ak.mahasiswa_id = ? LIMIT 1');
-$stmt->bind_param('iii', $userId, $userId, $userId);
+$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
+$stmt->bind_param('i', $userId);
 $stmt->execute();
 $r = $stmt->get_result()->fetch_assoc();
 if ($r) $kelompokId = (int) $r['id'];
@@ -23,12 +23,12 @@ $bukti = null;
 $plotting = null;
 
 if ($kelompokId) {
-    $stmt = $mysqli->prepare('SELECT id, nama, peran FROM anggota_kelompok WHERE kelompok_id = ? ORDER BY peran ASC, created_at ASC');
+    $stmt = $mysqli->prepare('SELECT ak.id, m.nama, ak.peran FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
     $stmt->bind_param('i', $kelompokId);
     $stmt->execute();
     $anggotaList = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    $stmt = $mysqli->prepare('SELECT * FROM pendaftaran_lokasi WHERE kelompok_id = ? LIMIT 1');
+    $stmt = $mysqli->prepare('SELECT p.nama AS perusahaan, p.nama_pimpinan, p.bidang, p.telepon, p.alamat, p.latitude, p.longitude, pl.status_verifikasi, pl.updated_at, pl.catatan FROM pendaftaran_lokasi pl JOIN perusahaan p ON pl.perusahaan_id = p.id WHERE pl.kelompok_id = ? LIMIT 1');
     $stmt->bind_param('i', $kelompokId);
     $stmt->execute();
     $lokasi = $stmt->get_result()->fetch_assoc();
@@ -38,12 +38,12 @@ if ($kelompokId) {
     $stmt->execute();
     $proposal = $stmt->get_result()->fetch_assoc();
 
-    $stmt = $mysqli->prepare('SELECT * FROM bukti_diterima WHERE kelompok_id = ? LIMIT 1');
+    $stmt = $mysqli->prepare('SELECT bd.id, p.nama AS tempat_diterima, bd.file_path, bd.status_verifikasi FROM bukti_diterima bd JOIN perusahaan p ON bd.perusahaan_id = p.id WHERE bd.kelompok_id = ? LIMIT 1');
     $stmt->bind_param('i', $kelompokId);
     $stmt->execute();
     $bukti = $stmt->get_result()->fetch_assoc();
 
-    $stmt = $mysqli->prepare('SELECT * FROM plotting WHERE kelompok_id = ? LIMIT 1');
+    $stmt = $mysqli->prepare('SELECT pl.id, d.nama AS dosen_pembimbing FROM plotting pl JOIN dosen d ON pl.dosen_id = d.id WHERE pl.kelompok_id = ? LIMIT 1');
     $stmt->bind_param('i', $kelompokId);
     $stmt->execute();
     $plotting = $stmt->get_result()->fetch_assoc();
@@ -51,14 +51,16 @@ if ($kelompokId) {
 
 $berkasData = [];
 $berkasFilePaths = [];
+$berkasStatusMap = [];
 $berkasUploadDate = null;
 if ($kelompokId) {
-    $bStmt = $mysqli->prepare('SELECT ba.anggota_id, ba.jenis_berkas, ba.file_path, ba.created_at FROM berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id WHERE ak.kelompok_id = ?');
+    $bStmt = $mysqli->prepare('SELECT ba.anggota_id, ba.jenis_berkas, ba.file_path, ba.status_verifikasi, ba.created_at FROM berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id WHERE ak.kelompok_id = ?');
     $bStmt->bind_param('i', $kelompokId);
     $bStmt->execute();
     foreach ($bStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $bRow) {
         $berkasData[$bRow['anggota_id']][$bRow['jenis_berkas']] = basename($bRow['file_path']);
         $berkasFilePaths[$bRow['anggota_id']][$bRow['jenis_berkas']] = $bRow['file_path'];
+        $berkasStatusMap[$bRow['anggota_id']][$bRow['jenis_berkas']] = $bRow['status_verifikasi'];
         // Track latest upload date
         if (!$berkasUploadDate || $bRow['created_at'] > $berkasUploadDate) {
             $berkasUploadDate = $bRow['created_at'];
@@ -342,7 +344,15 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             </div>
                                             <div class="info-field-item">
                                                 <span class="info-field-label">File</span>
-                                                <span class="info-field-value" id="v-file-proposal"><?= htmlspecialchars(basename($proposal['file_path'] ?? '-')) ?></span>
+                                                <span class="info-field-value" id="v-file-proposal" style="display:flex; align-items:center;">
+                                                    <?= htmlspecialchars(basename($proposal['file_path'] ?? '-')) ?>
+                                                    <?php if (!empty($proposal['file_path'])): ?>
+                                                    <a href="../../<?= htmlspecialchars($proposal['file_path']) ?>" target="_blank" style="margin-left: 10px; color: #10B981; text-decoration: none; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid #10B981; border-radius: 4px; background: #D1FAE5; transition: all 0.2s;">
+                                                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                                                        Lihat File
+                                                    </a>
+                                                    <?php endif; ?>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -543,10 +553,17 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                         <svg viewBox="0 0 24 24" fill="#7C83FD" width="22" height="22"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                                                     </div>
                                                     <div class="bak-card-name"><?= ($num+1) . '. ' . $berkasLabelsFull[$jenis] ?></div>
-                                                    <?php if ($hasFile): ?>
-                                                    <div class="bak-card-status bak-status-ok">
-                                                        <svg viewBox="0 0 24 24" fill="#28C76F" width="13" height="13"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                                                        Diunggah
+                                                    <?php if ($hasFile): 
+                                                        $fStatus = $berkasStatusMap[$anggota['id']][$jenis] ?? 'menunggu';
+                                                        $statusColor = ($fStatus === 'disetujui') ? '#28C76F' : (($fStatus === 'ditolak') ? '#EA5455' : '#FF9F43');
+                                                        $statusBg = ($fStatus === 'disetujui') ? '#D1FAE5' : (($fStatus === 'ditolak') ? '#FEE2E2' : '#FEF3C7');
+                                                        $statusIconPath = ($fStatus === 'disetujui') 
+                                                            ? 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z' 
+                                                            : (($fStatus === 'ditolak') ? 'M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z' : 'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z');
+                                                    ?>
+                                                    <div class="bak-card-status" style="color:<?= $statusColor ?>; border:1px solid <?= $statusColor ?>; background:<?= $statusBg ?>; display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600; margin-bottom:10px;">
+                                                        <svg viewBox="0 0 24 24" fill="<?= $statusColor ?>" width="13" height="13"><path d="<?= $statusIconPath ?>"/></svg>
+                                                        <?= ucfirst($fStatus) ?>
                                                     </div>
                                                     <a href="<?= htmlspecialchars($fileUrl) ?>" target="_blank" class="bak-card-action bak-action-view">
                                                         <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
@@ -656,7 +673,15 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             </div>
                                             <div class="info-field-item">
                                                 <span class="info-field-label">File Surat</span>
-                                                <span class="info-field-value" id="v-file-bukti"><?= htmlspecialchars(basename($bukti['file_path'] ?? '-')) ?></span>
+                                                <span class="info-field-value" id="v-file-bukti" style="display:flex; align-items:center;">
+                                                    <?= htmlspecialchars(basename($bukti['file_path'] ?? '-')) ?>
+                                                    <?php if (!empty($bukti['file_path'])): ?>
+                                                    <a href="../../<?= htmlspecialchars($bukti['file_path']) ?>" target="_blank" style="margin-left: 10px; color: #10B981; text-decoration: none; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid #10B981; border-radius: 4px; background: #D1FAE5; transition: all 0.2s;">
+                                                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                                                        Lihat File
+                                                    </a>
+                                                    <?php endif; ?>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -689,7 +714,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <?php endif; ?>
                             </div>
 
-                            <div class="t-body t-form" id="form-5" style="<?= ($step5Open && !$step5Done) ? '' : 'display: none;' ?>">
+                            <div class="t-body t-form" id="form-5" style="<?= ($step5Open) ? '' : 'display: none;' ?>">
                                 <?php if (!$step5Done): ?>
                                 <div style="background: #F8F9FA; padding: 20px; border-radius: 8px;">
                                     <p style="margin-bottom: 10px;">Status Plotting: <span
@@ -703,7 +728,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <div style="background: #F8F9FA; padding: 20px; border-radius: 8px;">
                                     <p style="margin-bottom: 10px;">Status Plotting: <span
                                             style="background: #28C76F; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Selesai</span></p>
-                                    <p style="font-size: 14px; margin-bottom: 5px;">Dosen Pembimbing: <strong><?= htmlspecialchars($plotting['dosen_pembimbing']) ?></strong></p>
+                                    <p style="font-size: 14px; margin-bottom: 5px;">Dosen Pembimbing: <strong><?= htmlspecialchars($plotting['dosen_pembimbing'] ?? 'Belum ditentukan') ?></strong></p>
                                 </div>
                                 <?php endif; ?>
                             </div>

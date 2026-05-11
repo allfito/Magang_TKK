@@ -23,11 +23,12 @@
                         <option value="ketua_z" <?= $sortBy === 'ketua_z' ? 'selected' : '' ?>>👤 Nama Ketua (Z-A)</option>
                         <option value="status_menunggu" <?= $sortBy === 'status_menunggu' ? 'selected' : '' ?>>⏳ Status Menunggu Duluan</option>
                     </select>
+                    <input type="text" id="search-lokasi" placeholder="Cari lokasi..." style="padding: 6px 10px; border: 1px solid #DDEAF5; border-radius: 4px; font-size: 13px; font-family: 'Inter', sans-serif;"/>
                 </div>
                 
                 <div class="card">
                     <div class="card-body p-0">
-                        <table class="table" style="font-size: 13px;">
+                        <table id="tabel-lokasi" class="table" style="font-size: 13px;">
                             <thead>
                                 <tr>
                                     <th>Kelompok & Ketua</th>

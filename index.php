@@ -17,18 +17,8 @@
     <div class="background-container"></div>
 
     <header class="navbar">
-        <a href="index.php" class="logo-container">
-            <div class="logo-icons">
-                <div class="logo-icon y"></div>
-                <div class="logo-icon b"></div>
-                <div class="logo-icon c"></div>
-            </div>
-            <div class="logo-text">
-                <span class="logo-text-inner">
-                    <span class="logo-text-jti">JTI</span>
-                    <span class="logo-text-desc">JURUSAN<br>TEKNOLOGI<br>INFORMASI</span>
-                </span>
-            </div>
+        <a href="index.php" class="logo-container" style="display: flex; align-items: center;">
+            <img src="assets/logo-jti-new.svg" alt="Logo JTI" style="height: 40px; width: auto;">
         </a>
         <div class="nav-links">
             <a href="frontend/auth/login.php" id="link-login">Login</a>

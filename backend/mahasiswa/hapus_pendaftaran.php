@@ -15,13 +15,13 @@ if (!$userId || ($_SESSION['role'] ?? '') !== 'mahasiswa') {
 
 $type = $_POST['type'] ?? '';
 
-// Get kelompok ID
-$stmt = $mysqli->prepare('SELECT k.id FROM kelompok k LEFT JOIN anggota_kelompok ak ON ak.kelompok_id = k.id AND ak.mahasiswa_id = ? WHERE k.ketua_id = ? OR ak.mahasiswa_id = ? LIMIT 1');
-$stmt->bind_param('iii', $userId, $userId, $userId);
+// Get kelompok ID (hanya ketua)
+$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
+$stmt->bind_param('i', $userId);
 $stmt->execute();
 $kel = $stmt->get_result()->fetch_assoc();
 if (!$kel) {
-    $_SESSION['error'] = 'Anda belum memiliki kelompok.';
+    $_SESSION['error'] = 'Anda belum memiliki kelompok atau bukan ketua.';
     header('Location: ../../frontend/mahasiswa/pendaftaran.php');
     exit;
 }

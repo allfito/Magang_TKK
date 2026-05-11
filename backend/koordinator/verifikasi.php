@@ -53,6 +53,20 @@ switch ($type) {
         $redirectPage = 'verifikasi_berkas.php';
         break;
 
+    case 'berkas_mahasiswa':
+        // Update all berkas for the given anggota_id
+        $stmt = $mysqli->prepare('UPDATE berkas_anggota SET status_verifikasi = ? WHERE anggota_id = ?');
+        $stmt->bind_param('si', $action, $id);
+        
+        // Also update anggota_kelompok status_berkas
+        $berkasStatus = ($action === 'disetujui') ? 'lengkap' : 'belum';
+        $stmt2 = $mysqli->prepare('UPDATE anggota_kelompok SET status_berkas = ? WHERE id = ?');
+        $stmt2->bind_param('si', $berkasStatus, $id);
+        $stmt2->execute();
+        
+        $redirectPage = 'verifikasi_berkas.php';
+        break;
+
     case 'berkas_satuan':
         $stmt = $mysqli->prepare('UPDATE berkas_anggota SET status_verifikasi = ? WHERE id = ?');
         $stmt->bind_param('si', $action, $id);

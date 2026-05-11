@@ -27,13 +27,13 @@ if ($perusahaan === '' || $namaPimpinan === '' || $bidang === '' || $telepon ===
     exit;
 }
 
-// Cari kelompok milik user (sebagai ketua atau anggota)
-$stmt = $mysqli->prepare('SELECT k.id FROM kelompok k LEFT JOIN anggota_kelompok ak ON ak.kelompok_id = k.id AND ak.mahasiswa_id = ? WHERE k.ketua_id = ? OR ak.mahasiswa_id = ? LIMIT 1');
-$stmt->bind_param('iii', $userId, $userId, $userId);
+// Cari kelompok milik user (hanya ketua yang bisa)
+$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
+$stmt->bind_param('i', $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 if (! $result || $result->num_rows === 0) {
-    $_SESSION['error'] = 'Anda belum memiliki kelompok.';
+    $_SESSION['error'] = 'Anda belum memiliki kelompok atau bukan ketua.';
     header('Location: ../../frontend/mahasiswa/pendaftaran.php');
     exit;
 }
@@ -50,10 +50,25 @@ if ($stmt->get_result()->num_rows > 0) {
     exit;
 }
 
-$stmt = $mysqli->prepare('INSERT INTO pendaftaran_lokasi (kelompok_id, perusahaan, nama_pimpinan, bidang, telepon, alamat, latitude, longitude, status_verifikasi, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, "menunggu", NOW())');
-$stmt->bind_param('isssssss', $kelompokId, $perusahaan, $namaPimpinan, $bidang, $telepon, $alamat, $latitude, $longitude);
-if (! $stmt->execute()) {
-    $_SESSION['error'] = 'Gagal menyimpan pendaftaran lokasi: ' . $stmt->error;
+$mysqli->begin_transaction();
+try {
+    $stmtP = $mysqli->prepare('INSERT INTO perusahaan (nama, nama_pimpinan, bidang, telepon, alamat, latitude, longitude, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())');
+    $stmtP->bind_param('sssssss', $perusahaan, $namaPimpinan, $bidang, $telepon, $alamat, $latitude, $longitude);
+    if (! $stmtP->execute()) {
+        throw new Exception('Gagal menyimpan perusahaan: ' . $stmtP->error);
+    }
+    $perusahaanId = $stmtP->insert_id;
+
+    $stmtL = $mysqli->prepare('INSERT INTO pendaftaran_lokasi (kelompok_id, perusahaan_id, status_verifikasi, created_at) VALUES (?, ?, "menunggu", NOW())');
+    $stmtL->bind_param('ii', $kelompokId, $perusahaanId);
+    if (! $stmtL->execute()) {
+        throw new Exception('Gagal menyimpan pendaftaran lokasi: ' . $stmtL->error);
+    }
+
+    $mysqli->commit();
+} catch (Exception $e) {
+    $mysqli->rollback();
+    $_SESSION['error'] = $e->getMessage();
     header('Location: ../../frontend/mahasiswa/pendaftaran.php');
     exit;
 }

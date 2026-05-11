@@ -13,7 +13,7 @@ $pendingGroups = getGroupsPendingVerification();
 
                 <!-- Welcome Card -->
                 <div class="welcome-card">
-                    <img src="../../assets/profile.png" alt="Profile Koordinator" class="profile-img">
+                    <img src="../../assets/default-avatar.svg" alt="Profile" class="profile-img">
                     <div class="welcome-text">
                         <h2>Selamat datang, Pak Sultan</h2>
                         <p>Koordinator Bidang &ndash; Teknik Komputer</p>

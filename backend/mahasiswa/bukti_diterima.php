@@ -31,12 +31,12 @@ if (!in_array($file['type'], $allowedTypes, true) || $file['size'] > $maxSize) {
     exit;
 }
 
-$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_id = ? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
 $stmt->bind_param('i', $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 if (! $result || $result->num_rows === 0) {
-    $_SESSION['error'] = 'Anda belum memiliki kelompok.';
+    $_SESSION['error'] = 'Anda belum memiliki kelompok atau bukan ketua.';
     header('Location: ../../frontend/mahasiswa/pendaftaran.php');
     exit;
 }
@@ -59,10 +59,37 @@ if (! move_uploaded_file($file['tmp_name'], $filepath)) {
 }
 
 $relativePath = 'uploads/bukti/' . $filename;
-$stmt = $mysqli->prepare('INSERT INTO bukti_diterima (kelompok_id, tempat_diterima, file_path, status_verifikasi, created_at) VALUES (?, ?, ?, "menunggu", NOW())');
-$stmt->bind_param('iss', $kelompokId, $tempatDiterima, $relativePath);
-if (! $stmt->execute()) {
-    $_SESSION['error'] = 'Gagal menyimpan bukti diterima: ' . $stmt->error;
+
+$mysqli->begin_transaction();
+try {
+    // Check if perusahaan exists, if not insert
+    $stmtP = $mysqli->prepare('SELECT id FROM perusahaan WHERE nama = ? LIMIT 1');
+    $stmtP->bind_param('s', $tempatDiterima);
+    $stmtP->execute();
+    $resP = $stmtP->get_result();
+    
+    if ($resP && $resP->num_rows > 0) {
+        $perusahaanId = $resP->fetch_assoc()['id'];
+    } else {
+        $empty = '';
+        $stmtInsert = $mysqli->prepare('INSERT INTO perusahaan (nama, nama_pimpinan, bidang, telepon, alamat, created_at) VALUES (?, ?, ?, ?, ?, NOW())');
+        $stmtInsert->bind_param('sssss', $tempatDiterima, $empty, $empty, $empty, $empty);
+        if (!$stmtInsert->execute()) {
+            throw new Exception('Gagal menyimpan nama perusahaan: ' . $stmtInsert->error);
+        }
+        $perusahaanId = $stmtInsert->insert_id;
+    }
+
+    $stmt = $mysqli->prepare('INSERT INTO bukti_diterima (kelompok_id, perusahaan_id, file_path, status_verifikasi, created_at) VALUES (?, ?, ?, "menunggu", NOW())');
+    $stmt->bind_param('iis', $kelompokId, $perusahaanId, $relativePath);
+    if (! $stmt->execute()) {
+        throw new Exception('Gagal menyimpan bukti diterima: ' . $stmt->error);
+    }
+
+    $mysqli->commit();
+} catch (Exception $e) {
+    $mysqli->rollback();
+    $_SESSION['error'] = $e->getMessage();
     header('Location: ../../frontend/mahasiswa/pendaftaran.php');
     exit;
 }

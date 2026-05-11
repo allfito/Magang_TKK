@@ -37,12 +37,12 @@ if ($file['size'] > $maxSize) {
     exit;
 }
 
-$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_id = ? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
 $stmt->bind_param('i', $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 if (! $result || $result->num_rows === 0) {
-    $_SESSION['error'] = 'Anda belum memiliki kelompok.';
+    $_SESSION['error'] = 'Anda belum memiliki kelompok atau bukan ketua.';
     header('Location: ../../frontend/mahasiswa/pendaftaran.php');
     exit;
 }

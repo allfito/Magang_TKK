@@ -23,6 +23,7 @@
                         <option value="ketua_z" <?= $sortBy === 'ketua_z' ? 'selected' : '' ?>>👤 Nama Ketua (Z-A)</option>
                         <option value="status_menunggu" <?= $sortBy === 'status_menunggu' ? 'selected' : '' ?>>⏳ Status Menunggu Duluan</option>
                     </select>
+                    <input type="text" id="search-berkas" placeholder="Cari berkas..." style="padding: 6px 10px; border: 1px solid #DDEAF5; border-radius: 4px; font-size: 13px; font-family: 'Inter', sans-serif;" />
                 </div>
                 
                 <?php if (empty($berkasGroups)): ?>
@@ -73,8 +74,25 @@
                                                     <i class="fas fa-user-circle" style="color: #0EA5E9; font-size: 16px;"></i>
                                                     <h4 style="margin: 0; font-size: 14px; color: #334155; font-weight: 600;"><?= htmlspecialchars($mahasiswa) ?></h4>
                                                 </div>
-                                                <div style="display: flex; align-items: center; gap: 6px;">
-                                                    <i class="fas fa-chevron-down" style="color: #64748B; transition: transform 0.3s ease; display: inline-block;"></i>
+                                                <div style="display: flex; align-items: center; gap: 15px;">
+                                                    <?php $anggotaId = $files[0]['anggota_id']; ?>
+                                                    <div style="display:flex; gap:8px;">
+                                                        <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                            <input type="hidden" name="type" value="berkas_mahasiswa">
+                                                            <input type="hidden" name="id" value="<?= $anggotaId ?>">
+                                                            <input type="hidden" name="action" value="disetujui">
+                                                            <button type="submit" class="btn" style="background:#D1FAE5; color:#10B981; padding:4px 10px; font-size:12px; font-weight:600; border-radius:4px; border:1px solid #10B981; cursor:pointer;" onclick="event.stopPropagation();">Setuju Semua</button>
+                                                        </form>
+                                                        <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                            <input type="hidden" name="type" value="berkas_mahasiswa">
+                                                            <input type="hidden" name="id" value="<?= $anggotaId ?>">
+                                                            <input type="hidden" name="action" value="ditolak">
+                                                            <button type="submit" class="btn" style="background:#FEE2E2; color:#EF4444; padding:4px 10px; font-size:12px; font-weight:600; border-radius:4px; border:1px solid #EF4444; cursor:pointer;" onclick="event.stopPropagation();">Tolak Semua</button>
+                                                        </form>
+                                                    </div>
+                                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                                        <i class="fas fa-chevron-down" style="color: #64748B; transition: transform 0.3s ease; display: inline-block;"></i>
+                                                    </div>
                                                 </div>
                                             </summary>
                                             <div style="padding: 0;">

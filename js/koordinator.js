@@ -310,18 +310,10 @@ function renderRekapDosen() {
 
     const dosenNames = Object.keys(beban).filter(n => n && n !== '-' && n !== 'Belum ditentukan');
     
-    const defaultDosen = [
-        'Dr. Budi Santoso, M.Kom',
-        'Ir. Siti Rahayu, M.T',
-        'Prof. Ahmad Fauzi, Ph.D',
-        'Dra. Rina Wulandari, M.Si',
-        'Dr. Hendra Kurniawan, M.Kom',
-        'Ir. Dewi Lestari, M.T',
-        'Dr. Fajar Nugroho, M.Sc',
-        'Drs. Yusuf Hidayat, M.Pd'
-    ];
+    const datalistOptions = document.querySelectorAll('#dosen-list option');
+    const allDosenDB = Array.from(datalistOptions).map(opt => opt.value);
     
-    const allDosen = [...new Set([...defaultDosen, ...dosenNames])];
+    const allDosen = [...new Set([...allDosenDB, ...dosenNames])];
 
     container.innerHTML = allDosen.map(nama => {
         const jml   = beban[nama] || 0;
@@ -421,6 +413,46 @@ function showToast(message, type) {
 document.addEventListener('DOMContentLoaded', () => {
     highlightCurrentNav();
     renderRekapDosen();
+    // Initialize search filters for all verification tables
+    // Bukti
+    const searchBukti = document.getElementById('search-bukti');
+    if (searchBukti) {
+        searchBukti.addEventListener('input', () => filterTable('#tabel-bukti', searchBukti.value));
+    }
+    // Lokasi
+    const searchLokasi = document.getElementById('search-lokasi');
+    if (searchLokasi) {
+        searchLokasi.addEventListener('input', () => filterTable('#tabel-lokasi', searchLokasi.value));
+    }
+    // Proposal
+    const searchProposal = document.getElementById('search-proposal');
+    if (searchProposal) {
+        searchProposal.addEventListener('input', () => filterTable('#tabel-proposal', searchProposal.value));
+    }
+    // Berkas (filter group cards)
+    const searchBerkas = document.getElementById('search-berkas');
+    if (searchBerkas) {
+        searchBerkas.addEventListener('input', () => filterBerkasDetails(searchBerkas.value));
+    }
+    // Generic table filter function
+    function filterTable(tableSelector, query) {
+        const q = query.toLowerCase();
+        const rows = document.querySelectorAll(`${tableSelector} tbody tr`);
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(q) ? '' : 'none';
+        });
+    }
+    // Berkas details filter
+    function filterBerkasDetails(query) {
+        const q = query.toLowerCase();
+        const cards = document.querySelectorAll('details.grupo-dropdown');
+        cards.forEach(card => {
+            const summary = card.querySelector('summary');
+            const text = summary ? summary.textContent.toLowerCase() : '';
+            card.style.display = text.includes(q) ? '' : 'none';
+        });
+    }
 });
 
 function highlightCurrentNav() {

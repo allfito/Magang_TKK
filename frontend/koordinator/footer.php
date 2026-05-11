@@ -60,27 +60,11 @@
                         <input type="text" id="plot-dosen" name="dosen_pembimbing" class="plot-select" list="dosen-list" placeholder="Ketik atau pilih dosen pembimbing..." oninput="tampilInfoDosen()" required>
                         <datalist id="dosen-list">
                             <?php 
-                            $defaultDosen = [
-                                'Dr. Budi Santoso, M.Kom',
-                                'Ir. Siti Rahayu, M.T',
-                                'Prof. Ahmad Fauzi, Ph.D',
-                                'Dra. Rina Wulandari, M.Si',
-                                'Dr. Hendra Kurniawan, M.Kom',
-                                'Ir. Dewi Lestari, M.T',
-                                'Dr. Fajar Nugroho, M.Sc',
-                                'Drs. Yusuf Hidayat, M.Pd'
-                            ];
-                            $allDosenList = $defaultDosen;
-                            if (isset($plottingSummary)) {
-                                foreach ($plottingSummary as $s) {
-                                    if (!in_array($s['dosen_pembimbing'], $allDosenList) && !empty($s['dosen_pembimbing'])) {
-                                        $allDosenList[] = $s['dosen_pembimbing'];
-                                    }
-                                }
+                            $allDosen = getAllDosen();
+                            foreach ($allDosen as $d) {
+                                echo '<option value="' . htmlspecialchars($d['nama']) . '">';
                             }
-                            foreach ($allDosenList as $d): ?>
-                                <option value="<?= htmlspecialchars($d) ?>">
-                            <?php endforeach; ?>
+                            ?>
                         </datalist>
                         <!-- Info beban dosen -->
                         <div id="dosen-info-box" class="dosen-info-box" style="display:none;">
@@ -114,6 +98,26 @@
                 <button class="btn-setuju-modal" id="detail-to-plot-btn" onclick="lanjutPlotDariDetail()">&#9998; Plot
                     Kelompok Ini</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Dosen -->
+    <div id="modal-tambah-dosen" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-box" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Tambah Dosen Baru</h3>
+                <button class="modal-close" onclick="document.getElementById('modal-tambah-dosen').style.display='none'">&times;</button>
+            </div>
+            <form method="POST" action="../../backend/koordinator/tambah_dosen.php">
+                <div class="modal-body">
+                    <label style="display:block; margin-bottom:8px; font-size:14px; font-weight:500;">Nama Lengkap (beserta gelar)</label>
+                    <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Budi Santoso, M.Kom" style="width:100%; padding:8px 12px; border:1px solid #CBD5E1; border-radius:6px; font-family: 'Inter', sans-serif;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-batal-modal" onclick="document.getElementById('modal-tambah-dosen').style.display='none'">Batal</button>
+                    <button type="submit" class="btn-setuju-modal" style="background:#10B981; border:none;">&#43; Tambah Dosen</button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -28,7 +28,8 @@ $plottingSummary = getPlottingSummary();
                             onclick="filterStatus('menunggu', this)">Belum Diplot</button>
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
-                        <label for="sort-plotting" style="font-size: 13px; font-weight: 600; color: #334155; white-space: nowrap;">Urutkan:</label>
+                        <button class="btn" style="background:#10B981; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;" onclick="document.getElementById('modal-tambah-dosen').style.display='flex'">&#43; Tambah Dosen</button>
+                        <label for="sort-plotting" style="font-size: 13px; font-weight: 600; color: #334155; white-space: nowrap; margin-left: 10px;">Urutkan:</label>
                         <select id="sort-plotting" onchange="changeSortPage(this.value)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none;">
                             <option value="nama_a" <?= $sortBy === 'nama_a' ? 'selected' : '' ?>>📖 Nama Kelompok (A-Z)</option>
                             <option value="nama_z" <?= $sortBy === 'nama_z' ? 'selected' : '' ?>>📖 Nama Kelompok (Z-A)</option>
