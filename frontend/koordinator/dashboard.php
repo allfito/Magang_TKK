@@ -1,11 +1,11 @@
 <?php include 'header.php'; ?>
 <?php
-$activeCount = getActiveGroupCount();
-$pendingLocationCount = getPendingLocationCount();
-$pendingProposalCount = getPendingProposalCount();
-$pendingBerkasCount = getPendingBerkasCount();
-$pendingBuktiCount = getPendingBuktiCount();
-$pendingGroups = getGroupsPendingVerification();
+$activeCount = KoordinatorHelper::getActiveGroupCount();
+$pendingLocationCount = KoordinatorHelper::getPendingLocationCount();
+$pendingProposalCount = KoordinatorHelper::getPendingProposalCount();
+$pendingBerkasCount = KoordinatorHelper::getPendingBerkasCount();
+$pendingBuktiCount = KoordinatorHelper::getPendingBuktiCount();
+$pendingGroups = KoordinatorHelper::getGroupsPendingVerification();
 ?>
 
             <!-- PAGE: Dashboard -->
@@ -78,7 +78,7 @@ $pendingGroups = getGroupsPendingVerification();
                                     <tr>
                                         <td><?= htmlspecialchars($group['kelompok_nama']) ?></td>
                                         <td><?= htmlspecialchars($group['ketua_nama']) ?></td>
-                                        <td><?= (int) getMembersCount($group['kelompok_id']) ?></td>
+                                        <td><?= (int) KoordinatorHelper::getMembersCount($group['kelompok_id']) ?></td>
                                         <td><?= htmlspecialchars($group['jenis_verifikasi']) ?></td>
                                         <td><span class="badge badge-warning">Menunggu</span></td>
                                         <td><button class="btn-verifikasi" onclick="window.location.href='<?= $redirectPage ?>'">Verifikasi</button></td>

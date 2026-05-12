@@ -1,8 +1,8 @@
 <?php include 'header.php'; ?>
 <?php
 $sortBy = $_GET['sort'] ?? 'nama_a';
-$plottingGroups = getGroupsForPlotting($sortBy);
-$plottingSummary = getPlottingSummary();
+$plottingGroups = KoordinatorHelper::getGroupsForPlotting($sortBy);
+$plottingSummary = KoordinatorHelper::getPlottingSummary();
 ?>
 
             <!-- PAGE: Plotting -->
@@ -61,7 +61,7 @@ $plottingSummary = getPlottingSummary();
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($plottingGroups as $group): ?>
-                                        <?php $statusClass = statusBadgeClass($group['status']); ?>
+                                        <?php $statusClass = KoordinatorHelper::statusBadgeClass($group['status']); ?>
                                         <tr>
                                             <td><?= htmlspecialchars($group['kelompok_nama']) ?></td>
                                             <td><?= htmlspecialchars($group['ketua_nama']) ?></td>

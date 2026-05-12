@@ -1,7 +1,7 @@
 <?php include 'header.php'; ?>
 <?php 
     $sortBy = $_GET['sort'] ?? 'tanggal_terbaru';
-    $locations = getGroupsForLocationVerification($sortBy); 
+    $locations = KoordinatorHelper::getGroupsForLocationVerification($sortBy); 
 ?>
 
             <!-- PAGE: Verifikasi Lokasi -->
@@ -45,12 +45,12 @@
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($locations as $location): ?>
-                                        <?php $statusClass = statusBadgeClass($location['status_verifikasi']); ?>
+                                        <?php $statusClass = KoordinatorHelper::statusBadgeClass($location['status_verifikasi']); ?>
                                         <tr>
                                             <td>
                                                 <strong style="display:block; margin-bottom: 4px; font-size: 14px; color: #1E293B;"><?= htmlspecialchars($location['kelompok_nama']) ?></strong>
                                                 <span style="color: #64748B;">Ketua: <?= htmlspecialchars($location['ketua_nama']) ?></span><br>
-                                                <span style="color: #94A3B8; font-size: 11px;">Diajukan: <?= htmlspecialchars(formatDateIndo($location['created_at'])) ?></span>
+                                                <span style="color: #94A3B8; font-size: 11px;">Diajukan: <?= htmlspecialchars(KoordinatorHelper::formatDateIndo($location['created_at'])) ?></span>
                                             </td>
                                             <td>
                                                 <strong style="display:block; margin-bottom: 4px; color: #1E293B;"><?= htmlspecialchars($location['perusahaan']) ?></strong>
@@ -68,13 +68,13 @@
                                             <td><span class="badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($location['status_verifikasi'])) ?></span></td>
                                             <td>
                                                 <div style="display:flex; flex-direction:column; gap:8px;">
-                                                    <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                    <form method="POST" action="../../backend/actions/koordinator_verifikasi.php" style="margin:0;">
                                                         <input type="hidden" name="type" value="lokasi">
                                                         <input type="hidden" name="id" value="<?= $location['lokasi_id'] ?>">
                                                         <input type="hidden" name="action" value="disetujui">
                                                         <button type="submit" class="btn" style="width: 100%; background: #D1FAE5; color: #10B981; padding: 6px 12px; font-size: 12px;" <?= $location['status_verifikasi'] === 'disetujui' ? 'disabled' : '' ?>>Setuju</button>
                                                     </form>
-                                                    <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                    <form method="POST" action="../../backend/actions/koordinator_verifikasi.php" style="margin:0;">
                                                         <input type="hidden" name="type" value="lokasi">
                                                         <input type="hidden" name="id" value="<?= $location['lokasi_id'] ?>">
                                                         <input type="hidden" name="action" value="ditolak">

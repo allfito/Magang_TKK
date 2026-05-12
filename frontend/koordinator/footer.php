@@ -36,7 +36,7 @@
                 <h3 id="plot-modal-title">Plotting Kelompok</h3>
                 <button class="modal-close" onclick="tutupModalPlotBtn()">&times;</button>
             </div>
-            <form method="POST" action="../../backend/koordinator/plotting.php">
+            <form method="POST" action="../../backend/actions/koordinator_plotting.php">
                 <input type="hidden" name="kelompok_id" id="plot-kelompok-id">
                 <div class="modal-body">
                     <div class="modal-info-strip">
@@ -60,7 +60,7 @@
                         <input type="text" id="plot-dosen" name="dosen_pembimbing" class="plot-select" list="dosen-list" placeholder="Ketik atau pilih dosen pembimbing..." oninput="tampilInfoDosen()" required>
                         <datalist id="dosen-list">
                             <?php 
-                            $allDosen = getAllDosen();
+                            $allDosen = KoordinatorHelper::getAllDosen();
                             foreach ($allDosen as $d) {
                                 echo '<option value="' . htmlspecialchars($d['nama']) . '">';
                             }
@@ -108,7 +108,7 @@
                 <h3>Tambah Dosen Baru</h3>
                 <button class="modal-close" onclick="document.getElementById('modal-tambah-dosen').style.display='none'">&times;</button>
             </div>
-            <form method="POST" action="../../backend/koordinator/tambah_dosen.php">
+            <form method="POST" action="../../backend/actions/koordinator_tambah_dosen.php">
                 <div class="modal-body">
                     <label style="display:block; margin-bottom:8px; font-size:14px; font-weight:500;">Nama Lengkap (beserta gelar)</label>
                     <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Budi Santoso, M.Kom" style="width:100%; padding:8px 12px; border:1px solid #CBD5E1; border-radius:6px; font-family: 'Inter', sans-serif;">
@@ -121,6 +121,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoA6DQD021o6FfQ2z9F3/jzQOf/0C1CmZ5l5q2Q8Qw9TGTg" crossorigin="anonymous"></script>
     <script src="../../js/koordinator.js"></script>
 </body>
 

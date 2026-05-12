@@ -1,9 +1,9 @@
 <?php
-include 'functions.php';
+require_once __DIR__ . '/../../backend/helpers/KoordinatorHelper.php';
 
 // Check if export is requested
 if ($_GET['action'] === 'export_excel') {
-    $data = getCompleteGroupsData();
+    $data = KoordinatorHelper::getCompleteGroupsData();
     
     // Set headers for Excel download
     header('Content-Type: application/vnd.ms-excel; charset=utf-8');
@@ -31,7 +31,7 @@ if ($_GET['action'] === 'export_excel') {
     
     // Output data rows
     foreach ($data as $row) {
-        $googleMapsLink = generateGoogleMapsLink($row['latitude'], $row['longitude']);
+        $googleMapsLink = KoordinatorHelper::generateGoogleMapsLink($row['latitude'], $row['longitude']);
         $proposalStatus = ucfirst(str_replace('_', ' ', $row['status_proposal']));
         $kontakPerson = $row['ketua_nama'] . ' (' . $row['kontak_ketua'] . ', ' . $row['email_ketua'] . ')';
         

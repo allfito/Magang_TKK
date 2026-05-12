@@ -1,7 +1,7 @@
 <?php include 'header.php'; ?>
 <?php 
     $sortBy = $_GET['sort'] ?? 'tanggal_terbaru';
-    $berkasGroups = getGroupsForBerkasVerification($sortBy); 
+    $berkasGroups = KoordinatorHelper::getGroupsForBerkasVerification($sortBy); 
 ?>
 
             <!-- PAGE: Verifikasi Berkas -->
@@ -34,7 +34,7 @@
                     </div>
                 <?php else: ?>
                     <?php foreach ($berkasGroups as $berkas): ?>
-                        <?php $statusClass = statusBadgeClass($berkas['status']); ?>
+                        <?php $statusClass = KoordinatorHelper::statusBadgeClass($berkas['status']); ?>
                         <details class="card grupo-dropdown" style="margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 2px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                             <summary class="card-header-plain" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px; background: linear-gradient(90deg, #F8FBFE 0%, #F1F5F9 100%); cursor: pointer; outline: none; list-style: none; transition: all 0.25s ease; border-radius: 6px; margin: 2px;">
                                 <div style="flex: 1;">
@@ -44,7 +44,7 @@
                                     </div>
                                     <span style="font-size:13px; color:#64748B; display: block; margin-left: 26px;">
                                         Ketua: <strong><?= htmlspecialchars($berkas['ketua_nama']) ?></strong> &bull; 
-                                        Tanggal Upload: <?= htmlspecialchars(formatDateIndo($berkas['tanggal_upload'])) ?> &bull; 
+                                        Tanggal Upload: <?= htmlspecialchars(KoordinatorHelper::formatDateIndo($berkas['tanggal_upload'])) ?> &bull; 
                                         Status: <span class="badge <?= $statusClass ?>" style="font-size:11px;"><?= htmlspecialchars(ucfirst($berkas['status'])) ?></span>
                                     </span>
                                 </div>
@@ -55,7 +55,7 @@
                             </summary>
                             <div class="card-body p-0" style="border-top: 1px solid #E2E8F0;">
                                 <?php 
-                                $listBerkas = getBerkasByGroup((int)$berkas['kelompok_id']); 
+                                $listBerkas = KoordinatorHelper::getBerkasByGroup((int)$berkas['kelompok_id']); 
                                 if (empty($listBerkas)): 
                                 ?>
                                     <div style="text-align:center; padding:20px; color:#6B7280;">Belum ada berkas yang diunggah</div>
@@ -77,13 +77,13 @@
                                                 <div style="display: flex; align-items: center; gap: 15px;">
                                                     <?php $anggotaId = $files[0]['anggota_id']; ?>
                                                     <div style="display:flex; gap:8px;">
-                                                        <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                        <form method="POST" action="../../backend/actions/koordinator_verifikasi.php" style="margin:0;">
                                                             <input type="hidden" name="type" value="berkas_mahasiswa">
                                                             <input type="hidden" name="id" value="<?= $anggotaId ?>">
                                                             <input type="hidden" name="action" value="disetujui">
                                                             <button type="submit" class="btn" style="background:#D1FAE5; color:#10B981; padding:4px 10px; font-size:12px; font-weight:600; border-radius:4px; border:1px solid #10B981; cursor:pointer;" onclick="event.stopPropagation();">Setuju Semua</button>
                                                         </form>
-                                                        <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                        <form method="POST" action="../../backend/actions/koordinator_verifikasi.php" style="margin:0;">
                                                             <input type="hidden" name="type" value="berkas_mahasiswa">
                                                             <input type="hidden" name="id" value="<?= $anggotaId ?>">
                                                             <input type="hidden" name="action" value="ditolak">
@@ -110,16 +110,16 @@
                                                             <tr>
                                                                 <td style="padding-left: 20px;"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', $b['jenis_berkas']))) ?></td>
                                                                 <td><a href="../../<?= htmlspecialchars($b['file_path']) ?>" target="_blank" style="color:#2563EB; text-decoration:none; font-weight:600;">Lihat File</a></td>
-                                                                <td><span class="badge <?= statusBadgeClass($b['status_verifikasi']) ?>"><?= htmlspecialchars(ucfirst($b['status_verifikasi'])) ?></span></td>
+                                                                <td><span class="badge <?= KoordinatorHelper::statusBadgeClass($b['status_verifikasi']) ?>"><?= htmlspecialchars(ucfirst($b['status_verifikasi'])) ?></span></td>
                                                                 <td>
                                                                     <div style="display:flex; gap:8px;">
-                                                                        <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                                        <form method="POST" action="../../backend/actions/koordinator_verifikasi.php" style="margin:0;">
                                                                             <input type="hidden" name="type" value="berkas_satuan">
                                                                             <input type="hidden" name="id" value="<?= $b['berkas_id'] ?>">
                                                                             <input type="hidden" name="action" value="disetujui">
                                                                             <button type="submit" class="btn" style="background:#D1FAE5; color:#10B981; padding:4px 8px; font-size:11px; font-weight:bold; border-radius:4px; border:1px solid #10B981; cursor:pointer;" <?= $b['status_verifikasi'] === 'disetujui' ? 'disabled' : '' ?>>Setuju</button>
                                                                         </form>
-                                                                        <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                                        <form method="POST" action="../../backend/actions/koordinator_verifikasi.php" style="margin:0;">
                                                                             <input type="hidden" name="type" value="berkas_satuan">
                                                                             <input type="hidden" name="id" value="<?= $b['berkas_id'] ?>">
                                                                             <input type="hidden" name="action" value="ditolak">

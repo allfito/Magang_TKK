@@ -1,85 +1,29 @@
 <?php
-require_once __DIR__ . '/functions.php';
-requireMahasiswaLogin();
+require_once __DIR__ . '/../../backend/helpers/MahasiswaHelper.php';
+MahasiswaHelper::requireLogin();
+
+// Load existing data via Controller (must be before header outputs HTML)
+require_once __DIR__ . '/../../backend/controllers/MahasiswaPendaftaranViewController.php';
+
 $pageTitle = 'Pendaftaran Magang - SIMM';
 $activePage = 'pendaftaran';
 require __DIR__ . '/header.php';
 
-// Load existing data
-$mysqli = require __DIR__ . '/../../backend/database.php';
 $userId = (int) $_SESSION['user_id'];
-$kelompokId = null;
-$stmt = $mysqli->prepare('SELECT id FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
-$stmt->bind_param('i', $userId);
-$stmt->execute();
-$r = $stmt->get_result()->fetch_assoc();
-if ($r) $kelompokId = (int) $r['id'];
+$controller = new MahasiswaPendaftaranViewController();
+$pendaftaranData = $controller->getPendaftaranData($userId);
 
-// Load anggota for berkas tab
-$anggotaList = [];
-$lokasi = null;
-$proposal = null;
-$bukti = null;
-$plotting = null;
-
-if ($kelompokId) {
-    $stmt = $mysqli->prepare('SELECT ak.id, m.nama, ak.peran FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $anggotaList = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-    $stmt = $mysqli->prepare('SELECT p.nama AS perusahaan, p.nama_pimpinan, p.bidang, p.telepon, p.alamat, p.latitude, p.longitude, pl.status_verifikasi, pl.updated_at, pl.catatan FROM pendaftaran_lokasi pl JOIN perusahaan p ON pl.perusahaan_id = p.id WHERE pl.kelompok_id = ? LIMIT 1');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $lokasi = $stmt->get_result()->fetch_assoc();
-
-    $stmt = $mysqli->prepare('SELECT * FROM proposal WHERE kelompok_id = ? LIMIT 1');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $proposal = $stmt->get_result()->fetch_assoc();
-
-    $stmt = $mysqli->prepare('SELECT bd.id, p.nama AS tempat_diterima, bd.file_path, bd.status_verifikasi FROM bukti_diterima bd JOIN perusahaan p ON bd.perusahaan_id = p.id WHERE bd.kelompok_id = ? LIMIT 1');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $bukti = $stmt->get_result()->fetch_assoc();
-
-    $stmt = $mysqli->prepare('SELECT pl.id, d.nama AS dosen_pembimbing FROM plotting pl JOIN dosen d ON pl.dosen_id = d.id WHERE pl.kelompok_id = ? LIMIT 1');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $plotting = $stmt->get_result()->fetch_assoc();
-}
-
-$berkasData = [];
-$berkasFilePaths = [];
-$berkasStatusMap = [];
-$berkasUploadDate = null;
-if ($kelompokId) {
-    $bStmt = $mysqli->prepare('SELECT ba.anggota_id, ba.jenis_berkas, ba.file_path, ba.status_verifikasi, ba.created_at FROM berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id WHERE ak.kelompok_id = ?');
-    $bStmt->bind_param('i', $kelompokId);
-    $bStmt->execute();
-    foreach ($bStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $bRow) {
-        $berkasData[$bRow['anggota_id']][$bRow['jenis_berkas']] = basename($bRow['file_path']);
-        $berkasFilePaths[$bRow['anggota_id']][$bRow['jenis_berkas']] = $bRow['file_path'];
-        $berkasStatusMap[$bRow['anggota_id']][$bRow['jenis_berkas']] = $bRow['status_verifikasi'];
-        // Track latest upload date
-        if (!$berkasUploadDate || $bRow['created_at'] > $berkasUploadDate) {
-            $berkasUploadDate = $bRow['created_at'];
-        }
-    }
-}
-
-$berkasStatus = 'belum';
-if ($kelompokId) {
-    $stmt = $mysqli->prepare('SELECT COUNT(*) AS total, SUM(ba.status_verifikasi = "disetujui") AS approved, SUM(ba.status_verifikasi = "ditolak") AS rejected FROM berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id WHERE ak.kelompok_id = ?');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $r = $stmt->get_result()->fetch_assoc();
-    if ($r && $r['total'] > 0) {
-        if ($r['rejected'] > 0) $berkasStatus = 'ditolak';
-        elseif ($r['approved'] == $r['total']) $berkasStatus = 'disetujui';
-        else $berkasStatus = 'menunggu';
-    }
-}
+$kelompokId = $pendaftaranData['kelompokId'];
+$anggotaList = $pendaftaranData['anggotaList'];
+$lokasi = $pendaftaranData['lokasi'];
+$proposal = $pendaftaranData['proposal'];
+$bukti = $pendaftaranData['bukti'];
+$plotting = $pendaftaranData['plotting'];
+$berkasData = $pendaftaranData['berkasData'];
+$berkasFilePaths = $pendaftaranData['berkasFilePaths'];
+$berkasStatusMap = $pendaftaranData['berkasStatusMap'];
+$berkasUploadDate = $pendaftaranData['berkasUploadDate'];
+$berkasStatus = $pendaftaranData['berkasStatus'];
 
 // Format upload date for display
 $berkasUploadFormatted = '';
@@ -148,7 +92,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                             <!-- Form -->
                             <div class="t-body t-form" id="form-1" style="<?= $step1Done ? 'display:none;' : '' ?>">
-                                <form class="profile-form" id="form-el-1" method="POST" action="../../backend/mahasiswa/pendaftaran.php">
+                                <form class="profile-form" id="form-el-1" method="POST" action="../../backend/actions/mahasiswa_pendaftaran.php">
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>Perusahaan <span style="color:#EA5455">*</span></label>
@@ -274,7 +218,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     </div>
                                     <?php if ($step1Status === 'ditolak'): ?>
                                     <div style="margin-top:16px;">
-                                        <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
+                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php">
                                             <input type="hidden" name="type" value="lokasi">
                                             <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
                                         </form>
@@ -305,7 +249,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <div class="t-body t-form" id="form-2" style="<?= ($step2Open && !$step2Done) ? '' : 'display: none;' ?>">
-                                <form class="profile-form" id="form-el-2" method="POST" action="../../backend/mahasiswa/proposal.php" enctype="multipart/form-data">
+                                <form class="profile-form" id="form-el-2" method="POST" action="../../backend/actions/mahasiswa_proposal.php" enctype="multipart/form-data">
                                     <div class="form-group">
                                         <label>Judul Proposal <span style="color:#EA5455">*</span></label>
                                         <input type="text" name="judul" id="inp-judul" placeholder="Masukkan judul proposal" required>
@@ -358,7 +302,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     </div>
                                     <?php if ($step2Status === 'ditolak'): ?>
                                     <div style="margin-top:14px;">
-                                        <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
+                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php">
                                             <input type="hidden" name="type" value="proposal">
                                             <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
                                         </form>
@@ -389,7 +333,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <div class="t-body t-form" id="form-3" style="<?= ($step3Open && !$step3Done) ? '' : 'display: none;' ?>">
-                                <form class="profile-form" id="form-el-3" method="POST" action="../../backend/mahasiswa/berkas.php" enctype="multipart/form-data">
+                                <form class="profile-form" id="form-el-3" method="POST" action="../../backend/actions/mahasiswa_berkas.php" enctype="multipart/form-data">
 
                                 <!-- Tab Member -->
                                 <div class="member-tabs" id="member-tabs">
@@ -599,7 +543,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <div style="margin-top:14px;display:flex;gap:10px;">
                                     <button type="button" class="btn btn-dark" onclick="editBerkas()" style="display:inline-flex;align-items:center;gap:6px;">&#9998; Edit Berkas</button>
                                     <?php if ($berkasStatus === 'ditolak'): ?>
-                                    <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php" style="display:inline;">
+                                    <form method="POST" action="../../backend/actions/mahasiswa_hapus.php" style="display:inline;">
                                         <input type="hidden" name="type" value="berkas">
                                         <button type="submit" class="btn" style="background:#EA5455;color:white;">Ajukan Ulang</button>
                                     </form>
@@ -632,7 +576,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <div class="t-body t-form" id="form-4" style="<?= ($step4Open && !$step4Done) ? '' : 'display: none;' ?>">
-                                <form class="profile-form" id="form-el-4" method="POST" action="../../backend/mahasiswa/bukti_diterima.php" enctype="multipart/form-data">
+                                <form class="profile-form" id="form-el-4" method="POST" action="../../backend/actions/mahasiswa_bukti.php" enctype="multipart/form-data">
                                     <div class="form-group">
                                         <label>Tempat Diterima <span style="color:#EA5455">*</span></label>
                                         <input type="text" id="inp-tempat" name="tempat_diterima"
@@ -687,7 +631,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     </div>
                                     <?php if ($step4Status === 'ditolak'): ?>
                                     <div style="margin-top:14px;">
-                                        <form method="POST" action="../../backend/mahasiswa/hapus_pendaftaran.php">
+                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php">
                                             <input type="hidden" name="type" value="bukti">
                                             <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
                                         </form>
@@ -743,7 +687,7 @@ unset($_SESSION['success'], $_SESSION['error']);
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // Update map when address changes
-        document.addEventListener('DOMContentLoaded', function() {
+        (function() {
             const mapContainer = document.getElementById('map-container');
             if (!mapContainer) return;
 
@@ -832,7 +776,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                     }
                 });
             }
-        });
+        })();
 
         // ===== Format tanggal hari ini =====
         function hariIni() {
@@ -991,5 +935,35 @@ unset($_SESSION['success'], $_SESSION['error']);
                 );
             }
         }
+        // Validasi dan Toggle Accordion
+        function toggleAccordion(stepId) {
+            const container = document.getElementById('step-' + stepId);
+            const form = document.getElementById('form-' + stepId);
+            
+            // Check if step is locked
+            if (container.classList.contains('locked')) {
+                alert('Tahap ini masih terkunci! Anda harus menunggu tahap sebelumnya disetujui.');
+                return;
+            }
+
+            // Toggle visibility
+            const isVisible = form.style.display === 'block';
+            form.style.display = isVisible ? 'none' : 'block';
+            
+            // Toggle active class
+            if (isVisible) {
+                container.classList.remove('active');
+            } else {
+                container.classList.add('active');
+            }
+        }
+
+        // Add event listeners to headers
+        document.querySelectorAll('.t-header').forEach((header, index) => {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', () => {
+                toggleAccordion(index + 1);
+            });
+        });
     </script>
 <?php require __DIR__ . '/footer.php'; ?>

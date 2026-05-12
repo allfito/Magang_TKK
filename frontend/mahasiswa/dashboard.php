@@ -1,86 +1,30 @@
 <?php
-require_once __DIR__ . '/functions.php';
-requireMahasiswaLogin();
+require_once __DIR__ . '/../../backend/helpers/MahasiswaHelper.php';
+MahasiswaHelper::requireLogin();
 
 $pageTitle = 'Dashboard Mahasiswa - SIMM';
 $activePage = 'dashboard';
 
-$user = currentMahasiswa();
+$user = MahasiswaHelper::currentUser();
 $userName = $user ? htmlspecialchars($user['nama']) : 'Mahasiswa';
 $userEmail = $user ? htmlspecialchars($user['email']) : '';
 
-// Get kelompok data
-$mysqli = require __DIR__ . '/../../backend/database.php';
+// Get dashboard data via Controller
+require_once __DIR__ . '/../../backend/controllers/MahasiswaDashboardController.php';
+
 $userId = (int) $_SESSION['user_id'];
+$controller = new MahasiswaDashboardController();
+$dashboardData = $controller->getDashboardData($userId);
 
-// Cari kelompok (sebagai ketua atau anggota)
-$kelompok = null;
-$kelompokId = null;
-$isKetua = false;
-$stmt = $mysqli->prepare('SELECT k.id, k.nama, k.ketua_user_id, u.nama AS ketua_nama FROM kelompok k JOIN user u ON k.ketua_user_id = u.id WHERE k.ketua_user_id = ? LIMIT 1');
-$stmt->bind_param('i', $userId);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result && $result->num_rows > 0) {
-    $kelompok = $result->fetch_assoc();
-    $kelompokId = $kelompok['id'];
-    $isKetua = true;
-}
-
-// Get anggota list
-$anggotaList = [];
-if ($kelompokId) {
-    $stmt = $mysqli->prepare('SELECT m.nama, m.nim, ak.peran, ak.status_berkas FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $anggotaList = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-
-// Get pendaftaran status
-$lokasiStatus = 'belum';
-$proposalStatus = 'belum';
-$berkasStatus = 'belum';
-$buktiStatus = 'belum';
-$plottingStatus = 'belum';
-
-if ($kelompokId) {
-    // Lokasi
-    $stmt = $mysqli->prepare('SELECT status_verifikasi FROM pendaftaran_lokasi WHERE kelompok_id = ? LIMIT 1');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $r = $stmt->get_result()->fetch_assoc();
-    if ($r) $lokasiStatus = $r['status_verifikasi'];
-
-    // Proposal
-    $stmt = $mysqli->prepare('SELECT status_verifikasi FROM proposal WHERE kelompok_id = ? LIMIT 1');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $r = $stmt->get_result()->fetch_assoc();
-    if ($r) $proposalStatus = $r['status_verifikasi'];
-
-    // Berkas
-    $stmt = $mysqli->prepare('SELECT COUNT(*) AS total, SUM(ba.status_verifikasi = "disetujui") AS approved FROM berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id WHERE ak.kelompok_id = ?');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $r = $stmt->get_result()->fetch_assoc();
-    if ($r && $r['total'] > 0) {
-        $berkasStatus = ($r['approved'] == $r['total']) ? 'disetujui' : 'menunggu';
-    }
-
-    // Bukti
-    $stmt = $mysqli->prepare('SELECT status_verifikasi FROM bukti_diterima WHERE kelompok_id = ? LIMIT 1');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $r = $stmt->get_result()->fetch_assoc();
-    if ($r) $buktiStatus = $r['status_verifikasi'];
-
-    // Plotting
-    $stmt = $mysqli->prepare('SELECT id FROM plotting WHERE kelompok_id = ? LIMIT 1');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $r = $stmt->get_result()->fetch_assoc();
-    if ($r) $plottingStatus = 'selesai';
-}
+$kelompok = $dashboardData['kelompok'];
+$kelompokId = $dashboardData['kelompokId'];
+$isKetua = $dashboardData['isKetua'];
+$anggotaList = $dashboardData['anggotaList'];
+$lokasiStatus = $dashboardData['lokasiStatus'];
+$proposalStatus = $dashboardData['proposalStatus'];
+$berkasStatus = $dashboardData['berkasStatus'];
+$buktiStatus = $dashboardData['buktiStatus'];
+$plottingStatus = $dashboardData['plottingStatus'];
 
 function stepClass(string $status): string {
     if ($status === 'disetujui' || $status === 'selesai') return 'active';

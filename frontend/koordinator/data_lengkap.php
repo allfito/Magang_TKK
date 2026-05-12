@@ -1,7 +1,7 @@
 <?php include 'header.php'; ?>
 <?php
 $sortBy = $_GET['sort'] ?? 'nama_a';
-$completeData = getCompleteGroupsData($sortBy);
+$completeData = KoordinatorHelper::getCompleteGroupsData($sortBy);
 ?>
 
             <!-- PAGE: Data Lengkap -->
@@ -62,7 +62,7 @@ $completeData = getCompleteGroupsData($sortBy);
                                     <?php else: ?>
                                         <?php foreach ($completeData as $row): ?>
                                         <?php
-                                            $googleMapsLink = generateGoogleMapsLink($row['latitude'], $row['longitude']);
+                                            $googleMapsLink = KoordinatorHelper::generateGoogleMapsLink($row['latitude'], $row['longitude']);
                                             $proposalStatus = ucfirst(str_replace('_', ' ', $row['status_proposal']));
                                             $statusBadge = match($row['status_proposal']) {
                                                 'disetujui' => '<span class="badge" style="background-color: #10B981; color: white; padding: 4px 8px; border-radius: 4px;">✓ Disetujui</span>',

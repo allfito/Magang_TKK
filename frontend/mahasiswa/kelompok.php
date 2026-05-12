@@ -1,33 +1,21 @@
 <?php
-require_once __DIR__ . '/functions.php';
-requireMahasiswaLogin();
+require_once __DIR__ . '/../../backend/helpers/MahasiswaHelper.php';
+MahasiswaHelper::requireLogin();
 
 $pageTitle = 'Kelompok Magang - SIMM';
 $activePage = 'kelompok';
 
-$mysqli = require __DIR__ . '/../../backend/database.php';
+// Load existing data via Controller
+require_once __DIR__ . '/../../backend/controllers/MahasiswaKelompokViewController.php';
+
 $userId = (int) $_SESSION['user_id'];
-$user = currentMahasiswa();
+$user = MahasiswaHelper::currentUser();
 
-// Check if user already has a kelompok
-$existingKelompok = null;
-$existingAnggota = [];
+$controller = new MahasiswaKelompokViewController();
+$kelompokData = $controller->getKelompokData($userId);
 
-$stmt = $mysqli->prepare('SELECT k.id, k.nama FROM kelompok k WHERE k.ketua_user_id = ? LIMIT 1');
-$stmt->bind_param('i', $userId);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result && $result->num_rows > 0) {
-    $existingKelompok = $result->fetch_assoc();
-}
-
-if ($existingKelompok) {
-    $kelompokId = $existingKelompok['id'];
-    $stmt = $mysqli->prepare('SELECT m.nama, m.nim, m.no_tlp, ak.peran, ak.status_berkas FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
-    $stmt->bind_param('i', $kelompokId);
-    $stmt->execute();
-    $existingAnggota = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
+$existingKelompok = $kelompokData['kelompok'];
+$existingAnggota = $kelompokData['anggotaList'];
 
 // Session messages
 $errorMessage = $_SESSION['error'] ?? '';
@@ -307,7 +295,7 @@ require __DIR__ . '/header.php';
     </script>
 
     <!-- Hidden form for submitting group data -->
-    <form id="group-form" method="POST" action="../../backend/mahasiswa/kelompok.php" style="display: none;">
+    <form id="group-form" method="POST" action="../../backend/actions/mahasiswa_kelompok.php" style="display: none;">
         <div id="form-anggota-container"></div>
     </form>
 

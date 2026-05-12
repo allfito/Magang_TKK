@@ -1,7 +1,7 @@
 <?php include 'header.php'; ?>
 <?php 
     $sortBy = $_GET['sort'] ?? 'tanggal_terbaru';
-    $buktiList = getGroupsForBuktiVerification($sortBy); 
+    $buktiList = KoordinatorHelper::getGroupsForBuktiVerification($sortBy); 
 ?>
 
             <!-- PAGE: Verifikasi Bukti Diterima -->
@@ -47,22 +47,22 @@
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($buktiList as $bukti): ?>
-                                        <?php $statusClass = statusBadgeClass($bukti['status_verifikasi']); ?>
+                                        <?php $statusClass = KoordinatorHelper::statusBadgeClass($bukti['status_verifikasi']); ?>
                                         <tr>
                                             <td><?= htmlspecialchars($bukti['kelompok_nama']) ?></td>
                                             <td><?= htmlspecialchars($bukti['ketua_nama']) ?></td>
                                             <td><?= htmlspecialchars($bukti['tempat_diterima']) ?></td>
                                             <td><a href="../../<?= htmlspecialchars($bukti['file_path']) ?>" class="link-file" target="_blank"><?= htmlspecialchars(basename($bukti['file_path'])) ?></a></td>
-                                            <td><?= htmlspecialchars(formatDateIndo($bukti['created_at'])) ?></td>
+                                            <td><?= htmlspecialchars(KoordinatorHelper::formatDateIndo($bukti['created_at'])) ?></td>
                                             <td><span class="badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($bukti['status_verifikasi'])) ?></span></td>
                                             <td class="aksi-group" style="display:flex; gap:8px;">
-                                                <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                <form method="POST" action="../../backend/actions/koordinator_verifikasi.php" style="margin:0;">
                                                     <input type="hidden" name="type" value="bukti">
                                                     <input type="hidden" name="id" value="<?= $bukti['bukti_id'] ?>">
                                                     <input type="hidden" name="action" value="disetujui">
                                                     <button type="submit" class="btn-setuju" <?= $bukti['status_verifikasi'] === 'disetujui' ? 'disabled' : '' ?>>Setuju</button>
                                                 </form>
-                                                <form method="POST" action="../../backend/koordinator/verifikasi.php" style="margin:0;">
+                                                <form method="POST" action="../../backend/actions/koordinator_verifikasi.php" style="margin:0;">
                                                     <input type="hidden" name="type" value="bukti">
                                                     <input type="hidden" name="id" value="<?= $bukti['bukti_id'] ?>">
                                                     <input type="hidden" name="action" value="ditolak">
