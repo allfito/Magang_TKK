@@ -102,11 +102,11 @@
     </div>
 
     <!-- Modal Tambah Dosen -->
-    <div id="modal-tambah-dosen" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div id="modal-tambah-dosen" class="modal-overlay" onclick="if(event.target === this) this.classList.remove('open')">
         <div class="modal-box" style="max-width: 400px;">
             <div class="modal-header">
                 <h3>Tambah Dosen Baru</h3>
-                <button class="modal-close" onclick="document.getElementById('modal-tambah-dosen').style.display='none'">&times;</button>
+                <button class="modal-close" onclick="document.getElementById('modal-tambah-dosen').classList.remove('open')">&times;</button>
             </div>
             <form method="POST" action="../../backend/actions/koordinator_tambah_dosen.php">
                 <div class="modal-body">
@@ -114,7 +114,7 @@
                     <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Budi Santoso, M.Kom" style="width:100%; padding:8px 12px; border:1px solid #CBD5E1; border-radius:6px; font-family: 'Inter', sans-serif;">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-batal-modal" onclick="document.getElementById('modal-tambah-dosen').style.display='none'">Batal</button>
+                    <button type="button" class="btn-batal-modal" onclick="document.getElementById('modal-tambah-dosen').classList.remove('open')">Batal</button>
                     <button type="submit" class="btn-setuju-modal" style="background:#10B981; border:none;">&#43; Tambah Dosen</button>
                 </div>
             </form>

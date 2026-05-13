@@ -287,7 +287,7 @@ function filterTabelPlotting() {
     document.querySelectorAll('#tbody-plotting tr').forEach(row => {
         const namaKelompok = row.cells[0].textContent.toLowerCase();
         const ketua        = row.cells[1].textContent.toLowerCase();
-        const statusBadge  = row.cells[5].querySelector('.badge')?.textContent.trim().toLowerCase();
+        const statusBadge  = row.cells[4].querySelector('.badge')?.textContent.trim().toLowerCase();
 
         const matchSearch = namaKelompok.includes(q) || ketua.includes(q);
         const matchStatus =
