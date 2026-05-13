@@ -973,35 +973,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                 );
             }
         }
-        // Validasi dan Toggle Accordion
-        function toggleAccordion(stepId) {
-            const container = document.getElementById('step-' + stepId);
-            const form = document.getElementById('form-' + stepId);
-            
-            // Check if step is locked
-            if (container.classList.contains('locked')) {
-                alert('Tahap ini masih terkunci! Anda harus menunggu tahap sebelumnya disetujui.');
-                return;
-            }
 
-            // Toggle visibility
-            const isVisible = form.style.display === 'block';
-            form.style.display = isVisible ? 'none' : 'block';
-            
-            // Toggle active class
-            if (isVisible) {
-                container.classList.remove('active');
-            } else {
-                container.classList.add('active');
-            }
-        }
-
-        // Add event listeners to headers
-        document.querySelectorAll('.t-header').forEach((header, index) => {
-            header.style.cursor = 'pointer';
-            header.addEventListener('click', () => {
-                toggleAccordion(index + 1);
-            });
-        });
     </script>
 <?php require __DIR__ . '/footer.php'; ?>
