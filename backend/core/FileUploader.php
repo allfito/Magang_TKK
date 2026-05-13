@@ -74,8 +74,18 @@ class FileUploader
     private function getRelativePath(string $fullPath): string
     {
         // Root project: dua level di atas /backend/core
-        $root = realpath(__DIR__ . '/../../') . '/';
-        return str_replace($root, '', $fullPath);
+        $root     = realpath(__DIR__ . '/../../');
+        $realFull = realpath($fullPath);
+
+        if ($realFull && $root) {
+            // Hapus root prefix (bekerja di Windows & Linux)
+            $relative = ltrim(str_replace($root, '', $realFull), DIRECTORY_SEPARATOR);
+            // Normalisasi separator menjadi forward slash agar URL-safe
+            return str_replace(DIRECTORY_SEPARATOR, '/', $relative);
+        }
+
+        // Fallback: normalisasi backslash
+        return str_replace('\\', '/', str_replace($root . DIRECTORY_SEPARATOR, '', $fullPath));
     }
 
     // ---------------------------------------------------------------

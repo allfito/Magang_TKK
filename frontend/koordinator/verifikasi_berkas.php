@@ -109,7 +109,7 @@
                                                         <?php foreach ($files as $b): ?>
                                                             <tr>
                                                                 <td style="padding-left: 20px;"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', $b['jenis_berkas']))) ?></td>
-                                                                <td><a href="../../<?= htmlspecialchars($b['file_path']) ?>" target="_blank" style="color:#2563EB; text-decoration:none; font-weight:600;">Lihat File</a></td>
+                                                                <td><a href="../../backend/helpers/serve_file.php?path=<?= urlencode($b['file_path']) ?>" target="_blank" style="color:#2563EB; text-decoration:none; font-weight:600;">Lihat File</a></td>
                                                                 <td><span class="badge <?= KoordinatorHelper::statusBadgeClass($b['status_verifikasi']) ?>"><?= htmlspecialchars(ucfirst($b['status_verifikasi'])) ?></span></td>
                                                                 <td>
                                                                     <div style="display:flex; gap:8px;">

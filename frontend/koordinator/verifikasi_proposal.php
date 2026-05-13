@@ -50,7 +50,7 @@
                                         <tr>
                                             <td><?= htmlspecialchars($proposal['kelompok_nama']) ?></td>
                                             <td><?= htmlspecialchars($proposal['ketua_nama']) ?></td>
-                                            <td><a href="<?= htmlspecialchars($proposal['file_path']) ?>" class="link-file" target="_blank"><?= htmlspecialchars(basename($proposal['file_path'])) ?></a></td>
+                                            <td><a href="../../backend/helpers/serve_file.php?path=<?= urlencode($proposal['file_path']) ?>" class="link-file" target="_blank"><?= htmlspecialchars(basename($proposal['file_path'])) ?></a></td>
                                             <td><?= htmlspecialchars(KoordinatorHelper::formatDateIndo($proposal['created_at'])) ?></td>
                                             <td><span class="badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($proposal['status_verifikasi'])) ?></span></td>
                                             <td class="aksi-group" style="display:flex; gap:8px;">

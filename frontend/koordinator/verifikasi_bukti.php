@@ -52,7 +52,7 @@
                                             <td><?= htmlspecialchars($bukti['kelompok_nama']) ?></td>
                                             <td><?= htmlspecialchars($bukti['ketua_nama']) ?></td>
                                             <td><?= htmlspecialchars($bukti['tempat_diterima']) ?></td>
-                                            <td><a href="../../<?= htmlspecialchars($bukti['file_path']) ?>" class="link-file" target="_blank"><?= htmlspecialchars(basename($bukti['file_path'])) ?></a></td>
+                                            <td><a href="../../backend/helpers/serve_file.php?path=<?= urlencode($bukti['file_path']) ?>" class="link-file" target="_blank"><?= htmlspecialchars(basename($bukti['file_path'])) ?></a></td>
                                             <td><?= htmlspecialchars(KoordinatorHelper::formatDateIndo($bukti['created_at'])) ?></td>
                                             <td><span class="badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($bukti['status_verifikasi'])) ?></span></td>
                                             <td class="aksi-group" style="display:flex; gap:8px;">

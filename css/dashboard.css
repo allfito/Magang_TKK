@@ -653,6 +653,7 @@ html {
     .main-content {
         padding: 20px 25px;
     }
+
     .form-row {
         flex-direction: column;
         gap: 15px;
@@ -663,6 +664,7 @@ html {
     .dashboard-layout {
         flex-direction: column;
     }
+
     .sidebar {
         width: 100%;
         height: auto;
@@ -671,17 +673,17 @@ html {
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         z-index: 50;
     }
-    
+
     .sidebar-header {
         justify-content: space-between;
         padding: 0 15px;
     }
-    
+
     .logo-container {
         margin-bottom: 0;
         padding: 15px 0;
     }
-    
+
     .logo-container img {
         max-width: 120px;
     }
@@ -697,13 +699,14 @@ html {
         gap: 5px;
         overflow-x: visible;
     }
-    
+
     .sidebar-footer {
         display: none;
         padding: 0 20px 20px 20px;
     }
-    
-    .sidebar-nav.mobile-open, .sidebar-footer.mobile-open {
+
+    .sidebar-nav.mobile-open,
+    .sidebar-footer.mobile-open {
         display: flex;
     }
 
@@ -711,11 +714,11 @@ html {
         white-space: normal;
         padding: 12px 15px;
     }
-    
+
     .logout-btn {
         text-align: left;
     }
-    
+
     /* Stepper adjustments */
     .stepper-container {
         flex-direction: column;
@@ -723,6 +726,7 @@ html {
         gap: 20px;
         padding: 0 10px;
     }
+
     .stepper-container::before {
         left: 35px;
         top: 25px;
@@ -730,17 +734,19 @@ html {
         width: 2px;
         height: auto;
     }
+
     .step {
         flex-direction: row;
         width: 100%;
         text-align: left;
         gap: 15px;
     }
+
     .step-circle {
         margin-bottom: 0;
         flex-shrink: 0;
     }
-    
+
     /* Card / Layout Adjustments */
     .welcome-card {
         flex-direction: column;
@@ -749,20 +755,25 @@ html {
         gap: 15px;
         padding: 20px;
     }
+
     .kel-info {
         flex-direction: column;
         align-items: center;
         gap: 10px;
         text-align: center;
     }
+
     .completed-grid {
         grid-template-columns: 1fr;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
         padding: 10px;
         font-size: 12px;
     }
 }
+
 :root {
     --input-border: #EAEAEA;
     --input-bg: #fff;
@@ -1839,179 +1850,179 @@ html {
 /* =====================
 MEMBER ACCORDION TAHAP 3
 ===================== */
-    .member-acc-card {
-        background: white;
-        border: 1px solid #EAEAEA;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
-    }
+.member-acc-card {
+    background: white;
+    border: 1px solid #EAEAEA;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
 
-    .member-acc-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 20px;
-        cursor: pointer;
-        background: #FAFCFF;
-        user-select: none;
-        transition: background 0.3s;
-    }
+.member-acc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    cursor: pointer;
+    background: #FAFCFF;
+    user-select: none;
+    transition: background 0.3s;
+}
 
-    .member-acc-header:hover {
-        background: #F1F5F9;
-    }
+.member-acc-header:hover {
+    background: #F1F5F9;
+}
 
-    .member-acc-left {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
+.member-acc-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-    .acc-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-    }
+.acc-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+}
 
-    .acc-avatar.ketua {
-        background: #FF7B72;
-    }
+.acc-avatar.ketua {
+    background: #FF7B72;
+}
 
-    .acc-avatar.anggota {
-        background: #4CC9B0;
-    }
+.acc-avatar.anggota {
+    background: #4CC9B0;
+}
 
-    .acc-info h4 {
-        margin: 0;
-        font-size: 15px;
-        font-weight: 600;
-        color: #1C334D;
-    }
+.acc-info h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1C334D;
+}
 
-    .acc-info p {
-        margin: 2px 0 0;
-        font-size: 12px;
-        color: #6B7280;
-    }
+.acc-info p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #6B7280;
+}
 
-    .member-acc-right {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
+.member-acc-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-    .acc-status {
-        font-size: 13px;
-        font-weight: 500;
-        color: #FF6B6B;
-    }
+.acc-status {
+    font-size: 13px;
+    font-weight: 500;
+    color: #FF6B6B;
+}
 
-    .acc-status.complete {
-        color: #28C76F;
-    }
+.acc-status.complete {
+    color: #28C76F;
+}
 
-    .acc-chevron {
-        transition: transform 0.3s;
-        color: #9CA3AF;
-    }
+.acc-chevron {
+    transition: transform 0.3s;
+    color: #9CA3AF;
+}
 
-    .member-acc-card.open .acc-chevron {
-        transform: rotate(180deg);
-    }
+.member-acc-card.open .acc-chevron {
+    transform: rotate(180deg);
+}
 
-    .member-acc-body {
-        display: none;
-        padding: 20px;
-        border-top: 1px dashed #EAEAEA;
-        background: #FFFFFF;
-    }
+.member-acc-body {
+    display: none;
+    padding: 20px;
+    border-top: 1px dashed #EAEAEA;
+    background: #FFFFFF;
+}
 
-    .member-acc-card.open .member-acc-body {
-        display: block;
-    }
+.member-acc-card.open .member-acc-body {
+    display: block;
+}
 
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+}
+
+.file-card {
+    border: 1px dashed #D1D5DB;
+    border-radius: 8px;
+    padding: 20px 15px;
+    text-align: center;
+    background: #F9FAFB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fc-icon {
+    font-size: 24px;
+    color: #4A6D8C;
+    margin-bottom: 12px;
+}
+
+.fc-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fc-status {
+    font-size: 11px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #EF4444;
+    background: #FEE2E2;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.fc-status.uploaded {
+    color: #10B981;
+    background: #D1FAE5;
+}
+
+.fc-btn {
+    width: 100%;
+    font-size: 12px;
+    padding: 6px 0;
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+@media (max-width: 992px) {
     .file-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 15px;
+        grid-template-columns: repeat(2, 1fr);
     }
+}
 
-    .file-card {
-        border: 1px dashed #D1D5DB;
-        border-radius: 8px;
-        padding: 20px 15px;
-        text-align: center;
-        background: #F9FAFB;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
+@media (max-width: 480px) {
+    .file-grid {
+        grid-template-columns: 1fr;
     }
-
-    .fc-icon {
-        font-size: 24px;
-        color: #4A6D8C;
-        margin-bottom: 12px;
-    }
-
-    .fc-title {
-        font-size: 12px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-        min-height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .fc-status {
-        font-size: 11px;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        color: #EF4444;
-        background: #FEE2E2;
-        padding: 4px 10px;
-        border-radius: 12px;
-    }
-
-    .fc-status.uploaded {
-        color: #10B981;
-        background: #D1FAE5;
-    }
-
-    .fc-btn {
-        width: 100%;
-        font-size: 12px;
-        padding: 6px 0;
-        border-radius: 6px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 6px;
-    }
-
-    @media (max-width: 992px) {
-        .file-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    @media (max-width: 480px) {
-        .file-grid {
-            grid-template-columns: 1fr;
-        }
-    }
+}
 
 /* =====================
 PLOTTING TAHAP 5
@@ -2114,6 +2125,7 @@ PLOTTING TAHAP 5
         align-items: flex-start;
         gap: 12px;
     }
+
     .psc-badge {
         position: absolute;
         top: 0;
@@ -2248,6 +2260,7 @@ PLOTTING TAHAP 5
         grid-template-columns: 1fr;
     }
 }
+
 /* =============================================
    KOORDINATOR BIDANG - DASHBOARD CSS
    Sidebar identik dengan dashboard mahasiswa
@@ -3326,52 +3339,67 @@ html {
     .stat-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
     .table {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
     }
+
     .aksi-group {
         flex-wrap: wrap;
     }
+
     .modal-box {
         width: 95vw;
         max-height: 90vh;
         overflow-y: auto;
     }
+
     .modal-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
     }
+
     .modal-info-strip {
         flex-direction: column;
     }
+
     .modal-info-item {
         border-right: none;
         border-bottom: 1px solid #E8EEF5;
     }
+
     .modal-info-item:last-child {
         border-bottom: none;
     }
+
     .plot-item-body {
         flex-direction: column;
     }
-    .plot-item-group, .plot-item-status, .plot-item-aksi {
+
+    .plot-item-group,
+    .plot-item-status,
+    .plot-item-aksi {
         width: 100%;
         text-align: left;
     }
+
     .plot-item-aksi {
         justify-content: flex-start;
         margin-top: 10px;
     }
+
     .filter-bar {
         flex-direction: column;
         gap: 10px;
     }
+
     .filter-group {
         width: 100%;
     }
+
     .search-box {
         width: 100%;
         max-width: 100%;

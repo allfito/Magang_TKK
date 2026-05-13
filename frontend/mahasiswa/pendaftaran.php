@@ -291,7 +291,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                 <span class="info-field-value" id="v-file-proposal" style="display:flex; align-items:center;">
                                                     <?= htmlspecialchars(basename($proposal['file_path'] ?? '-')) ?>
                                                     <?php if (!empty($proposal['file_path'])): ?>
-                                                    <a href="../../<?= htmlspecialchars($proposal['file_path']) ?>" target="_blank" style="margin-left: 10px; color: #10B981; text-decoration: none; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid #10B981; border-radius: 4px; background: #D1FAE5; transition: all 0.2s;">
+                                                    <a href="../../backend/helpers/serve_file.php?path=<?= urlencode($proposal['file_path']) ?>" target="_blank" style="margin-left: 10px; color: #10B981; text-decoration: none; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid #10B981; border-radius: 4px; background: #D1FAE5; transition: all 0.2s;">
                                                         <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
                                                         Lihat File
                                                     </a>
@@ -463,7 +463,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             <?php foreach ($berkasOrder as $num => $jenis):
                                                 $hasFile = isset($aBerkas[$jenis]);
                                                 $filePath = $aFilePaths[$jenis] ?? '';
-                                                $fileUrl  = '../../' . $filePath;
+                                                $fileUrl  = '../../backend/helpers/serve_file.php?path=' . urlencode($filePath);
                                             ?>
                                                 <div class="bak-card">
                                                     <div class="bak-card-icon">
@@ -593,7 +593,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                 <span class="info-field-value" id="v-file-bukti" style="display:flex; align-items:center;">
                                                     <?= htmlspecialchars(basename($bukti['file_path'] ?? '-')) ?>
                                                     <?php if (!empty($bukti['file_path'])): ?>
-                                                    <a href="../../<?= htmlspecialchars($bukti['file_path']) ?>" target="_blank" style="margin-left: 10px; color: #10B981; text-decoration: none; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid #10B981; border-radius: 4px; background: #D1FAE5; transition: all 0.2s;">
+                                                    <a href="../../backend/helpers/serve_file.php?path=<?= urlencode($bukti['file_path']) ?>" target="_blank" style="margin-left: 10px; color: #10B981; text-decoration: none; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid #10B981; border-radius: 4px; background: #D1FAE5; transition: all 0.2s;">
                                                         <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
                                                         Lihat File
                                                     </a>
