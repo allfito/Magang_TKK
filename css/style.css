@@ -360,3 +360,69 @@ html {
 select.form-control {
     appearance: none;
 }
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .split-layout {
+        flex-direction: column;
+    }
+    .split-half {
+        padding: 40px 5%;
+        align-items: center;
+        text-align: center;
+        flex: none;
+    }
+    .form-container {
+        max-width: 100%;
+    }
+    .text-block {
+        margin-bottom: 30px;
+        align-items: center;
+        text-align: center;
+    }
+    .text-block h2 {
+        font-size: 42px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 20px;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+    #app {
+        padding-top: 130px;
+    }
+    .home-view h1 {
+        font-size: 36px;
+    }
+    .home-view p {
+        font-size: 16px;
+        padding: 0 15px;
+    }
+    .text-block h2 {
+        font-size: 32px;
+    }
+    .text-block p {
+        font-size: 13px;
+    }
+    .form-container {
+        padding: 25px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-links {
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .btn-login-home {
+        padding: 10px 30px;
+    }
+    .form-container h2 {
+        font-size: 22px;
+    }
+}

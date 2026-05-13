@@ -14,7 +14,7 @@ $auth   = new AuthController();
 $result = $auth->register($_POST);
 
 if (!$result['status']) {
-    redirectWithError($result['message'], '../../frontend/auth/register.php');
+    MahasiswaHelper::redirectWithError($result['message'], '../../frontend/auth/register.php');
 } else {
-    redirectWithSuccess($result['message'], '../../frontend/auth/login.php');
+    MahasiswaHelper::redirectWithSuccess($result['message'], '../../frontend/auth/login.php');
 }

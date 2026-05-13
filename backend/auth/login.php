@@ -18,7 +18,7 @@ $auth   = new AuthController();
 $result = $auth->login($email, $password, $requestedRole);
 
 if (!$result['status']) {
-    redirectWithError($result['message'], '../../frontend/auth/login.php');
+    MahasiswaHelper::redirectWithError($result['message'], '../../frontend/auth/login.php');
 }
 
 if ($result['role'] === 'korbid') {
