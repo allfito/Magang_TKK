@@ -87,15 +87,7 @@ function animateEntrance() {
    SIDEBAR NAV ACTIVE INDICATOR SLIDE-IN
    -------------------------------------------------- */
 function animateSidebar() {
-    const activeItem = document.querySelector('.nav-item.active');
-    if (!activeItem) return;
-    activeItem.style.opacity   = '0';
-    activeItem.style.transform = 'translateX(-10px)';
-    activeItem.style.transition = 'opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s';
-    requestAnimationFrame(() => {
-        activeItem.style.opacity   = '1';
-        activeItem.style.transform = 'translateX(0)';
-    });
+    // animasi dihapus - logo dan nav item langsung tampil diam
 }
 
 /* --------------------------------------------------
@@ -332,19 +324,9 @@ function injectKeyframes() {
             0%, 100% { box-shadow: 0 0 0 0 rgba(135,206,235,0.5); }
             50%       { box-shadow: 0 0 0 10px rgba(135,206,235,0); }
         }
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-16px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-
-        /* Main content: fade-in saat load */
-        .main-content {
-            animation: fadeInUp 0.4s ease;
-        }
-
-        /* Sidebar logo slide-in */
+        /* Sidebar logo - no animation */
         .logo-container {
-            animation: slideInLeft 0.4s ease;
+            /* animation dihapus */
         }
 
         /* Btn global scale on hover */
@@ -358,9 +340,9 @@ function injectKeyframes() {
             animation: fadeInUp 0.28s ease;
         }
 
-        /* Member section title slide */
+        /* Member section title - no animation */
         .member-section-title {
-            animation: slideInLeft 0.35s ease;
+            /* animation dihapus */
         }
 
         /* Tahap container transition */

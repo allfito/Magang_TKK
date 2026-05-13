@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../core/Session.php';
 require_once __DIR__ . '/../controllers/KoordinatorViewController.php';
+require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../core/Database.php';
 
 /**
  * KoordinatorHelper
@@ -118,6 +120,25 @@ class KoordinatorHelper
     public static function getAllDosen(): array
     {
         return self::getController()->getAllDosen();
+    }
+
+    // ---------------------------------------------------------------
+    // USER INFO
+    // ---------------------------------------------------------------
+
+    /**
+     * Ambil data user yang sedang login (nama, email, dll.) dari database.
+     * Return null jika tidak ditemukan.
+     */
+    public static function getCurrentUser(): ?array
+    {
+        $userId = Session::getUserId();
+        if (!$userId) {
+            return null;
+        }
+        $db   = Database::getInstance()->getConnection();
+        $user = new User($db);
+        return $user->findById($userId);
     }
 
     // ---------------------------------------------------------------

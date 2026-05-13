@@ -1,11 +1,14 @@
 <?php include 'header.php'; ?>
 <?php
-$activeCount = KoordinatorHelper::getActiveGroupCount();
+$activeCount          = KoordinatorHelper::getActiveGroupCount();
 $pendingLocationCount = KoordinatorHelper::getPendingLocationCount();
 $pendingProposalCount = KoordinatorHelper::getPendingProposalCount();
-$pendingBerkasCount = KoordinatorHelper::getPendingBerkasCount();
-$pendingBuktiCount = KoordinatorHelper::getPendingBuktiCount();
-$pendingGroups = KoordinatorHelper::getGroupsPendingVerification();
+$pendingBerkasCount   = KoordinatorHelper::getPendingBerkasCount();
+$pendingBuktiCount    = KoordinatorHelper::getPendingBuktiCount();
+$pendingGroups        = KoordinatorHelper::getGroupsPendingVerification();
+
+$currentUser = KoordinatorHelper::getCurrentUser();
+$namaUser    = $currentUser['nama'] ?? 'Koordinator';
 ?>
 
             <!-- PAGE: Dashboard -->
@@ -15,7 +18,7 @@ $pendingGroups = KoordinatorHelper::getGroupsPendingVerification();
                 <div class="welcome-card">
                     <img src="../../assets/default-avatar.svg" alt="Profile" class="profile-img">
                     <div class="welcome-text">
-                        <h2>Selamat datang, Pak Sultan</h2>
+                        <h2>Selamat datang, <?= htmlspecialchars($namaUser) ?></h2>
                         <p>Koordinator Bidang &ndash; Teknik Komputer</p>
                     </div>
                 </div>

@@ -155,24 +155,12 @@ html {
     position: relative;
     padding-top: 100px;
     /* Offset for navbar */
-    animation: fadeIn 0.5s ease-in-out;
 }
 
 #app.home-padding {
     padding-top: 0;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
 /* --- Home View --- */
 .home-view {
