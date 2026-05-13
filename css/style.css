@@ -46,7 +46,7 @@ html {
     padding: 30px 60px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     z-index: 10;
 }
 
@@ -387,13 +387,26 @@ select.form-control {
 
 @media (max-width: 768px) {
     .navbar {
-        padding: 20px;
-        flex-direction: column;
-        gap: 15px;
+        padding: 15px 25px;
+        flex-direction: row;
+        justify-content: space-between;
         align-items: center;
     }
+    .navbar .logo-container img {
+        height: 32px !important;
+    }
+    .nav-links {
+        gap: 15px;
+    }
+    .btn-daftar {
+        padding: 6px 16px;
+        font-size: 13px;
+    }
+    .nav-links a:not(.btn-daftar) {
+        font-size: 13px;
+    }
     #app {
-        padding-top: 130px;
+        padding-top: 80px;
     }
     .home-view h1 {
         font-size: 36px;
@@ -414,10 +427,21 @@ select.form-control {
 }
 
 @media (max-width: 480px) {
+    .navbar {
+        padding: 15px;
+    }
+    .navbar .logo-container img {
+        height: 26px !important;
+    }
     .nav-links {
-        gap: 15px;
-        flex-wrap: wrap;
-        justify-content: center;
+        gap: 10px;
+    }
+    .btn-daftar {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+    .nav-links a:not(.btn-daftar) {
+        font-size: 12px;
     }
     .btn-login-home {
         padding: 10px 30px;

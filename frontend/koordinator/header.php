@@ -19,7 +19,7 @@ $isVerifikasiPage = in_array($currentPage, ['verifikasi_lokasi.php', 'verifikasi
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="../../css/dashboard.css">
-    <link rel="stylesheet" href="../../css/koordinator.css">
+    
 </head>
 
 <body>
@@ -27,11 +27,17 @@ $isVerifikasiPage = in_array($currentPage, ['verifikasi_lokasi.php', 'verifikasi
 
         <!-- Sidebar -->
         <aside class="sidebar">
-            <a class="logo-container" style="display: flex; justify-content: center; align-items: center; padding: 20px 0;">
-                <img src="../../assets/logo-jti-new.svg" alt="Logo JTI" style="max-width: 80%; height: auto;">
+            <div class="sidebar-header">
+                <a class="logo-container">
+                    <img src="../../assets/logo-jti-new.svg" alt="Logo JTI">
             </a>
 
-            <nav class="sidebar-nav">
+                <button class="hamburger-btn" onclick="toggleSidebar()">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebar-nav">
                 <a href="dashboard.php" class="nav-item <?= $currentPage === 'dashboard.php' ? 'active' : '' ?>" id="nav-dashboard">Dashboard</a>
 
                 <!-- Verifikasi dengan submenu -->
@@ -53,10 +59,17 @@ $isVerifikasiPage = in_array($currentPage, ['verifikasi_lokasi.php', 'verifikasi
                 <a href="data_lengkap.php" class="nav-item <?= $currentPage === 'data_lengkap.php' ? 'active' : '' ?>" id="nav-data-lengkap">Data Lengkap</a>
             </nav>
 
-            <div class="sidebar-footer">
+            <div class="sidebar-footer" id="sidebar-footer">
                 <a href="../../backend/auth/logout.php" class="nav-item logout-btn">Logout</a>
             </div>
         </aside>
+        
+        <script>
+            function toggleSidebar() {
+                document.getElementById('sidebar-nav').classList.toggle('mobile-open');
+                document.getElementById('sidebar-footer').classList.toggle('mobile-open');
+            }
+        </script>
 
         <!-- Main Content -->
         <main class="main-content">

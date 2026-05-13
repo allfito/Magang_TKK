@@ -56,7 +56,7 @@ class MahasiswaPendaftaranViewController
             $stmt->execute();
             $data['bukti'] = $stmt->get_result()->fetch_assoc();
 
-            $stmt = $this->db->prepare('SELECT pl.id, d.nama AS dosen_pembimbing FROM plotting pl JOIN dosen d ON pl.dosen_id = d.id WHERE pl.kelompok_id = ? LIMIT 1');
+            $stmt = $this->db->prepare('SELECT pl.*, d.nama AS dosen_pembimbing FROM plotting pl JOIN dosen d ON pl.dosen_id = d.id WHERE pl.kelompok_id = ? LIMIT 1');
             $stmt->bind_param('i', $kelId);
             $stmt->execute();
             $data['plotting'] = $stmt->get_result()->fetch_assoc();

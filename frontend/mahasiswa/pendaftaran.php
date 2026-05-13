@@ -335,94 +335,67 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <div class="t-body t-form" id="form-3" style="<?= ($step3Open && !$step3Done) ? '' : 'display: none;' ?>">
                                 <form class="profile-form" id="form-el-3" method="POST" action="../../backend/actions/mahasiswa_berkas.php" enctype="multipart/form-data">
 
-                                <!-- Tab Member -->
-                                <div class="member-tabs" id="member-tabs">
-                                    <?php foreach ($anggotaList as $idx => $anggota): ?>
-                                    <button type="button" class="member-tab <?= $idx === 0 ? 'active' : '' ?>" id="mtab-<?= $idx ?>"
-                                        onclick="switchMemberTab(<?= $idx ?>)">&#128100; <?= htmlspecialchars(explode(' ', $anggota['nama'])[0]) ?> <span class="mtab-status"
-                                            id="mstatus-<?= $idx ?>"></span></button>
-                                    <?php endforeach; ?>
-                                </div>
-
-                                <?php foreach ($anggotaList as $idx => $anggota): ?>
-                                <!-- Panel Anggota <?= $idx ?>: <?= htmlspecialchars($anggota['nama']) ?> -->
-                                <div class="member-panel <?= $idx === 0 ? 'active' : '' ?>" id="mpanel-<?= $idx ?>">
-                                    <div class="member-panel-title"><?= htmlspecialchars($anggota['nama']) ?> &mdash; <em><?= ucfirst(htmlspecialchars($anggota['peran'])) ?></em></div>
-                                    <div class="profile-form">
-                                        <input type="hidden" name="anggota_id_<?= $idx ?>" value="<?= $anggota['id'] ?>">
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>Formulir Pendaftaran</label>
-                                                <div class="file-input-row">
-                                                    <input type="file" name="berkas_<?= $idx ?>_formulir" id="file-m<?= $idx ?>-1" style="display:none"
-                                                        onchange="setFile('m<?= $idx ?>-1', this); updateMemberStatus(<?= $idx ?>)">
-                                                    <button type="button" class="btn btn-dark" style="padding: 10px 15px;"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-1').click()">Pilih File</button>
-                                                    <input type="text" id="fn-m<?= $idx ?>-1" readonly
-                                                        value="<?= htmlspecialchars($berkasData[$anggota['id']]['formulir'] ?? '') ?>"
-                                                        placeholder="<?= isset($berkasData[$anggota['id']]['formulir']) ? 'Ganti file...' : 'Klik untuk pilih file' ?>"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-1').click()"
-                                                        style="cursor:pointer; flex: 1;">
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Scan KTM</label>
-                                                <div class="file-input-row">
-                                                    <input type="file" name="berkas_<?= $idx ?>_ktm" id="file-m<?= $idx ?>-2" style="display:none"
-                                                        onchange="setFile('m<?= $idx ?>-2', this); updateMemberStatus(<?= $idx ?>)">
-                                                    <button type="button" class="btn btn-dark" style="padding: 10px 15px;"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-2').click()">Pilih File</button>
-                                                    <input type="text" id="fn-m<?= $idx ?>-2" readonly
-                                                        value="<?= htmlspecialchars($berkasData[$anggota['id']]['ktm'] ?? '') ?>"
-                                                        placeholder="<?= isset($berkasData[$anggota['id']]['ktm']) ? 'Ganti file...' : 'Klik untuk pilih file' ?>"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-2').click()"
-                                                        style="cursor:pointer; flex: 1;">
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Transkrip Nilai</label>
-                                                <div class="file-input-row">
-                                                    <input type="file" name="berkas_<?= $idx ?>_transkrip" id="file-m<?= $idx ?>-3" style="display:none"
-                                                        onchange="setFile('m<?= $idx ?>-3', this); updateMemberStatus(<?= $idx ?>)">
-                                                    <button type="button" class="btn btn-dark" style="padding: 10px 15px;"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-3').click()">Pilih File</button>
-                                                    <input type="text" id="fn-m<?= $idx ?>-3" readonly
-                                                        value="<?= htmlspecialchars($berkasData[$anggota['id']]['transkrip'] ?? '') ?>"
-                                                        placeholder="<?= isset($berkasData[$anggota['id']]['transkrip']) ? 'Ganti file...' : 'Klik untuk pilih file' ?>"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-3').click()"
-                                                        style="cursor:pointer; flex: 1;">
-                                                </div>
+                                <?php foreach ($anggotaList as $idx => $anggota): 
+                                    $initial = strtoupper(substr($anggota['nama'], 0, 1));
+                                    $avatarClass = strtolower($anggota['peran']) === 'ketua' ? 'ketua' : 'anggota';
+                                    $f_formulir = isset($berkasData[$anggota['id']]['formulir']);
+                                    $f_ktm = isset($berkasData[$anggota['id']]['ktm']);
+                                    $f_transkrip = isset($berkasData[$anggota['id']]['transkrip']);
+                                    $f_foto = isset($berkasData[$anggota['id']]['pas_foto']);
+                                    $f_cv = isset($berkasData[$anggota['id']]['cv']);
+                                    
+                                    $uploadedCount = ($f_formulir ? 1 : 0) + ($f_ktm ? 1 : 0) + ($f_transkrip ? 1 : 0) + ($f_foto ? 1 : 0) + ($f_cv ? 1 : 0);
+                                ?>
+                                <div class="member-acc-card <?= $idx === 0 ? 'open' : '' ?>" id="mcard-<?= $idx ?>">
+                                    <div class="member-acc-header" onclick="toggleMemberAcc(<?= $idx ?>)">
+                                        <div class="member-acc-left">
+                                            <div class="acc-avatar <?= $avatarClass ?>"><?= $initial ?></div>
+                                            <div class="acc-info">
+                                                <h4><?= htmlspecialchars($anggota['nama']) ?></h4>
+                                                <p><?= ucfirst(htmlspecialchars($anggota['peran'])) ?></p>
                                             </div>
                                         </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>Pas Foto</label>
-                                                <div class="file-input-row">
-                                                    <input type="file" name="berkas_<?= $idx ?>_pas_foto" id="file-m<?= $idx ?>-4" accept="image/*" style="display:none"
-                                                        onchange="setFile('m<?= $idx ?>-4', this); updateMemberStatus(<?= $idx ?>)">
-                                                    <button type="button" class="btn btn-dark" style="padding: 10px 15px;"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-4').click()">Pilih File</button>
-                                                    <input type="text" id="fn-m<?= $idx ?>-4" readonly
-                                                        value="<?= htmlspecialchars($berkasData[$anggota['id']]['pas_foto'] ?? '') ?>"
-                                                        placeholder="<?= isset($berkasData[$anggota['id']]['pas_foto']) ? 'Ganti file...' : 'Klik untuk pilih file' ?>"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-4').click()"
-                                                        style="cursor:pointer; flex: 1;">
-                                                </div>
+                                        <div class="member-acc-right">
+                                            <div class="acc-status" id="mstatus-<?= $idx ?>" <?= $uploadedCount === 5 ? 'style="color:#28C76F;"' : '' ?>><?= $uploadedCount ?>/5 berkas</div>
+                                            <div class="acc-chevron">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
                                             </div>
-                                            <div class="form-group">
-                                                <label>CV</label>
-                                                <div class="file-input-row">
-                                                    <input type="file" name="berkas_<?= $idx ?>_cv" id="file-m<?= $idx ?>-5" style="display:none"
-                                                        onchange="setFile('m<?= $idx ?>-5', this); updateMemberStatus(<?= $idx ?>)">
-                                                    <button type="button" class="btn btn-dark" style="padding: 10px 15px;"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-5').click()">Pilih File</button>
-                                                    <input type="text" id="fn-m<?= $idx ?>-5" readonly
-                                                        value="<?= htmlspecialchars($berkasData[$anggota['id']]['cv'] ?? '') ?>"
-                                                        placeholder="<?= isset($berkasData[$anggota['id']]['cv']) ? 'Ganti file...' : 'Klik untuk pilih file' ?>"
-                                                        onclick="document.getElementById('file-m<?= $idx ?>-5').click()"
-                                                        style="cursor:pointer; flex: 1;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="member-acc-body">
+                                        <input type="hidden" name="anggota_id_<?= $idx ?>" value="<?= $anggota['id'] ?>">
+                                        <div class="file-grid">
+                                            <?php 
+                                                $fileTypes = [
+                                                    ['key' => 'formulir', 'label' => 'Formulir Pendaftaran', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>'],
+                                                    ['key' => 'ktm', 'label' => 'Scan KTM', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>'],
+                                                    ['key' => 'transkrip', 'label' => 'Transkrip Nilai', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>'],
+                                                    ['key' => 'pas_foto', 'label' => 'Pas Foto', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>', 'accept' => 'image/*'],
+                                                    ['key' => 'cv', 'label' => 'CV', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>'],
+                                                ];
+                                                foreach ($fileTypes as $fidx => $f): 
+                                                    $isUploaded = isset($berkasData[$anggota['id']][$f['key']]);
+                                            ?>
+                                            <div class="file-card">
+                                                <div class="fc-icon"><?= $f['icon'] ?></div>
+                                                <div class="fc-title"><?= $f['label'] ?></div>
+                                                <div class="fc-status <?= $isUploaded ? 'uploaded' : '' ?>" id="fstatus-m<?= $idx ?>-<?= $fidx ?>">
+                                                    <?php if($isUploaded): ?>
+                                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Terunggah
+                                                    <?php else: ?>
+                                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Belum diunggah
+                                                    <?php endif; ?>
                                                 </div>
+                                                
+                                                <input type="file" name="berkas_<?= $idx ?>_<?= $f['key'] ?>" id="file-m<?= $idx ?>-<?= $fidx ?>" <?= isset($f['accept']) ? 'accept="'.$f['accept'].'"' : '' ?> style="display:none" onchange="handleFileGrid('m<?= $idx ?>-<?= $fidx ?>', this, <?= $idx ?>)">
+                                                
+                                                <button type="button" class="btn btn-dark fc-btn" onclick="document.getElementById('file-m<?= $idx ?>-<?= $fidx ?>').click()">
+                                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                                                    <span id="fbtn-m<?= $idx ?>-<?= $fidx ?>"><?= $isUploaded ? 'Ganti File' : 'Upload' ?></span>
+                                                </button>
                                             </div>
+                                            <?php endforeach; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -431,7 +404,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <p id="err-3" style="color:#EA5455;font-size:12px;display:none;margin:12px 0 4px;">
                                     &#9888; Setiap anggota wajib mengupload minimal 1 berkas.</p>
                                 <div class="form-actions" style="margin-top:16px;">
-                                    <button type="submit" class="btn btn-dark">Simpan & Lanjut</button>
+                                    <button type="submit" class="btn btn-dark"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align: middle; margin-right: 4px;"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg> Simpan Semua Berkas</button>
                                 </div>
                                 </form>
                             </div>
@@ -660,19 +633,78 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                             <div class="t-body t-form" id="form-5" style="<?= ($step5Open) ? '' : 'display: none;' ?>">
                                 <?php if (!$step5Done): ?>
-                                <div style="background: #F8F9FA; padding: 20px; border-radius: 8px;">
-                                    <p style="margin-bottom: 10px;">Status Plotting: <span
-                                            style="background: #FFFF00; color: #111; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Menunggu
-                                            Plotting Oleh Korbid</span></p>
-                                    <p style="font-size: 14px; margin-bottom: 5px;">Kelompok anda sedang menunggu
-                                        penentuan dosen pembimbing oleh koordinator bidang</p>
-                                    <p style="font-size: 14px;">Estimasi waktu plotting: 1 - 2 hari kerja</p>
+                                <div class="plotting-status-card">
+                                    <div class="psc-header">
+                                        <div class="psc-icon-wrapper pending">
+                                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                        </div>
+                                        <div class="psc-title-area">
+                                            <h4 class="psc-title">Menunggu Plotting Koordinator</h4>
+                                            <p class="psc-subtitle">Estimasi waktu: 1-2 hari kerja</p>
+                                        </div>
+                                        <div class="psc-badge pending">Menunggu</div>
+                                    </div>
+                                    <div class="psc-body">
+                                        <p>Kelompok Anda sedang menunggu penentuan dosen pembimbing oleh koordinator bidang.</p>
+                                    </div>
                                 </div>
-                                <?php else: ?>
-                                <div style="background: #F8F9FA; padding: 20px; border-radius: 8px;">
-                                    <p style="margin-bottom: 10px;">Status Plotting: <span
-                                            style="background: #28C76F; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Selesai</span></p>
-                                    <p style="font-size: 14px; margin-bottom: 5px;">Dosen Pembimbing: <strong><?= htmlspecialchars($plotting['dosen_pembimbing'] ?? 'Belum ditentukan') ?></strong></p>
+                                <?php else: 
+                                    $tglPlotting = '-';
+                                    if (!empty($plotting['created_at'])) {
+                                        $dt = new DateTime($plotting['created_at']);
+                                        $bulanNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                                        $tglPlotting = $dt->format('j') . ' ' . $bulanNames[(int)$dt->format('n') - 1] . ' ' . $dt->format('Y');
+                                    }
+                                    $namaDosen = $plotting['dosen_pembimbing'] ?? 'Belum ditentukan';
+                                    $inisialDosen = strtoupper(substr($namaDosen, 0, 1));
+                                    $perusahaanName = $lokasi['perusahaan'] ?? '-';
+                                ?>
+                                <div class="plotting-success-wrapper">
+                                    <div class="plotting-cards-grid">
+                                        <!-- Card 1: Dosen -->
+                                        <div class="p-card">
+                                            <div class="p-card-header">
+                                                <div class="p-card-icon user-icon">
+                                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                                </div>
+                                                <span class="p-card-title">Dosen Pembimbing</span>
+                                            </div>
+                                            <div class="p-card-body">
+                                                <div class="dosen-profile">
+                                                    <div class="dosen-avatar"><?= $inisialDosen ?></div>
+                                                    <div class="dosen-info">
+                                                        <h5><?= htmlspecialchars($namaDosen) ?></h5>
+                                                        <p>Dosen Pembimbing Magang</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 2: Info Plotting -->
+                                        <div class="p-card">
+                                            <div class="p-card-header">
+                                                <div class="p-card-icon loc-icon">
+                                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                                </div>
+                                                <span class="p-card-title">Info Plotting</span>
+                                            </div>
+                                            <div class="p-card-body">
+                                                <div class="p-info-row">
+                                                    <span class="p-info-label">Lokasi Magang</span>
+                                                    <span class="p-info-value"><?= htmlspecialchars($perusahaanName) ?></span>
+                                                </div>
+                                                <div class="p-info-row" style="margin-top: 14px;">
+                                                    <span class="p-info-label">Tanggal Plotting</span>
+                                                    <span class="p-info-value"><?= $tglPlotting ?></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="plotting-success-alert">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                        Proses pendaftaran magang Anda telah selesai. Selamat!
+                                    </div>
                                 </div>
                                 <?php endif; ?>
                             </div>
@@ -817,13 +849,14 @@ unset($_SESSION['success'], $_SESSION['error']);
             }
             if (step === 3) {
                 // Validation only - the completed view is rendered by PHP on reload
-                const memberCount = document.querySelectorAll('.member-panel').length;
+                const memberCount = document.querySelectorAll('.member-acc-card').length;
                 let allHaveFile = true;
 
                 for (let mi = 0; mi < memberCount; mi++) {
-                    const hasAny = [1, 2, 3, 4, 5].some(fi =>
-                        document.getElementById(`fn-m${mi}-${fi}`)?.value.trim()
-                    );
+                    const hasAny = [0, 1, 2, 3, 4].some(fi => {
+                        const statusEl = document.getElementById(`fstatus-m${mi}-${fi}`);
+                        return statusEl && statusEl.classList.contains('uploaded');
+                    });
                     if (!hasAny) allHaveFile = false;
                 }
 
@@ -850,45 +883,50 @@ unset($_SESSION['success'], $_SESSION['error']);
             return true;
         }
 
-        /* ===== Tahap 3: Tab & Status helpers ===== */
-        function switchMemberTab(idx) {
-            document.querySelectorAll('.member-tab').forEach((el, i) => {
-                el.classList.toggle('active', i === idx);
-            });
-            document.querySelectorAll('.member-panel').forEach((el, i) => {
-                el.classList.toggle('active', i === idx);
-            });
-        }
-
-        function setFile(key, input) {
-            const name = input.files[0] ? input.files[0].name : '';
-            document.getElementById('fn-' + key).value = name;
-        }
-
-        /* ===== Tahap 3: Edit berkas after save ===== */
+        /* ===== Tahap 3: Accordion & Status helpers ===== */
         function editBerkas() {
-            // Hide completed view, show form
             document.getElementById('completed-3').style.display = 'none';
             document.getElementById('form-3').style.display = 'block';
-            // Scroll to the form
             document.getElementById('step-3').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        function updateMemberStatus(mi) {
-            const count = [1, 2, 3, 4, 5].filter(fi =>
-                document.getElementById('fn-m' + mi + '-' + fi)?.value.trim()
-            ).length;
-            const badge = document.getElementById('mstatus-' + mi);
-            if (!badge) return;
-            if (count === 0) {
-                badge.textContent = '';
-                badge.style.cssText = '';
-            } else if (count < 5) {
-                badge.textContent = count + '/5';
-                badge.style.cssText = 'background:#FFF0DC;color:#FF9F43;margin-left:4px';
+        function toggleMemberAcc(idx) {
+            document.getElementById('mcard-' + idx).classList.toggle('open');
+        }
+
+        function handleFileGrid(key, input, mi) {
+            const isFileSelected = input.files && input.files.length > 0;
+            const statusEl = document.getElementById('fstatus-' + key);
+            const btnEl = document.getElementById('fbtn-' + key);
+            
+            if (isFileSelected) {
+                statusEl.className = 'fc-status uploaded';
+                statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Siap Diunggah';
+                btnEl.textContent = 'Ganti File';
             } else {
-                badge.textContent = '\u2713';
-                badge.style.cssText = 'background:#D6F5E3;color:#28C76F;margin-left:4px';
+                statusEl.className = 'fc-status';
+                statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Belum diunggah';
+                btnEl.textContent = 'Upload';
+            }
+            updateMemberStatusGrid(mi);
+        }
+
+        function updateMemberStatusGrid(mi) {
+            let count = 0;
+            for (let fidx = 0; fidx < 5; fidx++) {
+                const statusEl = document.getElementById('fstatus-m' + mi + '-' + fidx);
+                if (statusEl && statusEl.classList.contains('uploaded')) {
+                    count++;
+                }
+            }
+            const badge = document.getElementById('mstatus-' + mi);
+            if (badge) {
+                badge.textContent = count + '/5 berkas';
+                if (count === 5) {
+                    badge.style.color = '#28C76F';
+                } else {
+                    badge.style.color = '#FF6B6B';
+                }
             }
         }
 
