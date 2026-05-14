@@ -144,6 +144,202 @@
     border-color: #8EB9D4;
 }
 
+
+/* ════════════════════════════════════════════════
+   Member Card V2 — Premium redesign
+   ════════════════════════════════════════════════ */
+.member-card-v2 {
+    position: relative;
+    background: #fff;
+    border: 1px solid #E8EDF2;
+    border-radius: 18px;
+    padding: 28px 20px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 12px rgba(28, 51, 77, 0.06);
+    cursor: default;
+}
+
+.member-card-v2:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 40px rgba(28, 51, 77, 0.14);
+    border-color: #C5DDEF;
+}
+
+/* ── Overlay on hover ── */
+.member-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+        rgba(28, 51, 77, 0) 30%,
+        rgba(28, 51, 77, 0.82) 100%);
+    border-radius: 18px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+    padding-bottom: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+}
+
+.member-card-v2:hover .member-card-overlay {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ── Overlay action buttons ── */
+.mcv2-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    transform: translateY(10px);
+    backdrop-filter: blur(4px);
+}
+
+.member-card-v2:hover .mcv2-btn {
+    transform: translateY(0);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.member-card-v2:hover .mcv2-btn:nth-child(2) {
+    transition-delay: 0.05s;
+}
+
+.mcv2-btn svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+.mcv2-btn-edit {
+    background: rgba(255, 255, 255, 0.95);
+    color: #1C334D;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.mcv2-btn-edit:hover {
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transform: scale(1.05) !important;
+}
+
+.mcv2-btn-hapus {
+    background: rgba(234, 84, 85, 0.9);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(234, 84, 85, 0.35);
+}
+
+.mcv2-btn-hapus:hover {
+    background: #EA5455;
+    box-shadow: 0 4px 16px rgba(234, 84, 85, 0.5);
+    transform: scale(1.05) !important;
+}
+
+/* ── Avatar ring ── */
+.mcv2-avatar-wrap {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+}
+
+.mcv2-avatar-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8EB9D4, #1C334D);
+    z-index: 0;
+}
+
+.mcv2-avatar-ketua::before {
+    background: linear-gradient(135deg, #FFD700, #F59E0B, #1C334D);
+}
+
+.mcv2-avatar {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    object-fit: cover;
+    display: block;
+}
+
+/* ── Badge ── */
+.mcv2-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+.mcv2-badge svg {
+    width: 10px;
+    height: 10px;
+}
+
+.mcv2-badge-ketua {
+    background: linear-gradient(135deg, #FFF3CD, #FFE89A);
+    color: #92650A;
+    border: 1px solid #F0D070;
+}
+
+.mcv2-badge-anggota {
+    background: #EBF4FA;
+    color: #3A6A8C;
+    border: 1px solid #C5DDEF;
+}
+
+/* ── Name & detail ── */
+.mcv2-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1C334D;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.mcv2-detail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 11.5px;
+    color: #7B8FA1;
+}
+
+.mcv2-nim { font-weight: 600; }
+.mcv2-sep { color: #C5D0DB; }
+.mcv2-phone { color: #9AAAB8; }
+
+
+
 .member-grid-avatar {
     width: 72px;
     height: 72px;

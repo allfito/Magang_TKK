@@ -27,7 +27,7 @@ class MahasiswaKelompokViewController
             $kel = $result->fetch_assoc();
             $data['kelompok'] = $kel;
             
-            $stmt = $this->db->prepare('SELECT m.nama, m.nim, m.no_tlp, ak.peran, ak.status_berkas FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
+            $stmt = $this->db->prepare('SELECT ak.id as anggota_id, m.id as mahasiswa_id, m.nama, m.nim, m.no_tlp, ak.peran, ak.status_berkas FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
             $stmt->bind_param('i', $kel['id']);
             $stmt->execute();
             $data['anggotaList'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);

@@ -29,29 +29,7 @@ unset($_SESSION['error']);
         </div>
     </header>
 
-    <?php if ($errorMessage): ?>
-        <div id="error-toast" class="toast align-items-center text-bg-danger border-0 show"
-             style="position: fixed; top: 20px; right: 20px; z-index: 1100; min-width: 280px;"
-             role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body fw-medium">
-                    <?= htmlspecialchars($errorMessage) ?>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-        <script>
-            setTimeout(function() {
-                var toastEl = document.getElementById('error-toast');
-                if (toastEl) {
-                    var toast = bootstrap.Toast.getOrCreateInstance(toastEl, { autohide: false });
-                    toastEl.style.opacity = '0';
-                    toastEl.style.transition = 'opacity 0.5s';
-                    setTimeout(function() { toastEl.style.display = 'none'; }, 500);
-                }
-            }, 3500);
-        </script>
-    <?php endif; ?>
+
 
     <div id="app">
         <section class="split-layout">
@@ -64,29 +42,69 @@ unset($_SESSION['error']);
             <div class="split-half">
                 <div class="form-container">
                     <h2>Daftar Akun</h2>
-                    <form action="../../backend/auth/register.php" method="POST" novalidate>
+                    <?php if ($errorMessage): ?>
+                        <div class="alert alert-danger py-2 mb-3" style="font-size: 13px;">
+                            <?= htmlspecialchars($errorMessage) ?>
+                        </div>
+                    <?php endif; ?>
+                    <div id="js-error-msg" class="alert alert-danger py-2 mb-3" style="display:none; font-size: 13px;"></div>
+                    <form action="../../backend/auth/register.php" method="POST" id="registerForm">
                         <div class="form-group">
                             <label>Nama</label>
-                            <input type="text" name="nama" class="form-control" placeholder="Sultan Salahuddin" required>
+                            <input type="text" name="nama" id="reg-nama" class="form-control" placeholder="Sultan Salahuddin" required>
                         </div>
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="sultansalahuddin@students.college.ac.id" required>
+                            <input type="email" name="email" id="reg-email" class="form-control" placeholder="nama@student.polije.ac.id" required>
                         </div>
                         <div class="form-group">
                             <label>No. Telepon</label>
-                            <input type="tel" name="no_tlp" class="form-control" placeholder="081234567890" required>
+                            <input type="tel" name="no_tlp" id="reg-tlp" class="form-control" placeholder="081234567890" maxlength="15" required>
                         </div>
                         <div class="form-group">
                             <label>Password</label>
-                            <input type="password" name="password" class="form-control" placeholder="Sultan3587" required>
+                            <input type="password" name="password" id="reg-pass" class="form-control" placeholder="Sultan3587" required>
                         </div>
                         <div class="form-group">
                             <label>Konfirmasi Password</label>
-                            <input type="password" name="konfirmasi_password" class="form-control" placeholder="Sultan3587" required>
+                            <input type="password" name="konfirmasi_password" id="reg-conf" class="form-control" placeholder="Sultan3587" required>
                         </div>
                         <button type="submit" class="btn-submit">Daftar</button>
                     </form>
+
+                    <script>
+                        document.getElementById('registerForm').addEventListener('submit', function(e) {
+                            var nama = document.getElementById('reg-nama').value.trim();
+                            var email = document.getElementById('reg-email').value.trim();
+                            var tlp = document.getElementById('reg-tlp').value.trim();
+                            var pass = document.getElementById('reg-pass').value.trim();
+                            var conf = document.getElementById('reg-conf').value.trim();
+
+                            var errorMsgBox = document.getElementById('js-error-msg');
+                            errorMsgBox.style.display = 'none';
+
+                            if (!nama || !email || !tlp || !pass || !conf) {
+                                e.preventDefault();
+                                errorMsgBox.textContent = 'Peringatan: Seluruh data pendaftaran wajib diisi!';
+                                errorMsgBox.style.display = 'block';
+                                return;
+                            }
+
+                            if (!email.endsWith('@student.polije.ac.id')) {
+                                e.preventDefault();
+                                errorMsgBox.textContent = 'Peringatan: Email pendaftaran harus menggunakan domain @student.polije.ac.id!';
+                                errorMsgBox.style.display = 'block';
+                                return;
+                            }
+
+                            if (pass !== conf) {
+                                e.preventDefault();
+                                errorMsgBox.textContent = 'Peringatan: Password dan Konfirmasi Password tidak cocok!';
+                                errorMsgBox.style.display = 'block';
+                                return;
+                            }
+                        });
+                    </script>
                 </div>
             </div>
         </section>

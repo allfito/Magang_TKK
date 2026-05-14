@@ -104,9 +104,18 @@ class AuthController extends BaseController
         if (!filter_var($data['email'] ?? '', FILTER_VALIDATE_EMAIL)) {
             return 'Email tidak valid.';
         }
+        
+        $email = $data['email'] ?? '';
+        if (!str_ends_with($email, '@student.polije.ac.id')) {
+            return 'Email harus menggunakan domain @student.polije.ac.id.';
+        }
 
-        if (empty($data['no_tlp'])) {
+        $noTlp = $data['no_tlp'] ?? '';
+        if (empty($noTlp)) {
             return 'Nomor telepon tidak boleh kosong.';
+        }
+        if (strlen($noTlp) > 15) {
+            return 'Nomor telepon maksimal 15 karakter.';
         }
 
         $password = $data['password'] ?? '';

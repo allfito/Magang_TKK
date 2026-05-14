@@ -55,4 +55,51 @@ class Kelompok extends BaseModel
             throw new RuntimeException('Gagal menyimpan relasi anggota kelompok.');
         }
     }
+
+    /**
+     * Update biodata mahasiswa (nama, no_tlp).
+     *
+     * @throws RuntimeException Jika update gagal.
+     */
+    public function updateMahasiswa(int $mahasiswaId, string $nama, string $nim, string $noTlp): void
+    {
+        $result = $this->run(
+            'UPDATE mahasiswa SET nama = ?, nim = ?, no_tlp = ? WHERE id = ?',
+            'sssi',
+            [$nama, $nim, $noTlp, $mahasiswaId]
+        );
+        if ($result === false) {
+            throw new RuntimeException('Gagal mengupdate data mahasiswa.');
+        }
+    }
+
+    /**
+     * Hapus anggota kelompok berdasarkan anggota_kelompok.id.
+     *
+     * @throws RuntimeException Jika hapus gagal.
+     */
+    public function removeAnggota(int $anggotaId, int $kelompokId): void
+    {
+        $result = $this->run(
+            'DELETE FROM anggota_kelompok WHERE id = ? AND kelompok_id = ?',
+            'ii',
+            [$anggotaId, $kelompokId]
+        );
+        if ($result === false) {
+            throw new RuntimeException('Gagal menghapus anggota.');
+        }
+    }
+
+    /**
+     * Hitung jumlah anggota di kelompok.
+     */
+    public function countAnggota(int $kelompokId): int
+    {
+        $row = $this->fetchOne(
+            'SELECT COUNT(*) as total FROM anggota_kelompok WHERE kelompok_id = ?',
+            'i',
+            [$kelompokId]
+        );
+        return $row ? (int) $row['total'] : 0;
+    }
 }
