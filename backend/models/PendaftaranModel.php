@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../core/BaseModel.php';
+require_once __DIR__ . '/../core/FileUploader.php';
 
 /**
  * PendaftaranModel
@@ -34,9 +35,27 @@ class PendaftaranModel extends BaseModel
     public function getProposal(int $kelompokId): ?array
     {
         return $this->fetchOne(
-            'SELECT id FROM proposal WHERE kelompok_id = ? LIMIT 1',
+            'SELECT * FROM proposal WHERE kelompok_id = ? LIMIT 1',
             'i',
             [$kelompokId]
+        );
+    }
+
+    public function getBuktiDiterima(int $kelompokId): ?array
+    {
+        return $this->fetchOne(
+            'SELECT * FROM bukti_diterima WHERE kelompok_id = ? LIMIT 1',
+            'i',
+            [$kelompokId]
+        );
+    }
+
+    public function getSingleBerkas(int $anggotaId, string $jenis): ?array
+    {
+        return $this->fetchOne(
+            'SELECT * FROM berkas_anggota WHERE anggota_id = ? AND jenis_berkas = ? LIMIT 1',
+            'is',
+            [$anggotaId, $jenis]
         );
     }
 
@@ -162,6 +181,17 @@ class PendaftaranModel extends BaseModel
         return $result !== false;
     }
 
+    public function resetRejectedBerkas(int $kelompokId): void
+    {
+        $this->run(
+            'UPDATE berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id 
+             SET ba.status_verifikasi = "menunggu" 
+             WHERE ak.kelompok_id = ? AND ba.status_verifikasi = "ditolak"',
+            'i',
+            [$kelompokId]
+        );
+    }
+
     // ---------------------------------------------------------------
     // DELETE
     // ---------------------------------------------------------------
@@ -174,16 +204,27 @@ class PendaftaranModel extends BaseModel
      */
     public function deleteRegistration(int $kelompokId, string $type): void
     {
+        // Fetch file path before deleting record to ensure physical file can be deleted
+        if ($type === 'proposal') {
+            $data = $this->getProposal($kelompokId);
+            if ($data && !empty($data['file_path'])) {
+                FileUploader::deleteFile($data['file_path']);
+            }
+        } elseif ($type === 'bukti') {
+            $data = $this->getBuktiDiterima($kelompokId);
+            if ($data && !empty($data['file_path'])) {
+                FileUploader::deleteFile($data['file_path']);
+            }
+        } elseif ($type === 'berkas') {
+            $this->deleteBerkas($kelompokId);
+            return;
+        }
+
         $queries = [
             'lokasi'   => 'DELETE FROM pendaftaran_lokasi WHERE kelompok_id = ?',
             'proposal' => 'DELETE FROM proposal WHERE kelompok_id = ?',
             'bukti'    => 'DELETE FROM bukti_diterima WHERE kelompok_id = ?',
         ];
-
-        if ($type === 'berkas') {
-            $this->deleteBerkas($kelompokId);
-            return;
-        }
 
         if (!isset($queries[$type])) {
             throw new InvalidArgumentException("Tipe penghapusan '{$type}' tidak valid.");
@@ -200,6 +241,21 @@ class PendaftaranModel extends BaseModel
      */
     private function deleteBerkas(int $kelompokId): void
     {
+        // Fetch all file paths for this group's members
+        $files = $this->fetchAll(
+            'SELECT ba.file_path FROM berkas_anggota ba 
+             JOIN anggota_kelompok ak ON ba.anggota_id = ak.id 
+             WHERE ak.kelompok_id = ?',
+            'i',
+            [$kelompokId]
+        );
+
+        foreach ($files as $f) {
+            if (!empty($f['file_path'])) {
+                FileUploader::deleteFile($f['file_path']);
+            }
+        }
+
         $this->run(
             'DELETE ba FROM berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id WHERE ak.kelompok_id = ?',
             'i',

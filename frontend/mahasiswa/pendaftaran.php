@@ -15,15 +15,25 @@ $pendaftaranData = $controller->getPendaftaranData($userId);
 
 $kelompokId = $pendaftaranData['kelompokId'];
 $anggotaList = $pendaftaranData['anggotaList'];
-$lokasi = $pendaftaranData['lokasi'];
-$proposal = $pendaftaranData['proposal'];
-$bukti = $pendaftaranData['bukti'];
+$lokasiDb = $pendaftaranData['lokasi'];
+$proposalDb = $pendaftaranData['proposal'];
+$buktiDb = $pendaftaranData['bukti'];
+
+$lokasi = $lokasiDb ?: ($_SESSION['form_data']['lokasi'] ?? null);
+$proposal = $proposalDb ?: ($_SESSION['form_data']['proposal'] ?? null);
+$bukti = $buktiDb ?: ($_SESSION['form_data']['bukti'] ?? null);
 $plotting = $pendaftaranData['plotting'];
 $berkasData = $pendaftaranData['berkasData'];
 $berkasFilePaths = $pendaftaranData['berkasFilePaths'];
 $berkasStatusMap = $pendaftaranData['berkasStatusMap'];
 $berkasUploadDate = $pendaftaranData['berkasUploadDate'];
 $berkasStatus = $pendaftaranData['berkasStatus'];
+
+$openFormBerkas = false;
+if (isset($_SESSION['open_form_berkas'])) {
+    $openFormBerkas = true;
+    unset($_SESSION['open_form_berkas']);
+}
 
 // Format upload date for display
 $berkasUploadFormatted = '';
@@ -36,12 +46,12 @@ if ($berkasUploadDate) {
 // Determine if berkas form should be editable (menunggu or ditolak can edit)
 // Note: $berkasEditable is set after step variables below
 
-$step1Done = ($lokasi !== null);
-$step1Status = $lokasi['status_verifikasi'] ?? 'belum';
+$step1Done = ($lokasiDb !== null);
+$step1Status = $lokasiDb['status_verifikasi'] ?? 'belum';
 
 $step2Open = ($step1Status === 'disetujui');
-$step2Done = ($proposal !== null);
-$step2Status = $proposal['status_verifikasi'] ?? 'belum';
+$step2Done = ($proposalDb !== null);
+$step2Status = $proposalDb['status_verifikasi'] ?? 'belum';
 
 $step3Open = ($step2Status === 'disetujui');
 $step3Done = ($berkasStatus !== 'belum');
@@ -49,8 +59,8 @@ $step3Status = $berkasStatus;
 $berkasEditable = ($step3Done && ($berkasStatus === 'menunggu' || $berkasStatus === 'ditolak'));
 
 $step4Open = ($step3Status === 'disetujui');
-$step4Done = ($bukti !== null);
-$step4Status = $bukti['status_verifikasi'] ?? 'belum';
+$step4Done = ($buktiDb !== null);
+$step4Status = $buktiDb['status_verifikasi'] ?? 'belum';
 
 $step5Open = ($step4Status === 'disetujui');
 $step5Done = ($plotting !== null);
@@ -92,32 +102,32 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                             <!-- Form -->
                             <div class="t-body t-form" id="form-1" style="<?= $step1Done ? 'display:none;' : '' ?>">
-                                <form class="profile-form" id="form-el-1" method="POST" action="../../backend/actions/mahasiswa_pendaftaran.php">
+                                <form class="profile-form" id="form-el-1" method="POST" action="../../backend/actions/mahasiswa_pendaftaran.php" onsubmit="return isiCompleted(1)">
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>Perusahaan <span style="color:#EA5455">*</span></label>
-                                            <input type="text" name="perusahaan" id="inp-perusahaan" placeholder="Nama perusahaan" required>
+                                            <input type="text" name="perusahaan" id="inp-perusahaan" placeholder="Nama perusahaan" value="<?= htmlspecialchars($lokasi['perusahaan'] ?? '') ?>" required>
                                         </div>
                                         <div class="form-group">
                                             <label>Nama Pimpinan <span style="color:#EA5455">*</span></label>
                                             <input type="text" id="inp-pimpinan" name="nama_pimpinan"
-                                                placeholder="Nama pimpinan / contact person" required>
+                                                placeholder="Nama pimpinan / contact person" value="<?= htmlspecialchars($lokasi['nama_pimpinan'] ?? '') ?>" required>
                                         </div>
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>Bidang <span style="color:#EA5455">*</span></label>
-                                            <input type="text" id="inp-bidang" name="bidang" placeholder="Bidang perusahaan" required>
+                                            <input type="text" id="inp-bidang" name="bidang" placeholder="Bidang perusahaan" value="<?= htmlspecialchars($lokasi['bidang'] ?? '') ?>" required>
                                         </div>
                                         <div class="form-group">
                                             <label>Telepon <span style="color:#EA5455">*</span></label>
-                                            <input type="text" id="inp-telepon" name="telepon" placeholder="Nomor telepon" required>
+                                            <input type="text" id="inp-telepon" name="telepon" placeholder="Nomor telepon" required maxlength="15" value="<?= htmlspecialchars($lokasi['telepon'] ?? '') ?>" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                         </div>
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label>Alamat <span style="color:#EA5455">*</span></label>
-                                            <input type="text" name="alamat" id="inp-alamat" placeholder="Alamat lengkap perusahaan" required>
+                                            <input type="text" name="alamat" id="inp-alamat" placeholder="Alamat lengkap perusahaan" value="<?= htmlspecialchars($lokasi['alamat'] ?? '') ?>" required>
                                         </div>
                                     </div>
 
@@ -216,12 +226,18 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" style="display:block;"
                                             src="https://maps.google.com/maps?q=<?= urlencode($lokasi['alamat'] ?? 'Indonesia') ?>&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
                                     </div>
-                                    <?php if ($step1Status === 'ditolak'): ?>
-                                    <div style="margin-top:16px;">
-                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php">
+                                    <?php if ($step1Status === 'menunggu' || $step1Status === 'ditolak'): ?>
+                                    <div style="margin-top:16px;display:flex;gap:10px;">
+                                        <?php if ($step1Status === 'menunggu'): ?>
+                                        <button type="button" class="btn btn-dark" onclick="editTahap(1)" style="display:inline-flex;align-items:center;gap:6px;">&#9998; Edit Lokasi</button>
+                                        <?php endif; ?>
+                                        
+                                        <?php if ($step1Status === 'ditolak'): ?>
+                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php" style="display:inline;">
                                             <input type="hidden" name="type" value="lokasi">
-                                            <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
+                                            <button type="submit" class="btn" style="background:#EA5455;color:white;">Ajukan Ulang</button>
                                         </form>
+                                        <?php endif; ?>
                                     </div>
                                     <?php endif; ?>
                                 </div>
@@ -249,21 +265,21 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <div class="t-body t-form" id="form-2" style="<?= ($step2Open && !$step2Done) ? '' : 'display: none;' ?>">
-                                <form class="profile-form" id="form-el-2" method="POST" action="../../backend/actions/mahasiswa_proposal.php" enctype="multipart/form-data">
+                                <form class="profile-form" id="form-el-2" method="POST" action="../../backend/actions/mahasiswa_proposal.php" enctype="multipart/form-data" onsubmit="return isiCompleted(2)">
                                     <div class="form-group">
                                         <label>Judul Proposal <span style="color:#EA5455">*</span></label>
-                                        <input type="text" name="judul" id="inp-judul" placeholder="Masukkan judul proposal" required>
+                                        <input type="text" name="judul" id="inp-judul" placeholder="Masukkan judul proposal" value="<?= htmlspecialchars($proposal['judul'] ?? '') ?>" required>
                                     </div>
                                     <div class="form-group">
                                         <label>File Proposal (PDF) <span style="color:#EA5455">*</span></label>
                                         <div class="file-input-row">
-                                            <input type="file" name="proposal" id="file-tahap2" accept=".pdf" required style="display: none;"
+                                            <input type="file" name="proposal" id="file-tahap2" accept=".pdf" <?= empty($proposal['file_path']) ? 'required' : '' ?> style="display: none;"
                                                 onchange="document.getElementById('filename-tahap2').value = this.files[0] ? this.files[0].name : ''">
                                             <button type="button" class="btn btn-dark"
                                                 onclick="document.getElementById('file-tahap2').click()">Pilih
                                                 File</button>
                                             <input type="text" id="filename-tahap2" readonly
-                                                placeholder="Pilih file pdf...">
+                                                placeholder="<?= !empty($proposal['file_path']) ? htmlspecialchars(basename($proposal['file_path'])) : 'Pilih file pdf...' ?>" value="<?= !empty($proposal['file_path']) ? htmlspecialchars(basename($proposal['file_path'])) : '' ?>">
                                         </div>
                                     </div>
                                     <p id="err-2" style="color:#EA5455;font-size:12px;display:none;margin-bottom:8px;">
@@ -300,12 +316,18 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             </div>
                                         </div>
                                     </div>
-                                    <?php if ($step2Status === 'ditolak'): ?>
-                                    <div style="margin-top:14px;">
-                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php">
+                                    <?php if ($step2Status === 'menunggu' || $step2Status === 'ditolak'): ?>
+                                    <div style="margin-top:14px;display:flex;gap:10px;">
+                                        <?php if ($step2Status === 'menunggu'): ?>
+                                        <button type="button" class="btn btn-dark" onclick="editTahap(2)" style="display:inline-flex;align-items:center;gap:6px;">&#9998; Edit Proposal</button>
+                                        <?php endif; ?>
+
+                                        <?php if ($step2Status === 'ditolak'): ?>
+                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php" style="display:inline;">
                                             <input type="hidden" name="type" value="proposal">
-                                            <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
+                                            <button type="submit" class="btn" style="background:#EA5455;color:white;">Ajukan Ulang</button>
                                         </form>
+                                        <?php endif; ?>
                                     </div>
                                     <?php endif; ?>
                                 </div>
@@ -332,8 +354,8 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 <?php endif; ?>
                             </div>
 
-                            <div class="t-body t-form" id="form-3" style="<?= ($step3Open && !$step3Done) ? '' : 'display: none;' ?>">
-                                <form class="profile-form" id="form-el-3" method="POST" action="../../backend/actions/mahasiswa_berkas.php" enctype="multipart/form-data">
+                            <div class="t-body t-form" id="form-3" style="<?= (($step3Open && !$step3Done) || $openFormBerkas) ? '' : 'display: none;' ?>">
+                                <form class="profile-form" id="form-el-3" method="POST" action="../../backend/actions/mahasiswa_berkas.php" enctype="multipart/form-data" onsubmit="return isiCompleted(3)">
 
                                 <?php foreach ($anggotaList as $idx => $anggota): 
                                     $initial = strtoupper(substr($anggota['nama'], 0, 1));
@@ -368,11 +390,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <div class="file-grid">
                                             <?php 
                                                 $fileTypes = [
-                                                    ['key' => 'formulir', 'label' => 'Formulir Pendaftaran', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>'],
+                                                    ['key' => 'formulir', 'label' => 'Formulir Pendaftaran', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>', 'accept' => '.pdf'],
                                                     ['key' => 'ktm', 'label' => 'Scan KTM', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>'],
                                                     ['key' => 'transkrip', 'label' => 'Transkrip Nilai', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>'],
                                                     ['key' => 'pas_foto', 'label' => 'Pas Foto', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>', 'accept' => 'image/*'],
-                                                    ['key' => 'cv', 'label' => 'CV', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>'],
+                                                    ['key' => 'cv', 'label' => 'CV', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>', 'accept' => '.pdf'],
                                                 ];
                                                 foreach ($fileTypes as $fidx => $f): 
                                                     $isUploaded = isset($berkasData[$anggota['id']][$f['key']]);
@@ -380,9 +402,30 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             <div class="file-card">
                                                 <div class="fc-icon"><?= $f['icon'] ?></div>
                                                 <div class="fc-title"><?= $f['label'] ?></div>
-                                                <div class="fc-status <?= $isUploaded ? 'uploaded' : '' ?>" id="fstatus-m<?= $idx ?>-<?= $fidx ?>">
-                                                    <?php if($isUploaded): ?>
-                                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Terunggah
+                                                <?php 
+                                                    $indivStatus = $berkasStatusMap[$anggota['id']][$f['key']] ?? 'menunggu';
+                                                    $isRejected = ($isUploaded && $indivStatus === 'ditolak');
+                                                ?>
+                                                <div class="fc-status <?= $isUploaded ? 'uploaded' : '' ?>" 
+                                                     id="fstatus-m<?= $idx ?>-<?= $fidx ?>" 
+                                                     data-rejected="<?= $isRejected ? '1' : '0' ?>"
+                                                     style="flex-direction: column; align-items: center; gap: 2px;">
+                                                    <?php if($isUploaded): 
+                                                        $fName = $berkasData[$anggota['id']][$f['key']];
+                                                        $fNameDisp = strlen($fName) > 18 ? substr($fName, 0, 15) . '...' : $fName;
+                                                        $indivStatus = $berkasStatusMap[$anggota['id']][$f['key']] ?? 'menunggu';
+                                                    ?>
+                                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> 
+                                                        <span><?= htmlspecialchars($fNameDisp) ?></span>
+                                                    </div>
+                                                    
+                                                    <?php if ($indivStatus === 'ditolak'): ?>
+                                                    <div style="color:#EA5455; font-size:10px; font-weight:800; display:flex; align-items:center; gap:2px;">
+                                                        <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg> DITOLAK
+                                                    </div>
+                                                    <?php endif; ?>
+                                                    
                                                     <?php else: ?>
                                                     <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Belum diunggah
                                                     <?php endif; ?>
@@ -410,7 +453,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <!-- Completed -->
-                            <div id="completed-3" style="<?= $step3Done ? '' : 'display: none;' ?>">
+                            <div id="completed-3" style="<?= ($step3Done && !$openFormBerkas) ? '' : 'display: none;' ?>">
                                 <div class="lokasi-completed-wrap" style="padding: 16px 24px 20px;">
                                 <?php if ($step3Done && $kelompokId): ?>
                                 <?php
@@ -514,7 +557,10 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                                 <?php if ($berkasStatus === 'menunggu' || $berkasStatus === 'ditolak'): ?>
                                 <div style="margin-top:14px;display:flex;gap:10px;">
+                                    <?php if ($berkasStatus === 'menunggu'): ?>
                                     <button type="button" class="btn btn-dark" onclick="editBerkas()" style="display:inline-flex;align-items:center;gap:6px;">&#9998; Edit Berkas</button>
+                                    <?php endif; ?>
+
                                     <?php if ($berkasStatus === 'ditolak'): ?>
                                     <form method="POST" action="../../backend/actions/mahasiswa_hapus.php" style="display:inline;">
                                         <input type="hidden" name="type" value="berkas">
@@ -549,23 +595,23 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <div class="t-body t-form" id="form-4" style="<?= ($step4Open && !$step4Done) ? '' : 'display: none;' ?>">
-                                <form class="profile-form" id="form-el-4" method="POST" action="../../backend/actions/mahasiswa_bukti.php" enctype="multipart/form-data">
+                                <form class="profile-form" id="form-el-4" method="POST" action="../../backend/actions/mahasiswa_bukti.php" enctype="multipart/form-data" onsubmit="return isiCompleted(4)">
                                     <div class="form-group">
                                         <label>Tempat Diterima <span style="color:#EA5455">*</span></label>
                                         <input type="text" id="inp-tempat" name="tempat_diterima"
-                                            placeholder="Nama perusahaan / instansi yang menerima" required>
+                                            placeholder="Nama perusahaan / instansi yang menerima" value="<?= htmlspecialchars($bukti['tempat_diterima'] ?? '') ?>" required>
                                     </div>
                                     <div class="form-group">
                                         <label>Surat Penerimaan (PDF) <span style="color:#EA5455">*</span></label>
                                         <div class="file-input-row">
-                                            <input type="file" name="surat_penerimaan" id="file-tahap4" accept=".pdf,.jpg,.png"
-                                                style="display: none;" required
+                                            <input type="file" name="surat_penerimaan" id="file-tahap4" accept=".pdf"
+                                                style="display: none;" <?= empty($bukti['file_path']) ? 'required' : '' ?>
                                                 onchange="document.getElementById('filename-tahap4').value = this.files[0] ? this.files[0].name : ''">
                                             <button type="button" class="btn btn-dark"
                                                 onclick="document.getElementById('file-tahap4').click()">Pilih
                                                 File</button>
                                             <input type="text" id="filename-tahap4" readonly
-                                                placeholder="Pilih file surat penerimaan...">
+                                                placeholder="<?= !empty($bukti['file_path']) ? htmlspecialchars(basename($bukti['file_path'])) : 'Pilih file surat penerimaan...' ?>" value="<?= !empty($bukti['file_path']) ? htmlspecialchars(basename($bukti['file_path'])) : '' ?>">
                                         </div>
                                     </div>
                                     <p id="err-4" style="color:#EA5455;font-size:12px;display:none;margin-bottom:8px;">
@@ -602,12 +648,18 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             </div>
                                         </div>
                                     </div>
-                                    <?php if ($step4Status === 'ditolak'): ?>
-                                    <div style="margin-top:14px;">
-                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php">
+                                    <?php if ($step4Status === 'menunggu' || $step4Status === 'ditolak'): ?>
+                                    <div style="margin-top:14px;display:flex;gap:10px;">
+                                        <?php if ($step4Status === 'menunggu'): ?>
+                                        <button type="button" class="btn btn-dark" onclick="editTahap(4)" style="display:inline-flex;align-items:center;gap:6px;">&#9998; Edit Bukti</button>
+                                        <?php endif; ?>
+
+                                        <?php if ($step4Status === 'ditolak'): ?>
+                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php" style="display:inline;">
                                             <input type="hidden" name="type" value="bukti">
-                                            <button type="submit" class="btn btn-dark">Ajukan Ulang</button>
+                                            <button type="submit" class="btn" style="background:#EA5455;color:white;">Ajukan Ulang</button>
                                         </form>
+                                        <?php endif; ?>
                                     </div>
                                     <?php endif; ?>
                                 </div>
@@ -848,23 +900,34 @@ unset($_SESSION['success'], $_SESSION['error']);
                 return true;
             }
             if (step === 3) {
-                // Validation only - the completed view is rendered by PHP on reload
                 const memberCount = document.querySelectorAll('.member-acc-card').length;
                 let allHaveFile = true;
+                let hasRejected = false;
 
                 for (let mi = 0; mi < memberCount; mi++) {
-                    const hasAny = [0, 1, 2, 3, 4].some(fi => {
+                    let hasAnyUploaded = false;
+                    for (let fi = 0; fi < 5; fi++) {
                         const statusEl = document.getElementById(`fstatus-m${mi}-${fi}`);
-                        return statusEl && statusEl.classList.contains('uploaded');
-                    });
-                    if (!hasAny) allHaveFile = false;
+                        if (statusEl) {
+                            if (statusEl.dataset.rejected === '1') hasRejected = true;
+                            if (statusEl.classList.contains('uploaded')) hasAnyUploaded = true;
+                        }
+                    }
+                    if (!hasAnyUploaded) allHaveFile = false;
                 }
 
+                const errEl = document.getElementById('err-3');
                 if (!allHaveFile) {
-                    document.getElementById('err-3').style.display = 'block';
+                    errEl.textContent = '⚠ Setiap anggota wajib mengupload minimal 1 berkas.';
+                    errEl.style.display = 'block';
                     return false;
                 }
-                document.getElementById('err-3').style.display = 'none';
+                if (hasRejected) {
+                    errEl.textContent = '⚠ Harap ganti berkas yang ditolak dengan berkas baru.';
+                    errEl.style.display = 'block';
+                    return false;
+                }
+                errEl.style.display = 'none';
                 return true;
             }
             if (step === 4) {
@@ -885,9 +948,13 @@ unset($_SESSION['success'], $_SESSION['error']);
 
         /* ===== Tahap 3: Accordion & Status helpers ===== */
         function editBerkas() {
-            document.getElementById('completed-3').style.display = 'none';
-            document.getElementById('form-3').style.display = 'block';
-            document.getElementById('step-3').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            editTahap(3);
+        }
+
+        function editTahap(step) {
+            document.getElementById('completed-' + step).style.display = 'none';
+            document.getElementById('form-' + step).style.display = 'block';
+            document.getElementById('step-' + step).scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function toggleMemberAcc(idx) {
@@ -900,13 +967,17 @@ unset($_SESSION['success'], $_SESSION['error']);
             const btnEl = document.getElementById('fbtn-' + key);
             
             if (isFileSelected) {
+                let fileName = input.files[0].name;
+                if (fileName.length > 18) fileName = fileName.substring(0, 15) + '...';
                 statusEl.className = 'fc-status uploaded';
-                statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Siap Diunggah';
+                statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> ' + fileName;
                 btnEl.textContent = 'Ganti File';
+                statusEl.dataset.rejected = '0';
             } else {
                 statusEl.className = 'fc-status';
                 statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Belum diunggah';
                 btnEl.textContent = 'Upload';
+                statusEl.dataset.rejected = '0';
             }
             updateMemberStatusGrid(mi);
         }

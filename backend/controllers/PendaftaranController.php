@@ -40,8 +40,9 @@ class PendaftaranController extends BaseController
             }
         }
 
+        // If exists, delete old one to allow "Edit"
         if ($this->pendaftaranModel->getLokasi($kelompokId)) {
-            return $this->error('Kelompok sudah mendaftarkan lokasi magang.');
+            $this->pendaftaranModel->deleteRegistration($kelompokId, 'lokasi');
         }
 
         $this->db->begin_transaction();
@@ -81,19 +82,29 @@ class PendaftaranController extends BaseController
             return $this->error('Judul proposal wajib diisi.');
         }
 
-        if ($this->pendaftaranModel->getProposal($kelompokId)) {
-            return $this->error('Proposal kelompok sudah diunggah.');
+        $existing = $this->pendaftaranModel->getProposal($kelompokId);
+        $filePath = '';
+
+        if ($existing) {
+            $filePath = $existing['file_path'];
+            $this->pendaftaranModel->deleteRegistration($kelompokId, 'proposal');
         }
 
-        $uploader = FileUploader::forProposal();
-        $upload   = $uploader->upload($fileData, 'proposal');
+        if (!empty($fileData['name']) && $fileData['error'] !== UPLOAD_ERR_NO_FILE) {
+            $uploader = FileUploader::forProposal();
+            $upload   = $uploader->upload($fileData, 'proposal');
 
-        if (!$upload['status']) {
-            return $this->error($upload['message']);
+            if (!$upload['status']) {
+                return $this->error($upload['message']);
+            }
+
+            $filePath = $upload['path'];
+        } elseif (empty($filePath)) {
+            return $this->error('File proposal wajib diunggah.');
         }
 
         try {
-            $this->pendaftaranModel->createProposal($kelompokId, trim($judul), $upload['path']);
+            $this->pendaftaranModel->createProposal($kelompokId, trim($judul), $filePath);
             return $this->success('Proposal berhasil diunggah.');
         } catch (Exception $e) {
             return $this->error($e->getMessage());
@@ -120,6 +131,9 @@ class PendaftaranController extends BaseController
         $jenisList = ['formulir', 'ktm', 'transkrip', 'pas_foto', 'cv'];
         $uploaded  = 0;
 
+        // Reset any remaining 'rejected' status to 'menunggu' since user is resubmitting
+        $this->pendaftaranModel->resetRejectedBerkas($kelompokId);
+
         foreach ($anggotaList as $index => $anggota) {
             foreach ($jenisList as $jenis) {
                 $fieldName = "berkas_{$index}_{$jenis}";
@@ -131,6 +145,12 @@ class PendaftaranController extends BaseController
                 $result = $uploader->upload($filesData[$fieldName], "berkas_{$jenis}");
                 if (!$result['status']) {
                     continue;
+                }
+
+                // Hapus file lama jika ada
+                $oldBerkas = $this->pendaftaranModel->getSingleBerkas($anggota['id'], $jenis);
+                if ($oldBerkas && !empty($oldBerkas['file_path'])) {
+                    FileUploader::deleteFile($oldBerkas['file_path']);
                 }
 
                 if ($this->pendaftaranModel->upsertBerkas($anggota['id'], $jenis, $result['path'])) {
@@ -161,11 +181,27 @@ class PendaftaranController extends BaseController
             return $this->error('Tempat diterima wajib diisi.');
         }
 
-        $uploader = FileUploader::forBukti();
-        $upload   = $uploader->upload($fileData, 'bukti');
+        $existing = $this->pendaftaranModel->getBuktiDiterima($kelompokId);
+        $filePath = '';
 
-        if (!$upload['status']) {
-            return $this->error($upload['message']);
+        if ($existing) {
+            $filePath = $existing['file_path'];
+        }
+
+        // Allow overwrite
+        $this->pendaftaranModel->deleteRegistration($kelompokId, 'bukti');
+
+        if (!empty($fileData['name']) && $fileData['error'] !== UPLOAD_ERR_NO_FILE) {
+            $uploader = FileUploader::forBukti();
+            $upload   = $uploader->upload($fileData, 'bukti');
+
+            if (!$upload['status']) {
+                return $this->error($upload['message']);
+            }
+
+            $filePath = $upload['path'];
+        } elseif (empty($filePath)) {
+            return $this->error('Surat penerimaan wajib diunggah.');
         }
 
         $this->db->begin_transaction();
@@ -179,7 +215,7 @@ class PendaftaranController extends BaseController
                     'alamat'        => '',
                 ]);
 
-            $this->pendaftaranModel->createBuktiDiterima($kelompokId, $perusahaanId, $upload['path']);
+            $this->pendaftaranModel->createBuktiDiterima($kelompokId, $perusahaanId, $filePath);
             $this->db->commit();
 
             return $this->success('Bukti penerimaan berhasil diunggah.');

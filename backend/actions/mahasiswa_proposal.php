@@ -22,6 +22,7 @@ $controller = new PendaftaranController();
 $result     = $controller->submitProposal((int) $userId, $judul, $fileData);
 
 if ($result['status']) {
+    unset($_SESSION['form_data']['proposal']);
     $_SESSION['success'] = $result['message'];
 } else {
     $_SESSION['error'] = $result['message'];

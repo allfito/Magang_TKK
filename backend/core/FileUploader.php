@@ -88,6 +88,32 @@ class FileUploader
         return str_replace('\\', '/', str_replace($root . DIRECTORY_SEPARATOR, '', $fullPath));
     }
 
+    /**
+     * Hapus file fisik dari sistem storage.
+     *
+     * @param string|null $relativePath Path relatif file (dari database)
+     * @return bool
+     */
+    public static function deleteFile(?string $relativePath): bool
+    {
+        if (empty($relativePath)) {
+            return false;
+        }
+
+        // Cari path absolut (root project: dua level di atas /backend/core)
+        $root = realpath(__DIR__ . '/../../');
+        
+        // Normalisasi path agar sesuai OS
+        $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relativePath);
+        $fullPath = $root . DIRECTORY_SEPARATOR . $normalizedPath;
+
+        if (file_exists($fullPath) && is_file($fullPath)) {
+            return unlink($fullPath);
+        }
+        
+        return false;
+    }
+
     // ---------------------------------------------------------------
     // Factory methods untuk tiap jenis file
     // ---------------------------------------------------------------

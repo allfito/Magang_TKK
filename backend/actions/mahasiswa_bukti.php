@@ -22,6 +22,7 @@ $controller = new PendaftaranController();
 $result     = $controller->submitBuktiDiterima((int) $userId, $tempatDiterima, $fileData);
 
 if ($result['status']) {
+    unset($_SESSION['form_data']['bukti']);
     $_SESSION['success'] = $result['message'];
 } else {
     $_SESSION['error'] = $result['message'];

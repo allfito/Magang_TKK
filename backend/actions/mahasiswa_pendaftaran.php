@@ -19,6 +19,7 @@ $controller = new PendaftaranController();
 $result     = $controller->submitLokasi($userId, $_POST);
 
 if ($result['status']) {
+    unset($_SESSION['form_data']['lokasi']);
     MahasiswaHelper::redirectWithSuccess($result['message'], '../../frontend/mahasiswa/pendaftaran.php');
 } else {
     MahasiswaHelper::redirectWithError($result['message'], '../../frontend/mahasiswa/pendaftaran.php');
