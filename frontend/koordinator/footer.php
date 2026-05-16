@@ -103,19 +103,22 @@
 
     <!-- Modal Tambah Dosen -->
     <div id="modal-tambah-dosen" class="modal-overlay" onclick="if(event.target === this) this.classList.remove('open')">
-        <div class="modal-box" style="max-width: 400px;">
+        <div class="modal-box" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>Tambah Dosen Baru</h3>
+                <h3><i class="fas fa-user-plus" style="margin-right: 10px;"></i>Tambah Dosen Baru</h3>
                 <button class="modal-close" onclick="document.getElementById('modal-tambah-dosen').classList.remove('open')">&times;</button>
             </div>
             <form method="POST" action="../../backend/actions/koordinator_tambah_dosen.php">
                 <div class="modal-body">
-                    <label style="display:block; margin-bottom:8px; font-size:14px; font-weight:500;">Nama Lengkap (beserta gelar)</label>
-                    <input type="text" name="nama_dosen" required placeholder="Contoh: Dr. Budi Santoso, M.Kom" style="width:100%; padding:8px 12px; border:1px solid #CBD5E1; border-radius:6px; font-family: 'Inter', sans-serif;">
+                    <div class="plot-field">
+                        <label>Nama Lengkap & Gelar</label>
+                        <input type="text" name="nama_dosen" class="plot-select" required placeholder="Contoh: Dr. Budi Santoso, M.Kom">
+                        <p style="font-size: 11px; color: #94A3B8; margin-top: 8px;">Pastikan penulisan gelar sudah benar untuk keperluan administrasi.</p>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-batal-modal" onclick="document.getElementById('modal-tambah-dosen').classList.remove('open')">Batal</button>
-                    <button type="submit" class="btn-setuju-modal" style="background:#10B981; border:none;">&#43; Tambah Dosen</button>
+                    <button type="submit" class="btn-setuju-modal" style="background:#10B981;">&#43; Tambah Dosen</button>
                 </div>
             </form>
         </div>

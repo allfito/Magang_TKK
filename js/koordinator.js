@@ -218,36 +218,54 @@ function bukaDetailKelompok(btn) {
     const cells  = row.querySelectorAll('td');
     const nama   = cells[0].textContent.trim();
     const ketua  = cells[1].textContent.trim();
-    const anggota = cells[2].textContent.trim();
+    const anggotaCount = cells[2].textContent.trim();
     const dosen  = cells[3].querySelector('em') ? '-' : cells[3].textContent.trim();
     const status = cells[4].querySelector('.badge').textContent.trim();
     const isSelesai = status === 'Selesai';
 
-    document.getElementById('detail-modal-title').textContent = nama;
+    document.getElementById('detail-modal-title').innerHTML = `<i class="fas fa-users" style="margin-right:10px; color:#A9C2D9;"></i> ${nama}`;
 
     const anggotaList = dataAnggota[nama] || [];
     const anggotaHTML = anggotaList.map(a =>
-        `<div class="detail-member-item">&#128100; ${a}</div>`
+        `<div class="detail-member-item">
+            <span style="color:#6388AF; margin-right:8px;"><i class="fas fa-user-graduate"></i></span> ${a}
+        </div>`
     ).join('');
 
     document.getElementById('detail-modal-body').innerHTML = `
         <div class="detail-info-grid">
-            <div class="detail-info-block"><span class="detail-label">Ketua</span><span class="detail-val">${ketua}</span></div>
-            <div class="detail-info-block"><span class="detail-label">Jml. Anggota</span><span class="detail-val">${anggota} orang</span></div>
-            <div class="detail-info-block"><span class="detail-label">Dosen Pembimbing</span><span class="detail-val">${dosen}</span></div>
-            <div class="detail-info-block"><span class="detail-label">Status</span><span class="detail-val">
-                <span class="badge ${isSelesai ? 'badge-success-status' : 'badge-warning'}">${status}</span>
-            </span></div>
+            <div class="detail-info-block">
+                <span class="detail-label">Ketua Kelompok</span>
+                <span class="detail-val">${ketua}</span>
+            </div>
+            <div class="detail-info-block">
+                <span class="detail-label">Total Anggota</span>
+                <span class="detail-val">${anggotaCount} Mahasiswa</span>
+            </div>
+            <div class="detail-info-block">
+                <span class="detail-label">Dosen Pembimbing</span>
+                <span class="detail-val">${dosen === '-' ? '<em style="color:#94A3B8; font-weight:normal;">Belum Diplot</em>' : dosen}</span>
+            </div>
+            <div class="detail-info-block">
+                <span class="detail-label">Status Plotting</span>
+                <span class="detail-val">
+                    <span class="badge-status ${isSelesai ? 'badge-disetujui' : 'badge-menunggu'}" style="padding:2px 10px; font-size:10px; border-radius:4px;">
+                        ${isSelesai ? '✓ Terverifikasi' : '⧖ Menunggu'}
+                    </span>
+                </span>
+            </div>
         </div>
         <div class="detail-anggota-section">
-            <h4 class="detail-anggota-title">Daftar Anggota</h4>
-            <div class="detail-member-list">${anggotaHTML || '<em style="color:#aaa">Data anggota belum tersedia</em>'}</div>
+            <h4 class="detail-anggota-title"><i class="fas fa-list-ul" style="margin-right:8px;"></i>Daftar Anggota Kelompok</h4>
+            <div class="detail-member-list">${anggotaHTML || '<em style="color:#94A3B8; font-size:12px;">Data anggota belum tersedia di sistem ini.</em>'}</div>
         </div>
     `;
 
-    // Sembunyikan tombol plot jika sudah selesai
-    document.getElementById('detail-to-plot-btn').style.display = isSelesai ? 'inline-block' : 'inline-block';
-    document.getElementById('detail-to-plot-btn').textContent   = isSelesai ? '✎ Edit Plotting' : '+ Plot Kelompok Ini';
+    // Update Plot button text
+    const plotBtn = document.getElementById('detail-to-plot-btn');
+    if (plotBtn) {
+        plotBtn.innerHTML = isSelesai ? '<i class="fas fa-edit"></i> Edit Plotting' : '<i class="fas fa-plus"></i> Plot Kelompok';
+    }
 
     document.getElementById('modal-detail-kelompok').classList.add('open');
 }

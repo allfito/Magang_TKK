@@ -253,7 +253,9 @@ class KoordinatorViewController extends BaseController
                     COALESCE(MAX(p.status_verifikasi), 'belum_upload') AS status_proposal,
                     MAX(u.nama) AS ketua_nama,
                     MAX(u.no_tlp) AS kontak_ketua,
-                    MAX(u.email) AS email_ketua
+                    MAX(u.email) AS email_ketua,
+                    COALESCE(MAX(per.nama_pimpinan), '-') AS cp_nama,
+                    COALESCE(MAX(per.telepon), '-') AS cp_tlp
                 FROM kelompok k
                 LEFT JOIN anggota_kelompok a ON k.id = a.kelompok_id
                 LEFT JOIN mahasiswa m ON a.mahasiswa_id = m.id

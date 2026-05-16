@@ -167,13 +167,18 @@ class KoordinatorHelper
     }
 
     /**
-     * Buat link Google Maps dari koordinat.
+     * Buat link Google Maps dari koordinat atau alamat.
      */
-    public static function generateGoogleMapsLink(string $latitude, string $longitude): string
+    public static function generateGoogleMapsLink(?string $latitude, ?string $longitude, ?string $address = null): string
     {
-        if (empty($latitude) || empty($longitude)) {
-            return '-';
+        if (!empty($latitude) && !empty($longitude)) {
+            return "https://www.google.com/maps?q={$latitude},{$longitude}";
         }
-        return "https://maps.google.com/?q={$latitude},{$longitude}";
+        
+        if (!empty($address) && $address !== '-') {
+            return "https://www.google.com/maps?q=" . urlencode($address);
+        }
+
+        return '-';
     }
 }
