@@ -44,7 +44,7 @@ require __DIR__ . '/header.php';
                     style="display:flex; align-items:center; justify-content:space-between; padding: 20px 28px;">
                     <div>
                         <h3 style="font-size:18px; font-weight:700; margin-bottom:4px;">
-                            <?= htmlspecialchars($existingKelompok['nama']) ?>
+                            <?= htmlspecialchars(ucwords(strtolower($existingKelompok['nama']))) ?>
                         </h3>
                         <p style="font-size:13px; color:rgba(255,255,255,0.7); margin:0;">
                             <?= count($existingAnggota) ?>/4 anggota terdaftar
@@ -70,7 +70,7 @@ require __DIR__ . '/header.php';
                                         onclick="openEditModal(
                                             <?= (int)$anggota['anggota_id'] ?>,
                                             <?= (int)$anggota['mahasiswa_id'] ?>,
-                                            '<?= addslashes(htmlspecialchars($anggota['nama'])) ?>',
+                                            '<?= addslashes(htmlspecialchars(ucwords(strtolower($anggota['nama'])))) ?>',
                                             '<?= addslashes(htmlspecialchars($anggota['nim'])) ?>',
                                             '<?= addslashes(htmlspecialchars($anggota['no_tlp'] ?: '')) ?>'
                                         )">
@@ -79,7 +79,7 @@ require __DIR__ . '/header.php';
                                     </button>
                                     <?php if ($anggota['peran'] !== 'ketua'): ?>
                                     <button type="button" class="mcv2-btn mcv2-btn-hapus"
-                                        onclick="confirmHapus(<?= (int)$anggota['anggota_id'] ?>, '<?= addslashes(htmlspecialchars($anggota['nama'])) ?>')">
+                                        onclick="confirmHapus(<?= (int)$anggota['anggota_id'] ?>, '<?= addslashes(htmlspecialchars(ucwords(strtolower($anggota['nama'])))) ?>')">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                                         Hapus
                                     </button>
@@ -90,7 +90,7 @@ require __DIR__ . '/header.php';
                                 <div class="mcv2-avatar-wrap <?= $anggota['peran'] === 'ketua' ? 'mcv2-avatar-ketua' : 'mcv2-avatar-anggota' ?>">
                                     <img class="mcv2-avatar"
                                          src="https://ui-avatars.com/api/?name=<?= urlencode($anggota['nama']) ?>&background=1F3653&color=fff&size=80&bold=true"
-                                         alt="<?= htmlspecialchars($anggota['nama']) ?>">
+                                         alt="<?= htmlspecialchars(ucwords(strtolower($anggota['nama']))) ?>">
                                 </div>
 
                                 <!-- Badge -->
@@ -101,7 +101,7 @@ require __DIR__ . '/header.php';
                                 <?php endif; ?>
 
                                 <!-- Info -->
-                                <div class="mcv2-name"><?= htmlspecialchars($anggota['nama']) ?></div>
+                                <div class="mcv2-name"><?= htmlspecialchars(ucwords(strtolower($anggota['nama']))) ?></div>
                                 <div class="mcv2-detail">
                                     <span class="mcv2-nim"><?= htmlspecialchars($anggota['nim']) ?></span>
                                     <?php if ($anggota['no_tlp']): ?>
@@ -205,8 +205,8 @@ require __DIR__ . '/header.php';
                 <input type="text" id="edit-input-nim" placeholder="NIM..." maxlength="9">
             </div>
             <div class="modal-field">
-                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(maks. 15 karakter)</small></label>
-                <input type="text" id="edit-input-telp" placeholder="0812..." maxlength="15">
+                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(10-13 digit, diawali 08)</small></label>
+                <input type="text" id="edit-input-telp" placeholder="0812..." minlength="10" maxlength="13" pattern="08[0-9]{8,11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka">
             </div>
             <div class="modal-actions">
                 <button class="btn-batal" onclick="closeEditModal()">BATAL</button>
@@ -229,8 +229,8 @@ require __DIR__ . '/header.php';
                 <input type="text" id="input-nim" placeholder="NIM..." maxlength="9">
             </div>
             <div class="modal-field">
-                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(maks. 15 karakter)</small></label>
-                <input type="text" id="input-telp" placeholder="0812..." maxlength="15">
+                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(10-13 digit, diawali 08)</small></label>
+                <input type="text" id="input-telp" placeholder="0812..." minlength="10" maxlength="13" pattern="08[0-9]{8,11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka">
             </div>
 
             <div class="modal-actions">
@@ -254,8 +254,8 @@ require __DIR__ . '/header.php';
                 <input type="text" id="tambah-existing-nim" placeholder="NIM..." maxlength="9">
             </div>
             <div class="modal-field">
-                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(maks. 15 karakter)</small></label>
-                <input type="text" id="tambah-existing-telp" placeholder="0812..." maxlength="15">
+                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(10-13 digit, diawali 08)</small></label>
+                <input type="text" id="tambah-existing-telp" placeholder="0812..." minlength="10" maxlength="13" pattern="08[0-9]{8,11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka">
             </div>
 
             <div class="modal-actions">
@@ -343,6 +343,11 @@ require __DIR__ . '/header.php';
                 const telp = document.getElementById('input-telp').value.trim();
 
                 if (!nama || !nim) { alert('Nama dan NIM wajib diisi!'); return; }
+                if (telp && !/^08[0-9]{8,11}$/.test(telp)) {
+                    alert('Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka!');
+                    document.getElementById('input-telp').focus();
+                    return;
+                }
 
                 const slotIndex = memberCount;
                 const label  = badgeLabels[slotIndex];
@@ -427,6 +432,11 @@ require __DIR__ . '/header.php';
             const telp = document.getElementById('edit-input-telp').value.trim();
 
             if (!nama || !nim) { alert('Nama dan NIM wajib diisi!'); return; }
+            if (telp && !/^08[0-9]{8,11}$/.test(telp)) {
+                alert('Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka!');
+                document.getElementById('edit-input-telp').focus();
+                return;
+            }
 
             document.getElementById('hf-anggota-id').value   = editOverlay.dataset.anggotaId;
             document.getElementById('hf-mahasiswa-id').value = editOverlay.dataset.mahasiswaId;
@@ -476,6 +486,11 @@ require __DIR__ . '/header.php';
             if (!nama || !nim) { 
                 alert('Nama dan NIM wajib diisi!'); 
                 return; 
+            }
+            if (telp && !/^08[0-9]{8,11}$/.test(telp)) {
+                alert('Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka!');
+                document.getElementById('tambah-existing-telp').focus();
+                return;
             }
 
             document.getElementById('hf-tambah-nama').value = nama;

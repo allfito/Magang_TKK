@@ -96,21 +96,61 @@ class KoordinatorModel extends BaseModel
         return $row ? (int) $row['id'] : null;
     }
 
-    public function createDosen(string $nama): int
+    public function findDosenByNip(string $nip): ?int
+    {
+        $row = $this->fetchOne(
+            'SELECT id FROM dosen WHERE nip = ? LIMIT 1',
+            's',
+            [$nip]
+        );
+        return $row ? (int) $row['id'] : null;
+    }
+
+    public function findDosenByTlp(string $tlp): ?int
+    {
+        $row = $this->fetchOne(
+            'SELECT id FROM dosen WHERE no_tlp = ? LIMIT 1',
+            's',
+            [$tlp]
+        );
+        return $row ? (int) $row['id'] : null;
+    }
+
+    public function createDosen(string $nama, ?string $nip = null, ?string $noTlp = null): int
     {
         $id = $this->run(
-            'INSERT INTO dosen (nama, created_at) VALUES (?, NOW())',
-            's',
-            [$nama]
+            'INSERT INTO dosen (nama, nip, no_tlp, created_at) VALUES (?, ?, ?, NOW())',
+            'sss',
+            [$nama, $nip, $noTlp]
         );
         return (int) $id;
+    }
+
+    public function deleteDosen(int $dosenId): bool
+    {
+        $result = $this->run(
+            'DELETE FROM dosen WHERE id = ?',
+            'i',
+            [$dosenId]
+        );
+        return $result !== false;
+    }
+
+    public function checkDosenHasPlotting(int $dosenId): bool
+    {
+        $row = $this->fetchOne(
+            'SELECT COUNT(*) as jml FROM plotting WHERE dosen_id = ? LIMIT 1',
+            'i',
+            [$dosenId]
+        );
+        return $row && ((int)$row['jml']) > 0;
     }
 
     // ---------------------------------------------------------------
     // PLOTTING
     // ---------------------------------------------------------------
 
-    public function upsertPlotting(int $kelompokId, int $dosenId): bool
+    public function upsertPlotting(int $kelompokId, int $dosenId, ?int $korbidId = null): bool
     {
         $existing = $this->fetchOne(
             'SELECT id FROM plotting WHERE kelompok_id = ? LIMIT 1',
@@ -120,18 +160,28 @@ class KoordinatorModel extends BaseModel
 
         if ($existing) {
             $result = $this->run(
-                'UPDATE plotting SET dosen_id = ? WHERE id = ?',
-                'ii',
-                [$dosenId, $existing['id']]
+                'UPDATE plotting SET dosen_id = ?, korbid_id = ? WHERE id = ?',
+                'iii',
+                [$dosenId, $korbidId, $existing['id']]
             );
         } else {
             $result = $this->run(
-                'INSERT INTO plotting (kelompok_id, dosen_id, created_at) VALUES (?, ?, NOW())',
-                'ii',
-                [$kelompokId, $dosenId]
+                'INSERT INTO plotting (kelompok_id, dosen_id, korbid_id, created_at) VALUES (?, ?, ?, NOW())',
+                'iii',
+                [$kelompokId, $dosenId, $korbidId]
             );
         }
 
+        return $result !== false;
+    }
+
+    public function deletePlotting(int $kelompokId): bool
+    {
+        $result = $this->run(
+            'DELETE FROM plotting WHERE kelompok_id = ?',
+            'i',
+            [$kelompokId]
+        );
         return $result !== false;
     }
 }

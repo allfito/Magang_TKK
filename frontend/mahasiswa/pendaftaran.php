@@ -120,8 +120,8 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             <input type="text" id="inp-bidang" name="bidang" placeholder="Bidang perusahaan" value="<?= htmlspecialchars($lokasi['bidang'] ?? '') ?>" required>
                                         </div>
                                         <div class="form-group">
-                                            <label>Telepon <span style="color:#EA5455">*</span></label>
-                                            <input type="text" id="inp-telepon" name="telepon" placeholder="Nomor telepon" required maxlength="15" value="<?= htmlspecialchars($lokasi['telepon'] ?? '') ?>" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                            <label>Telepon <span style="color:#EA5455">*</span> <small style="color:#A0B2C0;font-weight:400;">(10-13 digit, diawali 08)</small></label>
+                                             <input type="text" id="inp-telepon" name="telepon" placeholder="Nomor telepon" required minlength="10" maxlength="13" pattern="08[0-9]{8,11}" value="<?= htmlspecialchars($lokasi['telepon'] ?? '') ?>" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka">
                                         </div>
                                     </div>
                                     <div class="form-row">
@@ -725,9 +725,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                 <div class="dosen-profile">
                                                     <div class="dosen-avatar"><?= $inisialDosen ?></div>
                                                     <div class="dosen-info">
-                                                        <h5><?= htmlspecialchars($namaDosen) ?></h5>
-                                                        <p>Dosen Pembimbing Magang</p>
-                                                    </div>
+                                                         <h5 style="margin-bottom: 4px;"><?= htmlspecialchars($namaDosen) ?></h5>
+                                                         <p style="margin-bottom: 2px; font-size: 11px; color: #64748B;">NIP: <?= !empty($plotting['nip']) ? htmlspecialchars($plotting['nip']) : '-' ?></p>
+                                                         <p style="margin-bottom: 2px; font-size: 11px; color: #64748B;">No. Telp: <?= !empty($plotting['no_tlp']) ? htmlspecialchars($plotting['no_tlp']) : '-' ?></p>
+                                                         <p style="color: #6366F1; font-weight: 600; margin-top: 4px; font-size: 11px;">Dosen Pembimbing Magang</p>
+                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -875,6 +877,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                     bidang = p('inp-bidang'), telepon = p('inp-telepon'), alamat = p('inp-alamat');
                 if (!perusahaan || !pimpinan || !bidang || !telepon || !alamat) {
                     document.getElementById('err-1').style.display = 'block';
+                    return false;
+                }
+                if (telepon && !/^08[0-9]{8,11}$/.test(telepon)) {
+                    alert('Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka!');
+                    document.getElementById('inp-telepon').focus();
                     return false;
                 }
                 document.getElementById('err-1').style.display = 'none';

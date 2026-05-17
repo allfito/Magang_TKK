@@ -8,7 +8,7 @@ $pendingBuktiCount    = KoordinatorHelper::getPendingBuktiCount();
 $pendingGroups        = KoordinatorHelper::getGroupsPendingVerification();
 
 $currentUser = KoordinatorHelper::getCurrentUser();
-$namaUser    = $currentUser['nama'] ?? 'Koordinator';
+$namaUser    = ucwords(strtolower(trim($currentUser['nama'] ?? 'Koordinator')));
 ?>
 
             <!-- PAGE: Dashboard -->
@@ -79,8 +79,8 @@ $namaUser    = $currentUser['nama'] ?? 'Koordinator';
                                         elseif ($group['jenis_verifikasi'] === 'Bukti Diterima') $redirectPage = 'verifikasi_bukti.php';
                                     ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($group['kelompok_nama']) ?></td>
-                                        <td><?= htmlspecialchars($group['ketua_nama']) ?></td>
+                                        <td><?= htmlspecialchars(ucwords(strtolower($group['kelompok_nama']))) ?></td>
+                                        <td><?= htmlspecialchars(ucwords(strtolower($group['ketua_nama']))) ?></td>
                                         <td><?= (int) KoordinatorHelper::getMembersCount($group['kelompok_id']) ?></td>
                                         <td><?= htmlspecialchars($group['jenis_verifikasi']) ?></td>
                                         <td><span class="badge badge-warning">Menunggu</span></td>

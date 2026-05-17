@@ -59,7 +59,7 @@ unset($_SESSION['error']);
                         </div>
                         <div class="form-group">
                             <label>No. Telepon</label>
-                            <input type="tel" name="no_tlp" id="reg-tlp" class="form-control" placeholder="081234567890" maxlength="15" required>
+                            <input type="tel" name="no_tlp" id="reg-tlp" class="form-control" placeholder="081234567890" pattern="08[0-9]{8,11}" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 angka" required>
                         </div>
                         <div class="form-group">
                             <label>Password</label>

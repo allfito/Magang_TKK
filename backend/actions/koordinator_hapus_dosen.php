@@ -1,6 +1,6 @@
 <?php
 /**
- * Action: Plotting Dosen Pembimbing (Koordinator)
+ * Action: Hapus Dosen Pembimbing (Koordinator)
  */
 
 require_once __DIR__ . '/../helpers/KoordinatorHelper.php';
@@ -13,12 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$kelompokId      = (int) ($_POST['kelompok_id']    ?? 0);
-$dosenPembimbing = trim($_POST['dosen_pembimbing'] ?? '');
-$korbidId        = (int) Session::getUserId();
+$dosenId = (int) ($_POST['dosen_id'] ?? 0);
 
 $controller = new KoordinatorController();
-$result     = $controller->plotDosen($kelompokId, $dosenPembimbing, $korbidId);
+$result     = $controller->deleteDosen($dosenId);
 
 if ($result['status']) {
     Session::setFlash('success', $result['message']);

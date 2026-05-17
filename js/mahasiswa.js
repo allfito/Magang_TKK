@@ -83,12 +83,6 @@ function animateEntrance() {
     });
 }
 
-/* --------------------------------------------------
-   SIDEBAR NAV ACTIVE INDICATOR SLIDE-IN
-   -------------------------------------------------- */
-function animateSidebar() {
-    // animasi dihapus - logo dan nav item langsung tampil diam
-}
 
 /* --------------------------------------------------
    BUTTON RIPPLE EFFECT (identik rasa koordinator)
@@ -190,112 +184,7 @@ function attachInputFocusGlow() {
     });
 }
 
-/* --------------------------------------------------
-   TAB CONTENT FADE-IN
-   -------------------------------------------------- */
-function attachTabAnimation() {
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const activeContent = document.querySelector('.tab-content.active');
-            if (activeContent) {
-                activeContent.style.animation = 'fadeInUp 0.3s ease';
-            }
-        });
-    });
-}
 
-/* --------------------------------------------------
-   PROFIL: Simpan → Toast (ganti alert)
-   -------------------------------------------------- */
-function patchProfilSave() {
-    const btnEdit = document.getElementById('btn-edit-profile');
-    if (!btnEdit) return;
-
-    const editableFields = ['nama-lengkap', 'program-studi', 'semester', 'email', 'no-telepon'];
-    let isEditing = false;
-
-    // Clone tombol untuk hapus event lama
-    const newBtn = btnEdit.cloneNode(true);
-    btnEdit.parentNode.replaceChild(newBtn, btnEdit);
-
-    newBtn.addEventListener('click', () => {
-        if (!isEditing) {
-            editableFields.forEach(id => {
-                const input = document.getElementById(id);
-                if (input) {
-                    input.removeAttribute('readonly');
-                    input.style.border          = '1px solid #00A3FF';
-                    input.style.backgroundColor = '#F5FBFF';
-                }
-            });
-            newBtn.innerText = 'Simpan Perubahan';
-            isEditing = true;
-            showToast('Mode edit aktif. Silakan ubah data profil.', 'info');
-        } else {
-            editableFields.forEach(id => {
-                const input = document.getElementById(id);
-                if (input) {
-                    input.setAttribute('readonly', 'true');
-                    input.style.border          = '1px solid #EAEAEA';
-                    input.style.backgroundColor = '#fff';
-                }
-            });
-            newBtn.innerText = 'Edit Profile';
-            isEditing = false;
-            showToast('Data profil berhasil disimpan!', 'success');
-        }
-        attachInputFocusGlow();
-        attachRipple();
-    });
-}
-
-/* --------------------------------------------------
-   KELOMPOK: Tambah anggota → Toast (ganti alert)
-   -------------------------------------------------- */
-function patchKelompokToast() {
-    const btn = document.getElementById('btn-tambah-anggota');
-    if (!btn) return;
-
-    btn.addEventListener('click', () => {
-        const name = document.getElementById('new-member-name')?.value.trim();
-        const nim  = document.getElementById('new-member-nim')?.value.trim();
-        if (name && nim) {
-            setTimeout(() => showToast(`Anggota "${name}" berhasil ditambahkan!`, 'success'), 80);
-            setTimeout(() => {
-                attachMemberCardHover();
-                attachRipple();
-            }, 150);
-        }
-    });
-}
-
-/* --------------------------------------------------
-   PENDAFTARAN: nextStep → Toast setelah simpan
-   -------------------------------------------------- */
-function patchPendaftaranToast() {
-    const stepLabels = {
-        1: 'Lokasi Magang',
-        2: 'Proposal Kelompok',
-        3: 'Berkas Anggota',
-        4: 'Bukti Diterima'
-    };
-    // Override nextStep agar menampilkan toast
-    const originalNextStep = window.nextStep;
-    if (!originalNextStep) return;
-    window.nextStep = function(step) {
-        const before = document.getElementById(`completed-${step}`)?.style.display;
-        originalNextStep(step);
-        const after = document.getElementById(`completed-${step}`)?.style.display;
-        if (after === 'block' && before !== 'block') {
-            showToast(`Tahap ${step} (${stepLabels[step] || ''}) berhasil disimpan!`, 'success');
-            setTimeout(() => {
-                animateEntrance();
-                attachCardHover();
-            }, 120);
-        }
-    };
-}
 
 /* --------------------------------------------------
    INJECT CSS KEYFRAMES ke <head>
@@ -372,17 +261,10 @@ function injectKeyframes() {
    -------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
     injectKeyframes();
-    animateSidebar();
     animateEntrance();
     animateActiveStepper();
     attachRipple();
     attachMemberCardHover();
     attachCardHover();
     attachInputFocusGlow();
-    attachTabAnimation();
-
-    // Page-specific patches
-    patchProfilSave();
-    patchKelompokToast();
-    patchPendaftaranToast();
 });

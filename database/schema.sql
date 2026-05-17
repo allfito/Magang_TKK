@@ -21,9 +21,10 @@ CREATE TABLE IF NOT EXISTS mahasiswa (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nim VARCHAR(50) NOT NULL UNIQUE,
     nama VARCHAR(191) NOT NULL,
-    email VARCHAR(191) NOT NULL,
     no_tlp VARCHAR(30) NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    user_id INT NULL, -- Hubungan ke tabel user (khusus untuk ketua yang memiliki akun)
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- 3. Tabel perusahaan: Memisahkan entitas perusahaan (3NF)
@@ -42,7 +43,9 @@ CREATE TABLE IF NOT EXISTS perusahaan (
 -- 4. Tabel dosen: Memisahkan entitas dosen pembimbing (3NF)
 CREATE TABLE IF NOT EXISTS dosen (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    nip VARCHAR(50) DEFAULT NULL,
     nama VARCHAR(191) NOT NULL UNIQUE,
+    no_tlp VARCHAR(30) DEFAULT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -120,7 +123,9 @@ CREATE TABLE IF NOT EXISTS plotting (
     id INT AUTO_INCREMENT PRIMARY KEY,
     kelompok_id INT NOT NULL UNIQUE,
     dosen_id INT NOT NULL,
+    korbid_id INT NULL, -- Menandakan korbid mana yang melakukan plotting
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (kelompok_id) REFERENCES kelompok(id) ON DELETE CASCADE,
-    FOREIGN KEY (dosen_id) REFERENCES dosen(id) ON DELETE RESTRICT
+    FOREIGN KEY (dosen_id) REFERENCES dosen(id) ON DELETE RESTRICT,
+    FOREIGN KEY (korbid_id) REFERENCES user(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;

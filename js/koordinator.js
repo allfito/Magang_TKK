@@ -16,22 +16,6 @@ function toggleVerifikasi() {
     arrow.classList.toggle('open');
 }
 
-/* --------------------------------------------------
-   MODAL VERIFIKASI (dari tabel dashboard)
-   -------------------------------------------------- */
-function bukaVerifikasi(btn) {
-    const row = btn.closest('tr');
-    currentRow = row;
-
-    const cells = row.querySelectorAll('td');
-    document.getElementById('mKelompok').textContent = cells[0].textContent.trim();
-    document.getElementById('mKetua').textContent    = cells[1].textContent.trim();
-    document.getElementById('mJenis').textContent    = cells[3].textContent.trim();
-    document.getElementById('mStatus').textContent   = cells[4].querySelector('.badge').textContent.trim();
-    document.getElementById('catatan-modal').value   = '';
-
-    document.getElementById('modal-verifikasi').classList.add('open');
-}
 
 function tutupModal(event) {
     // Tutup hanya jika klik di luar modal-box
@@ -65,38 +49,6 @@ function aksiModal(tindakan) {
     updateStatCards();
 }
 
-/* --------------------------------------------------
-   SETUJU / TOLAK (dari tabel verifikasi)
-   -------------------------------------------------- */
-function setujuRow(btn) {
-    const row = btn.closest('tr');
-    const badgeEl = row.querySelector('.badge');
-    badgeEl.className = 'badge badge-success-status';
-    badgeEl.textContent = 'Disetujui';
-
-    // Disable tombol setelah aksi
-    const aksiGroup = btn.closest('.aksi-group');
-    if (aksiGroup) {
-        aksiGroup.querySelectorAll('button').forEach(b => b.disabled = true);
-    }
-
-    showToast('Berhasil disetujui!', 'success');
-}
-
-function tolakRow(btn) {
-    const row = btn.closest('tr');
-    const badgeEl = row.querySelector('.badge');
-    badgeEl.className = 'badge badge-danger';
-    badgeEl.textContent = 'Ditolak';
-
-    // Disable tombol setelah aksi
-    const aksiGroup = btn.closest('.aksi-group');
-    if (aksiGroup) {
-        aksiGroup.querySelectorAll('button').forEach(b => b.disabled = true);
-    }
-
-    showToast('Data telah ditolak.', 'danger');
-}
 
 /* --------------------------------------------------
    SORT PAGE (Dropdown pengurutan)
@@ -179,15 +131,6 @@ function tampilInfoDosen() {
     infoBox.style.display = 'flex';
 }
 
-function setSelectByText(selectEl, text) {
-    for (let i = 0; i < selectEl.options.length; i++) {
-        if (selectEl.options[i].text === text) {
-            selectEl.selectedIndex = i;
-            return;
-        }
-    }
-    selectEl.value = '';
-}
 
 function tutupModalPlotBtn() {
     document.getElementById('modal-plotting').classList.remove('open');
@@ -202,15 +145,6 @@ function tutupModalPlotOverlay(event) {
 /* --------------------------------------------------
    MODAL DETAIL KELOMPOK
    -------------------------------------------------- */
-// Data anggota dummy per kelompok
-const dataAnggota = {
-    'Tim Alpha':   ['Tegar (NIM: 2301010001)', 'Rina (NIM: 2301010002)', 'Budi (NIM: 2301010003)', 'Sari (NIM: 2301010004)', 'Alfi (NIM: 2301010005)'],
-    'Tim Beta':    ['Rina (NIM: 2301020001)', 'Dodi (NIM: 2301020002)', 'Mira (NIM: 2301020003)', 'Yusuf (NIM: 2301020004)'],
-    'Tim Gamma':   ['Budi (NIM: 2301030001)', 'Hani (NIM: 2301030002)', 'Rudi (NIM: 2301030003)', 'Lita (NIM: 2301030004)', 'Aryo (NIM: 2301030005)'],
-    'Tim Delta':   ['Aldi (NIM: 2301040001)', 'Citra (NIM: 2301040002)', 'Nanda (NIM: 2301040003)', 'Fajar (NIM: 2301040004)', 'Dewi (NIM: 2301040005)'],
-    'Tim Epsilon': ['Sari (NIM: 2301050001)', 'Kevin (NIM: 2301050002)', 'Eka (NIM: 2301050003)'],
-    'Tim Zeta':    ['Hendra (NIM: 2301060001)', 'Putri (NIM: 2301060002)', 'Bayu (NIM: 2301060003)', 'Nita (NIM: 2301060004)']
-};
 
 function bukaDetailKelompok(btn) {
     const row    = btn.closest('tr');
@@ -223,14 +157,29 @@ function bukaDetailKelompok(btn) {
     const status = cells[4].querySelector('.badge').textContent.trim();
     const isSelesai = status === 'Selesai';
 
-    document.getElementById('detail-modal-title').innerHTML = `<i class="fas fa-users" style="margin-right:10px; color:#A9C2D9;"></i> ${nama}`;
+    document.getElementById('detail-modal-title').innerHTML = `<i class="fas fa-users" style="margin-right:10px; color:#FFFFFF;"></i> ${nama}`;
 
-    const anggotaList = dataAnggota[nama] || [];
-    const anggotaHTML = anggotaList.map(a =>
-        `<div class="detail-member-item">
-            <span style="color:#6388AF; margin-right:8px;"><i class="fas fa-user-graduate"></i></span> ${a}
-        </div>`
-    ).join('');
+    const membersAttr = btn.getAttribute('data-members');
+    let members = [];
+    try {
+        if (membersAttr) {
+            members = JSON.parse(membersAttr);
+        }
+    } catch(e) {
+        console.error("Gagal parsing data-members:", e);
+    }
+
+    const anggotaHTML = members.map(m => {
+        const isKetua = m.peran.toLowerCase() === 'ketua';
+        const roleLabel = isKetua ? '<span style="background: #EEF2FF; color: #4F46E5; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">Ketua</span>' : '';
+        return `<div class="detail-member-item" style="padding: 10px 14px; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #334155; font-family: 'Inter', sans-serif;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="color:#6366F1;"><i class="fas fa-user-graduate"></i></span>
+                <span><strong>${m.nama}</strong> <span style="color: #64748B;">(NIM: ${m.nim})</span></span>
+            </div>
+            <div>${roleLabel}</div>
+        </div>`;
+    }).join('');
 
     document.getElementById('detail-modal-body').innerHTML = `
         <div class="detail-info-grid">
@@ -430,7 +379,6 @@ function showToast(message, type) {
    -------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
     highlightCurrentNav();
-    renderRekapDosen();
     // Initialize search filters for all verification tables
     // Bukti
     const searchBukti = document.getElementById('search-bukti');
@@ -493,5 +441,27 @@ function highlightCurrentNav() {
                 si.classList.add('active-sub');
             }
         });
+    } else if (currentPath === 'data_lengkap.php') {
+        const navDataLengkap = document.getElementById('nav-data-lengkap');
+        if (navDataLengkap) {
+            navDataLengkap.classList.add('active');
+        }
     }
+}
+
+
+function konfirmasiHapusPlot(kelompokId, kelompokNama) {
+    document.getElementById('hapus-plot-kelompok-id').value = kelompokId;
+    document.getElementById('hapus-plot-kelompok-nama').textContent = kelompokNama;
+    document.getElementById('modal-hapus-plot').classList.add('open');
+}
+
+function konfirmasiHapusDosen(dosenId, dosenNama, count) {
+    if (count > 0) {
+        alert(`Dosen "${dosenNama}" tidak dapat dihapus karena sedang aktif membimbing ${count} kelompok magang.`);
+        return;
+    }
+    document.getElementById('hapus-dosen-id').value = dosenId;
+    document.getElementById('hapus-dosen-nama').textContent = dosenNama;
+    document.getElementById('modal-hapus-dosen').classList.add('open');
 }

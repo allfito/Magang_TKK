@@ -14,6 +14,14 @@ class MahasiswaDashboardController extends BaseController
         parent::__construct();
     }
 
+    private function formatName(?string $name): string
+    {
+        if ($name === null || trim($name) === '') {
+            return '';
+        }
+        return ucwords(strtolower(trim($name)));
+    }
+
     /**
      * Kumpulkan semua data yang dibutuhkan dashboard mahasiswa.
      */
@@ -73,6 +81,11 @@ class MahasiswaDashboardController extends BaseController
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
 
+        if ($row) {
+            $row['nama'] = $this->formatName($row['nama']);
+            $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+        }
+
         return $row ?: null;
     }
 
@@ -87,7 +100,11 @@ class MahasiswaDashboardController extends BaseController
         );
         $stmt->bind_param('i', $kelompokId);
         $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        foreach ($rows as &$row) {
+            $row['nama'] = $this->formatName($row['nama']);
+        }
+        return $rows;
     }
 
     /**
@@ -112,7 +129,7 @@ class MahasiswaDashboardController extends BaseController
     {
         $stmt = $this->db->prepare(
             'SELECT COUNT(*) AS total,
-                    SUM(ba.status_verifikasi = "disetujui") AS approved
+                     SUM(ba.status_verifikasi = "disetujui") AS approved
              FROM berkas_anggota ba
              JOIN anggota_kelompok ak ON ba.anggota_id = ak.id
              WHERE ak.kelompok_id = ?'

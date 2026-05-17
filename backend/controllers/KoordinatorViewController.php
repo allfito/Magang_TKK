@@ -4,11 +4,24 @@ require_once __DIR__ . '/../core/BaseController.php';
 
 class KoordinatorViewController extends BaseController
 {
-    
-
     public function __construct()
     {
         parent::__construct();
+    }
+
+    /**
+     * Helper to format name to Title Case (Capitalize each word)
+     */
+    private function formatName(?string $name): string
+    {
+        if ($name === null || trim($name) === '') {
+            return '';
+        }
+        // Protect placeholder values like '-'
+        if (trim($name) === '-') {
+            return '-';
+        }
+        return ucwords(strtolower(trim($name)));
     }
 
     public function getActiveGroupCount(): int
@@ -67,7 +80,12 @@ class KoordinatorViewController extends BaseController
                    OR EXISTS(SELECT 1 FROM bukti_diterima bd WHERE bd.kelompok_id = k.id AND bd.status_verifikasi = 'menunggu')
                 ORDER BY k.nama ASC";
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['kelompok_nama'] = $this->formatName($row['kelompok_nama']);
+            $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+        }
+        return $rows;
     }
 
     public function getMembersCount(int $kelompokId): int
@@ -99,7 +117,14 @@ class KoordinatorViewController extends BaseController
                 JOIN user u ON k.ketua_user_id = u.id
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['kelompok_nama'] = $this->formatName($row['kelompok_nama']);
+            $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+            $row['perusahaan'] = $this->formatName($row['perusahaan']);
+            $row['nama_pimpinan'] = $this->formatName($row['nama_pimpinan']);
+        }
+        return $rows;
     }
 
     public function getGroupsForProposalVerification(string $sortBy = 'tanggal_terbaru'): array
@@ -121,7 +146,12 @@ class KoordinatorViewController extends BaseController
                 JOIN user u ON k.ketua_user_id = u.id
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['kelompok_nama'] = $this->formatName($row['kelompok_nama']);
+            $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+        }
+        return $rows;
     }
 
     public function getGroupsForBerkasVerification(string $sortBy = 'tanggal_terbaru'): array
@@ -151,7 +181,12 @@ class KoordinatorViewController extends BaseController
                 GROUP BY k.id, k.nama, u.id, u.nama
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['kelompok_nama'] = $this->formatName($row['kelompok_nama']);
+            $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+        }
+        return $rows;
     }
 
     public function getBerkasByGroup(int $kelompokId): array
@@ -161,11 +196,15 @@ class KoordinatorViewController extends BaseController
                 JOIN mahasiswa m ON a.mahasiswa_id = m.id
                 JOIN berkas_anggota b ON a.id = b.anggota_id
                 WHERE a.kelompok_id = ?
-                ORDER BY m.nama ASC, b.jenis_berkas ASC";
+                ORDER BY CASE WHEN a.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC, b.jenis_berkas ASC";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('i', $kelompokId);
         $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        foreach ($rows as &$row) {
+            $row['anggota_nama'] = $this->formatName($row['anggota_nama']);
+        }
+        return $rows;
     }
 
     public function getGroupsForBuktiVerification(string $sortBy = 'tanggal_terbaru'): array
@@ -188,7 +227,13 @@ class KoordinatorViewController extends BaseController
                 JOIN user u ON k.ketua_user_id = u.id
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['kelompok_nama'] = $this->formatName($row['kelompok_nama']);
+            $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+            $row['tempat_diterima'] = $this->formatName($row['tempat_diterima']);
+        }
+        return $rows;
     }
 
     public function getGroupsForPlotting(string $sortBy = 'nama_a'): array
@@ -203,6 +248,7 @@ class KoordinatorViewController extends BaseController
         
         $sql = "SELECT k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
                 COALESCE(per.nama, '') AS lokasi, COALESCE(d.nama, '') AS dosen_pembimbing,
+                pl.id AS plotting_id, d.id AS dosen_id,
                 COUNT(a.id) AS anggota_count,
                 CASE WHEN pl.id IS NULL THEN 'menunggu' ELSE 'selesai' END AS status
                 FROM kelompok k
@@ -212,10 +258,17 @@ class KoordinatorViewController extends BaseController
                 LEFT JOIN perusahaan per ON plok.perusahaan_id = per.id
                 LEFT JOIN anggota_kelompok a ON a.kelompok_id = k.id
                 JOIN user u ON k.ketua_user_id = u.id
-                GROUP BY k.id, k.nama, u.id, u.nama, per.nama, d.nama, pl.id
+                GROUP BY k.id, k.nama, u.id, u.nama, per.nama, d.nama, pl.id, d.id
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['kelompok_nama'] = $this->formatName($row['kelompok_nama']);
+            $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+            $row['lokasi'] = $this->formatName($row['lokasi']);
+            $row['dosen_pembimbing'] = $this->formatName($row['dosen_pembimbing']);
+        }
+        return $rows;
     }
 
     public function getPlottingSummary(): array
@@ -226,7 +279,11 @@ class KoordinatorViewController extends BaseController
                 GROUP BY d.nama
                 ORDER BY jumlah_kelompok DESC";
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['dosen_pembimbing'] = $this->formatName($row['dosen_pembimbing']);
+        }
+        return $rows;
     }
 
     public function getCompleteGroupsData(string $sortBy = 'nama_a'): array
@@ -243,13 +300,14 @@ class KoordinatorViewController extends BaseController
                     k.id AS kelompok_id,
                     k.nama AS kelompok_nama,
                     COUNT(DISTINCT a.id) AS jumlah_mhs,
-                    GROUP_CONCAT(DISTINCT m.nama ORDER BY m.nama SEPARATOR ', ') AS nama_mahasiswa,
-                    GROUP_CONCAT(DISTINCT m.nim ORDER BY m.nama SEPARATOR ', ') AS nim,
-                    GROUP_CONCAT(DISTINCT m.no_tlp ORDER BY m.nama SEPARATOR ', ') AS no_hp,
+                    GROUP_CONCAT(m.nama ORDER BY CASE WHEN a.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ') AS nama_mahasiswa,
+                    GROUP_CONCAT(m.nim ORDER BY CASE WHEN a.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ') AS nim,
+                    GROUP_CONCAT(m.no_tlp ORDER BY CASE WHEN a.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ') AS no_hp,
                     COALESCE(MAX(per.nama), '-') AS lokasi_magang,
                     COALESCE(MAX(per.alamat), '-') AS alamat_lengkap,
                     COALESCE(MAX(per.latitude), '') AS latitude,
                     COALESCE(MAX(per.longitude), '') AS longitude,
+                    COALESCE(MAX(pl.status_verifikasi), 'belum') AS status_lokasi,
                     COALESCE(MAX(p.status_verifikasi), 'belum_upload') AS status_proposal,
                     MAX(u.nama) AS ketua_nama,
                     MAX(u.no_tlp) AS kontak_ketua,
@@ -266,13 +324,49 @@ class KoordinatorViewController extends BaseController
                 GROUP BY k.id, k.nama
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['kelompok_nama'] = $this->formatName($row['kelompok_nama']);
+            $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+            $row['lokasi_magang'] = $this->formatName($row['lokasi_magang']);
+            $row['cp_nama'] = $this->formatName($row['cp_nama']);
+            
+            if (!empty($row['nama_mahasiswa']) && $row['nama_mahasiswa'] !== '-') {
+                $names = explode(', ', $row['nama_mahasiswa']);
+                $formatted = array_map(function($n) {
+                    return $this->formatName($n);
+                }, $names);
+                $row['nama_mahasiswa'] = implode(', ', $formatted);
+            }
+        }
+        return $rows;
     }
 
     public function getAllDosen(): array
     {
-        $sql = "SELECT nama FROM dosen ORDER BY nama ASC";
+        $sql = "SELECT id, nip, nama, no_tlp FROM dosen ORDER BY nama ASC";
         $result = $this->db->query($sql);
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        foreach ($rows as &$row) {
+            $row['nama'] = $this->formatName($row['nama']);
+        }
+        return $rows;
+    }
+
+    public function getGroupMembers(int $kelompokId): array
+    {
+        $sql = "SELECT m.nama, m.nim, ak.peran
+                FROM anggota_kelompok ak
+                JOIN mahasiswa m ON ak.mahasiswa_id = m.id
+                WHERE ak.kelompok_id = ?
+                ORDER BY CASE WHEN ak.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param('i', $kelompokId);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        foreach ($rows as &$row) {
+            $row['nama'] = $this->formatName($row['nama']);
+        }
+        return $rows;
     }
 }

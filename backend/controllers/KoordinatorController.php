@@ -56,18 +56,21 @@ class KoordinatorController extends BaseController
     // PLOTTING DOSEN
     // ---------------------------------------------------------------
 
-    public function plotDosen(int $kelompokId, string $dosenPembimbing): array
+    public function plotDosen(int $kelompokId, string $dosenPembimbing, int $korbidId): array
     {
-        if ($kelompokId <= 0 || empty($dosenPembimbing)) {
+        if ($kelompokId <= 0 || empty(trim($dosenPembimbing))) {
             return $this->error('Dosen pembimbing wajib diisi.');
         }
 
         try {
-            // Cari atau buat data dosen
-            $dosenId = $this->koordinatorModel->findDosenByName($dosenPembimbing)
-                ?? $this->koordinatorModel->createDosen($dosenPembimbing);
+            // Cari data dosen pembimbing
+            $dosenId = $this->koordinatorModel->findDosenByName($dosenPembimbing);
 
-            if ($this->koordinatorModel->upsertPlotting($kelompokId, $dosenId)) {
+            if (!$dosenId) {
+                return $this->error('Dosen "' . $dosenPembimbing . '" belum terdaftar. Silakan tambahkan dosen terlebih dahulu.');
+            }
+
+            if ($this->koordinatorModel->upsertPlotting($kelompokId, $dosenId, $korbidId)) {
                 return $this->success('Plotting dosen berhasil disimpan.');
             }
 
@@ -75,5 +78,35 @@ class KoordinatorController extends BaseController
         } catch (Exception $e) {
             return $this->error('Terjadi kesalahan saat memproses plotting.');
         }
+    }
+
+    public function deletePlotting(int $kelompokId): array
+    {
+        if ($kelompokId <= 0) {
+            return $this->error('ID kelompok tidak valid.');
+        }
+
+        if ($this->koordinatorModel->deletePlotting($kelompokId)) {
+            return $this->success('Plotting dosen pembimbing berhasil dihapus.');
+        }
+
+        return $this->error('Gagal menghapus plotting dosen pembimbing.');
+    }
+
+    public function deleteDosen(int $dosenId): array
+    {
+        if ($dosenId <= 0) {
+            return $this->error('ID dosen tidak valid.');
+        }
+
+        if ($this->koordinatorModel->checkDosenHasPlotting($dosenId)) {
+            return $this->error('Dosen pembimbing tidak dapat dihapus karena sedang aktif membimbing kelompok magang.');
+        }
+
+        if ($this->koordinatorModel->deleteDosen($dosenId)) {
+            return $this->success('Dosen pembimbing berhasil dihapus.');
+        }
+
+        return $this->error('Gagal menghapus dosen pembimbing.');
     }
 }

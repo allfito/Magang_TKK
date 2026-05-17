@@ -181,4 +181,9 @@ class KoordinatorHelper
 
         return '-';
     }
+
+    public static function getGroupMembers(int $kelompokId): array
+    {
+        return self::getController()->getGroupMembers($kelompokId);
+    }
 }

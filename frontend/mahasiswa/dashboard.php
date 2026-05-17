@@ -6,7 +6,7 @@ $pageTitle = 'Dashboard Mahasiswa - SIMM';
 $activePage = 'dashboard';
 
 $user = MahasiswaHelper::currentUser();
-$userName = $user ? htmlspecialchars($user['nama']) : 'Mahasiswa';
+$userName = $user ? htmlspecialchars(ucwords(strtolower(trim($user['nama'])))) : 'Mahasiswa';
 $userEmail = $user ? htmlspecialchars($user['email']) : '';
 
 // Get dashboard data via Controller
@@ -67,8 +67,8 @@ require __DIR__ . '/header.php';
                 <div class="card-body kel-info">
                     <?php if ($kelompok): ?>
                     <div class="kel-details">
-                        <p>Kelompok: <?= htmlspecialchars($kelompok['nama']) ?></p>
-                        <p>Ketua Kelompok: <?= htmlspecialchars($kelompok['ketua_nama']) ?><?= $isKetua ? ' (anda)' : '' ?></p>
+                        <p>Kelompok: <?= htmlspecialchars(ucwords(strtolower($kelompok['nama']))) ?></p>
+                        <p>Ketua Kelompok: <?= htmlspecialchars(ucwords(strtolower($kelompok['ketua_nama']))) ?><?= $isKetua ? ' (anda)' : '' ?></p>
                         <p>Jumlah anggota: <?= count($anggotaList) ?> orang</p>
                     </div>
                     <div class="kel-action">
@@ -143,7 +143,7 @@ require __DIR__ . '/header.php';
                         <tbody>
                             <?php foreach ($anggotaList as $anggota): ?>
                             <tr>
-                                <td><?= htmlspecialchars($anggota['nama']) ?></td>
+                                <td><?= htmlspecialchars(ucwords(strtolower($anggota['nama']))) ?></td>
                                 <td><?= htmlspecialchars($anggota['nim']) ?></td>
                                 <td><?= htmlspecialchars(ucfirst($anggota['peran'])) ?></td>
                                 <td><?= berkasStatusBadge($anggota['status_berkas']) ?></td>

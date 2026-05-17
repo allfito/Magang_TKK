@@ -11,6 +11,14 @@ class MahasiswaPendaftaranViewController
         $this->db = Database::getInstance()->getConnection();
     }
 
+    private function formatName(?string $name): string
+    {
+        if ($name === null || trim($name) === '') {
+            return '';
+        }
+        return ucwords(strtolower(trim($name)));
+    }
+
     public function getPendaftaranData(int $userId): array
     {
         $data = [
@@ -39,12 +47,21 @@ class MahasiswaPendaftaranViewController
             $stmt = $this->db->prepare('SELECT ak.id, m.nama, ak.peran FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
             $stmt->bind_param('i', $kelId);
             $stmt->execute();
-            $data['anggotaList'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $anggota = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            foreach ($anggota as &$ang) {
+                $ang['nama'] = $this->formatName($ang['nama']);
+            }
+            $data['anggotaList'] = $anggota;
 
             $stmt = $this->db->prepare('SELECT p.nama AS perusahaan, p.nama_pimpinan, p.bidang, p.telepon, p.alamat, p.latitude, p.longitude, pl.status_verifikasi, pl.updated_at, pl.catatan FROM pendaftaran_lokasi pl JOIN perusahaan p ON pl.perusahaan_id = p.id WHERE pl.kelompok_id = ? LIMIT 1');
             $stmt->bind_param('i', $kelId);
             $stmt->execute();
-            $data['lokasi'] = $stmt->get_result()->fetch_assoc();
+            $lok = $stmt->get_result()->fetch_assoc();
+            if ($lok) {
+                $lok['perusahaan'] = $this->formatName($lok['perusahaan']);
+                $lok['nama_pimpinan'] = $this->formatName($lok['nama_pimpinan']);
+            }
+            $data['lokasi'] = $lok;
 
             $stmt = $this->db->prepare('SELECT * FROM proposal WHERE kelompok_id = ? LIMIT 1');
             $stmt->bind_param('i', $kelId);
@@ -54,12 +71,20 @@ class MahasiswaPendaftaranViewController
             $stmt = $this->db->prepare('SELECT bd.id, p.nama AS tempat_diterima, bd.file_path, bd.status_verifikasi FROM bukti_diterima bd JOIN perusahaan p ON bd.perusahaan_id = p.id WHERE bd.kelompok_id = ? LIMIT 1');
             $stmt->bind_param('i', $kelId);
             $stmt->execute();
-            $data['bukti'] = $stmt->get_result()->fetch_assoc();
+            $buk = $stmt->get_result()->fetch_assoc();
+            if ($buk) {
+                $buk['tempat_diterima'] = $this->formatName($buk['tempat_diterima']);
+            }
+            $data['bukti'] = $buk;
 
-            $stmt = $this->db->prepare('SELECT pl.*, d.nama AS dosen_pembimbing FROM plotting pl JOIN dosen d ON pl.dosen_id = d.id WHERE pl.kelompok_id = ? LIMIT 1');
+            $stmt = $this->db->prepare('SELECT pl.*, d.nama AS dosen_pembimbing, d.nip, d.no_tlp FROM plotting pl JOIN dosen d ON pl.dosen_id = d.id WHERE pl.kelompok_id = ? LIMIT 1');
             $stmt->bind_param('i', $kelId);
             $stmt->execute();
-            $data['plotting'] = $stmt->get_result()->fetch_assoc();
+            $plot = $stmt->get_result()->fetch_assoc();
+            if ($plot) {
+                $plot['dosen_pembimbing'] = $this->formatName($plot['dosen_pembimbing']);
+            }
+            $data['plotting'] = $plot;
 
             $bStmt = $this->db->prepare('SELECT ba.anggota_id, ba.jenis_berkas, ba.file_path, ba.status_verifikasi, ba.created_at FROM berkas_anggota ba JOIN anggota_kelompok ak ON ba.anggota_id = ak.id WHERE ak.kelompok_id = ?');
             $bStmt->bind_param('i', $kelId);
