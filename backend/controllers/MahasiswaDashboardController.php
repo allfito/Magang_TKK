@@ -52,7 +52,14 @@ class MahasiswaDashboardController extends BaseController
         $kelompokId = $data['kelompokId'];
 
         $data['anggotaList']    = $this->getAnggotaList($kelompokId);
-        $data['lokasiStatus']   = $this->getStatusField('pendaftaran_lokasi', 'kelompok_id', $kelompokId, 'menunggu') ?? 'belum';
+        
+        $statusProgress = $kelompok['status_progress'] ?? '';
+        if ($statusProgress === 'Ditolak Perusahaan') {
+            $data['lokasiStatus'] = 'ditolak_perusahaan';
+        } else {
+            $data['lokasiStatus'] = $this->getStatusField('pendaftaran_lokasi', 'kelompok_id', $kelompokId, 'menunggu') ?? 'belum';
+        }
+        
         $data['proposalStatus'] = $this->getStatusField('proposal', 'kelompok_id', $kelompokId, 'menunggu') ?? 'belum';
         $data['berkasStatus']   = $this->getBerkasStatus($kelompokId);
         $data['buktiStatus']    = $this->getStatusField('bukti_diterima', 'kelompok_id', $kelompokId, 'menunggu') ?? 'belum';
@@ -72,7 +79,7 @@ class MahasiswaDashboardController extends BaseController
     {
         // Cek sebagai ketua
         $stmt = $this->db->prepare(
-            'SELECT k.id, k.nama, k.ketua_user_id, u.nama AS ketua_nama
+            'SELECT k.id, k.nama, k.ketua_user_id, k.status_progress, k.tahun_angkatan, u.nama AS ketua_nama
              FROM kelompok k
              JOIN user u ON k.ketua_user_id = u.id
              WHERE k.ketua_user_id = ? LIMIT 1'

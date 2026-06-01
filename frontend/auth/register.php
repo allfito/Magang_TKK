@@ -55,7 +55,7 @@ unset($_SESSION['error']);
                         </div>
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" name="email" id="reg-email" class="form-control" placeholder="nama@student.polije.ac.id" required>
+                            <input type="email" name="email" id="reg-email" class="form-control" placeholder="nim@student.polije.ac.id" required>
                         </div>
                         <div class="form-group">
                             <label>No. Telepon</label>

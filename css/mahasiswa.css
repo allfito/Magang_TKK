@@ -375,6 +375,11 @@ html {
     /* Match the active light blue step */
 }
 
+.step.rejected .step-circle {
+    background-color: #EA5455;
+    color: white;
+}
+
 .step-title {
     font-size: 14px;
     font-weight: 500;

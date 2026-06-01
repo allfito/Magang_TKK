@@ -24,7 +24,7 @@ class KelompokController extends BaseController
     /**
      * Buat kelompok beserta anggota-anggotanya.
      */
-    public function createKelompok(int $userId, string $namaKelompok, array $anggotaRaw): array
+    public function createKelompok(int $userId, string $namaKelompok, array $anggotaRaw, ?int $tahunAngkatan = null): array
     {
         if (trim($namaKelompok) === '') {
             return $this->error('Nama kelompok wajib diisi.');
@@ -36,13 +36,27 @@ class KelompokController extends BaseController
             return $this->error('Kelompok harus terdiri dari 3 sampai 4 anggota (minimal ketua + 2 anggota).');
         }
 
+        // Cek duplikat NIM di input
+        $nims = array_column($anggotaValid, 'nim');
+        if (count($nims) !== count(array_unique($nims))) {
+            return $this->error('Terdapat duplikasi NIM dalam anggota yang dimasukkan.');
+        }
+
+        // Cek apakah ada NIM yang sudah terdaftar di kelompok lain
+        foreach ($anggotaValid as $member) {
+            $kelompokLain = $this->mahasiswaModel->findKelompokByNim($member['nim']);
+            if ($kelompokLain) {
+                return $this->error("Mahasiswa dengan NIM {$member['nim']} ({$member['nama']}) sudah terdaftar di kelompok lain.");
+            }
+        }
+
         if ($this->kelompokModel->findByKetua($userId)) {
             return $this->error('Anda sudah memiliki kelompok.');
         }
 
         $this->db->begin_transaction();
         try {
-            $kelompokId = $this->kelompokModel->create(trim($namaKelompok), $userId);
+            $kelompokId = $this->kelompokModel->create(trim($namaKelompok), $userId, $tahunAngkatan);
 
             foreach ($anggotaValid as $index => $member) {
                 $peran = ($index === 0) ? 'ketua' : 'anggota';
@@ -114,6 +128,16 @@ class KelompokController extends BaseController
         }
         if (mb_strlen($noTlp) > 15) {
             return $this->error('No telepon maksimal 15 karakter.');
+        }
+
+        // Cek apakah NIM sudah terdaftar pada mahasiswa lain
+        $existingMahasiswa = $this->mahasiswaModel->findByNim($nim);
+        if ($existingMahasiswa && (int) $existingMahasiswa['id'] !== $mahasiswaId) {
+            $kelompokLain = $this->mahasiswaModel->findKelompokByNim($nim);
+            if ($kelompokLain) {
+                return $this->error("Mahasiswa dengan NIM {$nim} sudah terdaftar di kelompok lain.");
+            }
+            return $this->error("NIM {$nim} sudah terdaftar pada mahasiswa lain.");
         }
 
         try {
@@ -193,6 +217,12 @@ class KelompokController extends BaseController
         }
         if (mb_strlen($noTlp) > 15) {
             return $this->error('No telepon maksimal 15 karakter.');
+        }
+
+        // Cek apakah NIM sudah terdaftar di kelompok lain
+        $kelompokLain = $this->mahasiswaModel->findKelompokByNim($nim);
+        if ($kelompokLain) {
+            return $this->error("Mahasiswa dengan NIM {$nim} sudah terdaftar di kelompok lain.");
         }
 
         $this->db->begin_transaction();

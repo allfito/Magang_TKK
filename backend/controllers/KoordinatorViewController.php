@@ -64,26 +64,54 @@ class KoordinatorViewController extends BaseController
 
     public function getGroupsPendingVerification(): array
     {
-        $sql = "SELECT DISTINCT k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
+        $sql = "SELECT DISTINCT k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama, k.status_progress,
+                (SELECT GROUP_CONCAT(m.nama ORDER BY CASE WHEN ak.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ')
+                 FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = k.id) AS nama_mahasiswa,
+                (SELECT GROUP_CONCAT(m.nim ORDER BY CASE WHEN ak.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ')
+                 FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = k.id) AS nim,
+                (SELECT GROUP_CONCAT(m.no_tlp ORDER BY CASE WHEN ak.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ')
+                 FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = k.id) AS no_hp,
+                COALESCE((SELECT per.nama FROM pendaftaran_lokasi pl JOIN perusahaan per ON pl.perusahaan_id = per.id WHERE pl.kelompok_id = k.id LIMIT 1), '-') AS lokasi_magang,
+                COALESCE((SELECT per.alamat FROM pendaftaran_lokasi pl JOIN perusahaan per ON pl.perusahaan_id = per.id WHERE pl.kelompok_id = k.id LIMIT 1), '-') AS alamat_lengkap,
+                (SELECT per.latitude FROM pendaftaran_lokasi pl JOIN perusahaan per ON pl.perusahaan_id = per.id WHERE pl.kelompok_id = k.id LIMIT 1) AS latitude,
+                (SELECT per.longitude FROM pendaftaran_lokasi pl JOIN perusahaan per ON pl.perusahaan_id = per.id WHERE pl.kelompok_id = k.id LIMIT 1) AS longitude,
+                COALESCE((SELECT per.nama_pimpinan FROM pendaftaran_lokasi pl JOIN perusahaan per ON pl.perusahaan_id = per.id WHERE pl.kelompok_id = k.id LIMIT 1), '-') AS cp_nama,
+                COALESCE((SELECT per.telepon FROM pendaftaran_lokasi pl JOIN perusahaan per ON pl.perusahaan_id = per.id WHERE pl.kelompok_id = k.id LIMIT 1), '-') AS cp_tlp,
                 CASE
                     WHEN EXISTS(SELECT 1 FROM pendaftaran_lokasi pl WHERE pl.kelompok_id = k.id AND pl.status_verifikasi = 'menunggu') THEN 'Lokasi Magang'
                     WHEN EXISTS(SELECT 1 FROM proposal pr WHERE pr.kelompok_id = k.id AND pr.status_verifikasi = 'menunggu') THEN 'Proposal'
                     WHEN EXISTS(SELECT 1 FROM anggota_kelompok a JOIN berkas_anggota b ON a.id = b.anggota_id WHERE a.kelompok_id = k.id AND b.status_verifikasi = 'menunggu') THEN 'Berkas'
                     WHEN EXISTS(SELECT 1 FROM bukti_diterima bd WHERE bd.kelompok_id = k.id AND bd.status_verifikasi = 'menunggu') THEN 'Bukti Diterima'
-                    ELSE 'Info Kelompok'
-                END AS jenis_verifikasi
+                    ELSE '-'
+                END AS jenis_verifikasi,
+                CASE
+                    WHEN EXISTS(SELECT 1 FROM pendaftaran_lokasi pl WHERE pl.kelompok_id = k.id AND pl.status_verifikasi = 'menunggu') OR
+                         EXISTS(SELECT 1 FROM proposal pr WHERE pr.kelompok_id = k.id AND pr.status_verifikasi = 'menunggu') OR
+                         EXISTS(SELECT 1 FROM anggota_kelompok a JOIN berkas_anggota b ON a.id = b.anggota_id WHERE a.kelompok_id = k.id AND b.status_verifikasi = 'menunggu') OR
+                         EXISTS(SELECT 1 FROM bukti_diterima bd WHERE bd.kelompok_id = k.id AND bd.status_verifikasi = 'menunggu') THEN 'Menunggu'
+                    WHEN NOT EXISTS(SELECT 1 FROM pendaftaran_lokasi pl WHERE pl.kelompok_id = k.id) OR k.status_progress = 'Ditolak Perusahaan' THEN 'Belum Mengajukan'
+                    WHEN EXISTS(SELECT 1 FROM bukti_diterima bd WHERE bd.kelompok_id = k.id AND bd.status_verifikasi = 'disetujui') THEN 'Selesai'
+                    ELSE '-'
+                END AS status_kelompok
                 FROM kelompok k
                 JOIN user u ON k.ketua_user_id = u.id
-                WHERE EXISTS(SELECT 1 FROM pendaftaran_lokasi pl WHERE pl.kelompok_id = k.id AND pl.status_verifikasi = 'menunggu')
-                   OR EXISTS(SELECT 1 FROM proposal pr WHERE pr.kelompok_id = k.id AND pr.status_verifikasi = 'menunggu')
-                   OR EXISTS(SELECT 1 FROM anggota_kelompok a JOIN berkas_anggota b ON a.id = b.anggota_id WHERE a.kelompok_id = k.id AND b.status_verifikasi = 'menunggu')
-                   OR EXISTS(SELECT 1 FROM bukti_diterima bd WHERE bd.kelompok_id = k.id AND bd.status_verifikasi = 'menunggu')
                 ORDER BY k.nama ASC";
         $result = $this->db->query($sql);
         $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         foreach ($rows as &$row) {
             $row['kelompok_nama'] = $this->formatName($row['kelompok_nama']);
             $row['ketua_nama'] = $this->formatName($row['ketua_nama']);
+            $row['lokasi_magang'] = $this->formatName($row['lokasi_magang']);
+            $row['alamat_lengkap'] = $row['alamat_lengkap'];
+            $row['cp_nama'] = $this->formatName($row['cp_nama']);
+            
+            if (!empty($row['nama_mahasiswa'])) {
+                $names = explode(', ', $row['nama_mahasiswa']);
+                $formatted = array_map(function($n) {
+                    return $this->formatName($n);
+                }, $names);
+                $row['nama_mahasiswa'] = implode(', ', $formatted);
+            }
         }
         return $rows;
     }
@@ -110,11 +138,14 @@ class KoordinatorViewController extends BaseController
         }
         
         $sql = "SELECT pl.id AS lokasi_id, k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
-                p.nama AS perusahaan, p.bidang, p.alamat, p.nama_pimpinan, p.telepon, pl.status_verifikasi, pl.created_at
+                (SELECT GROUP_CONCAT(m.nim ORDER BY CASE WHEN ak.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ')
+                 FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = k.id) AS nim,
+                p.nama AS perusahaan, p.bidang, p.alamat, p.nama_pimpinan, p.telepon, pl.status_verifikasi, pl.created_at, pl.catatan
                 FROM pendaftaran_lokasi pl
                 JOIN perusahaan p ON pl.perusahaan_id = p.id
                 JOIN kelompok k ON pl.kelompok_id = k.id
                 JOIN user u ON k.ketua_user_id = u.id
+                WHERE k.status_progress != 'Ditolak Perusahaan'
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
         $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
@@ -140,6 +171,8 @@ class KoordinatorViewController extends BaseController
         }
         
         $sql = "SELECT pr.id AS proposal_id, k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
+                (SELECT GROUP_CONCAT(m.nim ORDER BY CASE WHEN ak.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ')
+                 FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = k.id) AS nim,
                 pr.file_path, pr.status_verifikasi, pr.created_at
                 FROM proposal pr
                 JOIN kelompok k ON pr.kelompok_id = k.id
@@ -167,6 +200,8 @@ class KoordinatorViewController extends BaseController
         }
         
         $sql = "SELECT k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
+                (SELECT GROUP_CONCAT(m.nim ORDER BY CASE WHEN ak.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ')
+                 FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = k.id) AS nim,
                 COUNT(b.id) AS jumlah_berkas,
                 MAX(b.created_at) AS tanggal_upload,
                 CASE
@@ -220,6 +255,8 @@ class KoordinatorViewController extends BaseController
         }
         
         $sql = "SELECT bd.id AS bukti_id, k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
+                (SELECT GROUP_CONCAT(m.nim ORDER BY CASE WHEN ak.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ')
+                 FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = k.id) AS nim,
                 p.nama AS tempat_diterima, bd.file_path, bd.status_verifikasi, bd.created_at
                 FROM bukti_diterima bd
                 JOIN perusahaan p ON bd.perusahaan_id = p.id
@@ -286,10 +323,11 @@ class KoordinatorViewController extends BaseController
         return $rows;
     }
 
-    public function getCompleteGroupsData(string $sortBy = 'nama_a'): array
+    public function getCompleteGroupsData(string $sortBy = 'pendaftaran'): array
     {
-        $orderBy = "k.nama ASC";
+        $orderBy = "k.id ASC";
         switch($sortBy) {
+            case 'nama_a': $orderBy = "k.nama ASC"; break;
             case 'nama_z': $orderBy = "k.nama DESC"; break;
             case 'ketua_a': $orderBy = "MAX(u.nama) ASC"; break;
             case 'ketua_z': $orderBy = "MAX(u.nama) DESC"; break;
@@ -299,6 +337,7 @@ class KoordinatorViewController extends BaseController
         $sql = "SELECT 
                     k.id AS kelompok_id,
                     k.nama AS kelompok_nama,
+                    k.status_progress,
                     COUNT(DISTINCT a.id) AS jumlah_mhs,
                     GROUP_CONCAT(m.nama ORDER BY CASE WHEN a.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ') AS nama_mahasiswa,
                     GROUP_CONCAT(m.nim ORDER BY CASE WHEN a.peran = 'ketua' THEN 0 ELSE 1 END ASC, m.nama ASC SEPARATOR ', ') AS nim,
@@ -321,7 +360,7 @@ class KoordinatorViewController extends BaseController
                 LEFT JOIN perusahaan per ON pl.perusahaan_id = per.id
                 LEFT JOIN proposal p ON k.id = p.kelompok_id
                 JOIN user u ON k.ketua_user_id = u.id
-                GROUP BY k.id, k.nama
+                GROUP BY k.id, k.nama, k.status_progress
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
         $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];

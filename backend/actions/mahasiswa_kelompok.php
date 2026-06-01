@@ -15,11 +15,12 @@ if (!$userId || ($_SESSION['role'] ?? '') !== 'mahasiswa') {
 
 require_once __DIR__ . '/../controllers/KelompokController.php';
 
-$namaKelompok = trim($_POST['nama_kelompok'] ?? '');
-$anggota      = $_POST['anggota'] ?? [];
+$namaKelompok   = trim($_POST['nama_kelompok'] ?? '');
+$tahunAngkatan  = !empty($_POST['tahun_angkatan']) ? (int) $_POST['tahun_angkatan'] : null;
+$anggota        = $_POST['anggota'] ?? [];
 
 $controller = new KelompokController();
-$result     = $controller->createKelompok((int) $userId, $namaKelompok, $anggota);
+$result     = $controller->createKelompok((int) $userId, $namaKelompok, $anggota, $tahunAngkatan);
 
 if ($result['status']) {
     $_SESSION['success'] = $result['message'];

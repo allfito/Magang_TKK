@@ -49,7 +49,7 @@ unset($_SESSION['success']);
                     <form method="POST" action="../../backend/auth/login.php" id="login-form">
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" name="email" id="login-email" class="form-control" placeholder="sultansalahuddin@students.college.ac.id" required>
+                            <input type="email" name="email" id="login-email" class="form-control" placeholder="nim@students.polije.ac.id" required>
                         </div>
                         <div class="form-group">
                             <label>Password</label>

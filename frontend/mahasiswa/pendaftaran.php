@@ -46,23 +46,23 @@ if ($berkasUploadDate) {
 // Determine if berkas form should be editable (menunggu or ditolak can edit)
 // Note: $berkasEditable is set after step variables below
 
-$step1Done = ($lokasiDb !== null);
-$step1Status = $lokasiDb['status_verifikasi'] ?? 'belum';
+$step1Done = ($lokasiDb !== null && ($pendaftaranData['status_progress'] ?? '') !== 'Ditolak Perusahaan');
+$step1Status = (($pendaftaranData['status_progress'] ?? '') === 'Ditolak Perusahaan') ? 'belum' : ($lokasiDb['status_verifikasi'] ?? 'belum');
 
 $step2Open = ($step1Status === 'disetujui');
 $step2Done = ($proposalDb !== null);
 $step2Status = $proposalDb['status_verifikasi'] ?? 'belum';
 
-$step3Open = ($step2Status === 'disetujui');
+$step3Open = ($step2Open && $step2Status === 'disetujui');
 $step3Done = ($berkasStatus !== 'belum');
 $step3Status = $berkasStatus;
 $berkasEditable = ($step3Done && ($berkasStatus === 'menunggu' || $berkasStatus === 'ditolak'));
 
-$step4Open = ($step3Status === 'disetujui');
+$step4Open = ($step3Open && $step3Status === 'disetujui');
 $step4Done = ($buktiDb !== null);
 $step4Status = $buktiDb['status_verifikasi'] ?? 'belum';
 
-$step5Open = ($step4Status === 'disetujui');
+$step5Open = ($step4Open && $step4Status === 'disetujui');
 $step5Done = ($plotting !== null);
 
 function stepBadge($status) {
@@ -102,6 +102,12 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                             <!-- Form -->
                             <div class="t-body t-form" id="form-1" style="<?= $step1Done ? 'display:none;' : '' ?>">
+                                <?php if (($pendaftaranData['status_progress'] ?? '') === 'Ditolak Perusahaan'): ?>
+                                    <div style="background: #FEE2E2; color: #EF4444; border: 1px solid #FCA5A5; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="flex-shrink:0;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                        Pendaftaran Anda sebelumnya ditolak oleh perusahaan. Silakan ajukan lokasi magang baru di bawah ini.
+                                    </div>
+                                <?php endif; ?>
                                 <form class="profile-form" id="form-el-1" method="POST" action="../../backend/actions/mahasiswa_pendaftaran.php" onsubmit="return isiCompleted(1)">
                                     <div class="form-row">
                                         <div class="form-group">
@@ -120,7 +126,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             <input type="text" id="inp-bidang" name="bidang" placeholder="Bidang perusahaan" value="<?= htmlspecialchars($lokasi['bidang'] ?? '') ?>" required>
                                         </div>
                                         <div class="form-group">
-                                            <label>Telepon <span style="color:#EA5455">*</span> <small style="color:#A0B2C0;font-weight:400;">(10-13 digit, diawali 08)</small></label>
+                                            <label>Telepon <span style="color:#EA5455">*</span></label>
                                              <input type="text" id="inp-telepon" name="telepon" placeholder="Nomor telepon" required minlength="10" maxlength="13" pattern="08[0-9]{8,11}" value="<?= htmlspecialchars($lokasi['telepon'] ?? '') ?>" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka">
                                         </div>
                                     </div>
@@ -202,18 +208,19 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                 Informasi Tambahan
                                             </div>
                                             <div class="info-field-item">
-                                                <span class="info-field-label">Tanggal Disetujui</span>
-                                                <span class="info-field-value"><?php
-                                                    $tgl = '-';
-                                                    if ($step1Status === 'disetujui' && !empty($lokasi['updated_at'])) {
-                                                        $bn = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-                                                        $dt = new DateTime($lokasi['updated_at']);
-                                                        $tgl = $dt->format('j') . ' ' . $bn[(int)$dt->format('n')-1] . ' ' . $dt->format('Y');
-                                                    } echo $tgl; ?></span>
-                                            </div>
+                                                 <span class="info-field-label"><?= ($step1Status === 'disetujui') ? 'Tanggal Disetujui' : (($step1Status === 'ditolak') ? 'Tanggal Ditolak' : 'Tanggal Pengajuan') ?></span>
+                                                 <span class="info-field-value"><?php
+                                                     $tgl = '-';
+                                                     $dateToUse = !empty($lokasi['updated_at']) ? $lokasi['updated_at'] : '';
+                                                     if (!empty($dateToUse)) {
+                                                         $bn = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                                                         $dt = new DateTime($dateToUse);
+                                                         $tgl = $dt->format('j') . ' ' . $bn[(int)$dt->format('n')-1] . ' ' . $dt->format('Y');
+                                                     } echo $tgl; ?></span>
+                                             </div>
                                             <div class="info-field-item">
                                                 <span class="info-field-label">Catatan</span>
-                                                <span class="info-field-value"><?= htmlspecialchars($lokasi['catatan'] ?? '-') ?></span>
+                                                <span class="info-field-value"><?= nl2br(htmlspecialchars($lokasi['catatan'] ?? '-')) ?></span>
                                             </div>
                                         </div>
                                     </div>
@@ -290,7 +297,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                 </form>
                             </div>
 
-                            <div id="completed-2" style="<?= $step2Done ? '' : 'display: none;' ?>">
+                            <div id="completed-2" style="<?= ($step2Open && $step2Done) ? '' : 'display: none;' ?>">
                                 <div class="lokasi-completed-wrap">
                                     <div class="lokasi-info-grid" style="grid-template-columns: 1fr;">
                                         <div class="info-card">
@@ -391,8 +398,8 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             <?php 
                                                 $fileTypes = [
                                                     ['key' => 'formulir', 'label' => 'Formulir Pendaftaran', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>', 'accept' => '.pdf'],
-                                                    ['key' => 'ktm', 'label' => 'Scan KTM', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>'],
-                                                    ['key' => 'transkrip', 'label' => 'Transkrip Nilai', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>'],
+                                                    ['key' => 'ktm', 'label' => 'Scan KTM', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>', 'accept' => '.pdf, image/*'],
+                                                    ['key' => 'transkrip', 'label' => 'Transkrip Nilai', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>', 'accept' => '.pdf, image/*'],
                                                     ['key' => 'pas_foto', 'label' => 'Pas Foto', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>', 'accept' => 'image/*'],
                                                     ['key' => 'cv', 'label' => 'CV', 'icon' => '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>', 'accept' => '.pdf'],
                                                 ];
@@ -453,7 +460,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <!-- Completed -->
-                            <div id="completed-3" style="<?= ($step3Done && !$openFormBerkas) ? '' : 'display: none;' ?>">
+                            <div id="completed-3" style="<?= ($step3Open && $step3Done && !$openFormBerkas) ? '' : 'display: none;' ?>">
                                 <div class="lokasi-completed-wrap" style="padding: 16px 24px 20px;">
                                 <?php if ($step3Done && $kelompokId): ?>
                                 <?php
@@ -595,34 +602,70 @@ unset($_SESSION['success'], $_SESSION['error']);
                             </div>
 
                             <div class="t-body t-form" id="form-4" style="<?= ($step4Open && !$step4Done) ? '' : 'display: none;' ?>">
-                                <form class="profile-form" id="form-el-4" method="POST" action="../../backend/actions/mahasiswa_bukti.php" enctype="multipart/form-data" onsubmit="return isiCompleted(4)">
-                                    <div class="form-group">
-                                        <label>Tempat Diterima <span style="color:#EA5455">*</span></label>
-                                        <input type="text" id="inp-tempat" name="tempat_diterima"
-                                            placeholder="Nama perusahaan / instansi yang menerima" value="<?= htmlspecialchars($bukti['tempat_diterima'] ?? '') ?>" required>
+                                <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 15px;">
+                                    
+                                    <!-- Kolom Kiri: Jika Diterima -->
+                                    <div style="flex: 1 1 320px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 20px;">
+                                        <h4 style="margin-top: 0; margin-bottom: 12px; color: #1E293B; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 16px;">
+                                            <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #D1FAE5; color: #059669; border-radius: 50%; font-size: 14px; font-weight: bold;">✓</span>
+                                            Diterima Perusahaan
+                                        </h4>
+                                        <p style="font-size: 12px; color: #64748B; margin-bottom: 16px; line-height: 1.5;">
+                                            Jika permohonan magang kelompok Anda disetujui/diterima oleh perusahaan, silakan isi nama perusahaan dan unggah surat penerimaan resmi di bawah ini.
+                                        </p>
+                                        
+                                        <form class="profile-form" id="form-el-4" method="POST" action="../../backend/actions/mahasiswa_bukti.php" enctype="multipart/form-data" onsubmit="return isiCompleted(4)">
+                                            <div class="form-group" style="margin-bottom: 12px;">
+                                                <label>Tempat Diterima <span style="color:#EA5455">*</span></label>
+                                                <input type="text" id="inp-tempat" name="tempat_diterima"
+                                                    placeholder="Nama perusahaan / instansi yang menerima" value="<?= htmlspecialchars($bukti['tempat_diterima'] ?? '') ?>" required style="width: 100%;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 16px;">
+                                                <label>Surat Penerimaan (PDF) <span style="color:#EA5455">*</span></label>
+                                                <div class="file-input-row" style="display: flex; gap: 8px;">
+                                                    <input type="file" name="surat_penerimaan" id="file-tahap4" accept=".pdf"
+                                                        style="display: none;" <?= empty($bukti['file_path']) ? 'required' : '' ?>
+                                                        onchange="document.getElementById('filename-tahap4').value = this.files[0] ? this.files[0].name : ''">
+                                                    <button type="button" class="btn btn-dark" style="flex-shrink: 0;"
+                                                        onclick="document.getElementById('file-tahap4').click()">Pilih File</button>
+                                                    <input type="text" id="filename-tahap4" readonly
+                                                        placeholder="<?= !empty($bukti['file_path']) ? htmlspecialchars(basename($bukti['file_path'])) : 'Pilih file pdf...' ?>" value="<?= !empty($bukti['file_path']) ? htmlspecialchars(basename($bukti['file_path'])) : '' ?>" style="width: 100%;">
+                                                </div>
+                                            </div>
+                                            <p id="err-4" style="color:#EA5455;font-size:12px;display:none;margin-bottom:8px;">
+                                                &#9888; Harap isi tempat diterima dan upload surat penerimaan.</p>
+                                            <div class="form-actions">
+                                                <button type="submit" class="btn btn-dark" style="width: 100%;">Upload Bukti Diterima</button>
+                                            </div>
+                                        </form>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Surat Penerimaan (PDF) <span style="color:#EA5455">*</span></label>
-                                        <div class="file-input-row">
-                                            <input type="file" name="surat_penerimaan" id="file-tahap4" accept=".pdf"
-                                                style="display: none;" <?= empty($bukti['file_path']) ? 'required' : '' ?>
-                                                onchange="document.getElementById('filename-tahap4').value = this.files[0] ? this.files[0].name : ''">
-                                            <button type="button" class="btn btn-dark"
-                                                onclick="document.getElementById('file-tahap4').click()">Pilih
-                                                File</button>
-                                            <input type="text" id="filename-tahap4" readonly
-                                                placeholder="<?= !empty($bukti['file_path']) ? htmlspecialchars(basename($bukti['file_path'])) : 'Pilih file surat penerimaan...' ?>" value="<?= !empty($bukti['file_path']) ? htmlspecialchars(basename($bukti['file_path'])) : '' ?>">
+                                    
+                                    <!-- Kolom Ranan: Jika Ditolak -->
+                                    <div style="flex: 1 1 320px; background: #FFF5F5; border: 1px solid #FED7D7; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                                        <div>
+                                            <h4 style="margin-top: 0; margin-bottom: 12px; color: #9B2C2C; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 16px;">
+                                                <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #FED7D7; color: #C53030; border-radius: 50%; font-size: 14px; font-weight: bold;">✕</span>
+                                                Ditolak Perusahaan
+                                            </h4>
+                                            <p style="font-size: 12px; color: #9B2C2C; margin-bottom: 16px; line-height: 1.6;">
+                                                Jika permohonan magang kelompok Anda ditolak oleh perusahaan tujuan, Anda harus mengajukan lokasi magang baru.<br><br>
+                                                <strong>Catatan:</strong> Klik tombol di bawah ini untuk menghapus data pendaftaran sebelumnya dan memulai kembali pengisian data dari <strong>Tahap 1 (Lokasi Magang)</strong>.
+                                            </p>
                                         </div>
+                                        
+                                        <form method="POST" action="../../backend/actions/mahasiswa_hapus.php" onsubmit="return confirm('Apakah Anda yakin ingin mengulang pendaftaran dari Tahap 1? Seluruh data pendaftaran sebelumnya akan dihapus.')">
+                                            <input type="hidden" name="type" value="ditolak_perusahaan">
+                                            <button type="submit" class="btn" style="background: #E53E3E; color: white; width: 100%; font-weight: 600; padding: 12px; border-radius: 4px; border: none; cursor: pointer; transition: background 0.2s; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                                Mengulang dari Tahap 1
+                                            </button>
+                                        </form>
                                     </div>
-                                    <p id="err-4" style="color:#EA5455;font-size:12px;display:none;margin-bottom:8px;">
-                                        &#9888; Harap isi tempat diterima dan upload surat penerimaan.</p>
-                                    <div class="form-actions">
-                                        <button type="submit" class="btn btn-dark">Upload Bukti Diterima</button>
-                                    </div>
-                                </form>
+                                    
+                                </div>
                             </div>
 
-                            <div id="completed-4" style="<?= $step4Done ? '' : 'display: none;' ?>">
+                            <div id="completed-4" style="<?= ($step4Open && $step4Done) ? '' : 'display: none;' ?>">
                                 <div class="lokasi-completed-wrap">
                                     <div class="lokasi-info-grid" style="grid-template-columns: 1fr;">
                                         <div class="info-card">
@@ -974,10 +1017,55 @@ unset($_SESSION['success'], $_SESSION['error']);
             const btnEl = document.getElementById('fbtn-' + key);
             
             if (isFileSelected) {
-                let fileName = input.files[0].name;
-                if (fileName.length > 18) fileName = fileName.substring(0, 15) + '...';
+                const file = input.files[0];
+                const fileName = file.name;
+                const fileSize = file.size;
+                const acceptAttr = input.getAttribute('accept');
+                
+                if (acceptAttr) {
+                    const ext = fileName.split('.').pop().toLowerCase();
+                    const allowedRules = acceptAttr.split(',').map(r => r.trim().toLowerCase());
+                    let isAllowed = false;
+                    for (let i = 0; i < allowedRules.length; i++) {
+                        const rule = allowedRules[i];
+                        if (rule === 'image/*' && file.type.startsWith('image/')) {
+                            isAllowed = true;
+                            break;
+                        } else if (rule.startsWith('.')) {
+                            if ('.' + ext === rule) {
+                                isAllowed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!isAllowed) {
+                        alert('Tipe file tidak valid! Harap pilih file dengan format: ' + acceptAttr);
+                        input.value = '';
+                        statusEl.className = 'fc-status';
+                        statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Belum diunggah';
+                        btnEl.textContent = 'Upload';
+                        statusEl.dataset.rejected = '0';
+                        updateMemberStatusGrid(mi);
+                        return;
+                    }
+                }
+                
+                // Cek ukuran file maksimal 2MB
+                if (fileSize > 2 * 1024 * 1024) {
+                    alert('Ukuran file maksimal 2MB!');
+                    input.value = '';
+                    statusEl.className = 'fc-status';
+                    statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Belum diunggah';
+                    btnEl.textContent = 'Upload';
+                    statusEl.dataset.rejected = '0';
+                    updateMemberStatusGrid(mi);
+                    return;
+                }
+
+                let fileNameDisp = fileName;
+                if (fileNameDisp.length > 18) fileNameDisp = fileNameDisp.substring(0, 15) + '...';
                 statusEl.className = 'fc-status uploaded';
-                statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> ' + fileName;
+                statusEl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> ' + fileNameDisp;
                 btnEl.textContent = 'Ganti File';
                 statusEl.dataset.rejected = '0';
             } else {

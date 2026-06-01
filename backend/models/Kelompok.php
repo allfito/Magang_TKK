@@ -12,7 +12,7 @@ class Kelompok extends BaseModel
     public function findByKetua(int $userId): ?array
     {
         return $this->fetchOne(
-            'SELECT id, nama, ketua_user_id FROM kelompok WHERE ketua_user_id = ? LIMIT 1',
+            'SELECT id, nama, tahun_angkatan, ketua_user_id FROM kelompok WHERE ketua_user_id = ? LIMIT 1',
             'i',
             [$userId]
         );
@@ -23,12 +23,12 @@ class Kelompok extends BaseModel
      *
      * @throws RuntimeException Jika pembuatan gagal.
      */
-    public function create(string $nama, int $ketuaUserId): int
+    public function create(string $nama, int $ketuaUserId, ?int $tahunAngkatan = null): int
     {
         $id = $this->run(
-            'INSERT INTO kelompok (nama, ketua_user_id, created_at) VALUES (?, ?, NOW())',
-            'si',
-            [$nama, $ketuaUserId]
+            "INSERT INTO kelompok (nama, tahun_angkatan, ketua_user_id, status_progress, created_at) VALUES (?, ?, ?, 'Pengajuan Tempat', NOW())",
+            'sii',
+            [$nama, $tahunAngkatan, $ketuaUserId]
         );
 
         if (!$id) {

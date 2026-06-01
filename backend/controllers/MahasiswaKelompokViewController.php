@@ -26,7 +26,7 @@ class MahasiswaKelompokViewController
             'anggotaList' => [],
         ];
 
-        $stmt = $this->db->prepare('SELECT k.id, k.nama FROM kelompok k WHERE k.ketua_user_id = ? LIMIT 1');
+        $stmt = $this->db->prepare('SELECT k.id, k.nama, k.tahun_angkatan FROM kelompok k WHERE k.ketua_user_id = ? LIMIT 1');
         $stmt->bind_param('i', $userId);
         $stmt->execute();
         $result = $stmt->get_result();

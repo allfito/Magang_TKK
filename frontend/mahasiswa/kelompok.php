@@ -45,6 +45,11 @@ require __DIR__ . '/header.php';
                     <div>
                         <h3 style="font-size:18px; font-weight:700; margin-bottom:4px;">
                             <?= htmlspecialchars(ucwords(strtolower($existingKelompok['nama']))) ?>
+                            <?php if (!empty($existingKelompok['tahun_angkatan'])): ?>
+                            <span style="font-size:13px; font-weight:500; color:rgba(255,255,255,0.75); margin-left:8px; background:rgba(255,255,255,0.12); padding:2px 10px; border-radius:20px;">
+                                Angkatan <?= htmlspecialchars($existingKelompok['tahun_angkatan']) ?>
+                            </span>
+                            <?php endif; ?>
                         </h3>
                         <p style="font-size:13px; color:rgba(255,255,255,0.7); margin:0;">
                             <?= count($existingAnggota) ?>/4 anggota terdaftar
@@ -72,7 +77,8 @@ require __DIR__ . '/header.php';
                                             <?= (int)$anggota['mahasiswa_id'] ?>,
                                             '<?= addslashes(htmlspecialchars(ucwords(strtolower($anggota['nama'])))) ?>',
                                             '<?= addslashes(htmlspecialchars($anggota['nim'])) ?>',
-                                            '<?= addslashes(htmlspecialchars($anggota['no_tlp'] ?: '')) ?>'
+                                            '<?= addslashes(htmlspecialchars($anggota['no_tlp'] ?: '')) ?>',
+                                            '<?= $anggota['peran'] ?>'
                                         )">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                         Edit
@@ -138,9 +144,15 @@ require __DIR__ . '/header.php';
                 </div>
 
                 <div class="card-body">
-                    <div style="margin-bottom: 20px;">
-                        <label style="display:block; font-weight:600; margin-bottom:8px;">Nama Kelompok <span style="color:#EA5455">*</span></label>
-                        <input type="text" id="input-nama-kelompok" placeholder="Masukkan nama kelompok..." style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                    <div style="margin-bottom: 20px; display:flex; gap:16px; align-items:flex-end;">
+                        <div style="flex:1;">
+                            <label style="display:block; font-weight:600; margin-bottom:8px;">Nama Kelompok <span style="color:#EA5455">*</span></label>
+                            <input type="text" id="input-nama-kelompok" placeholder="Masukkan nama kelompok..." style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box;">
+                        </div>
+                        <div style="width:160px; flex-shrink:0;">
+                            <label style="display:block; font-weight:600; margin-bottom:8px;">Tahun Angkatan</label>
+                            <input type="text" id="input-tahun-angkatan" placeholder="Angkatan" maxlength="4" style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box;" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+                        </div>
                     </div>
                     <div class="member-grid" id="member-grid">
                         <!-- Slot 1: Ketua -->
@@ -201,11 +213,11 @@ require __DIR__ . '/header.php';
                 <input type="text" id="edit-input-nama" placeholder="Nama lengkap...">
             </div>
             <div class="modal-field">
-                <label>NIM <small style="color:#A0B2C0;font-weight:400;">(maks. 9 karakter)</small></label>
+                <label>NIM <small style="color:#A0B2C0;font-weight:400;"></small></label>
                 <input type="text" id="edit-input-nim" placeholder="NIM..." maxlength="9">
             </div>
             <div class="modal-field">
-                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(10-13 digit, diawali 08)</small></label>
+                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;"></small></label>
                 <input type="text" id="edit-input-telp" placeholder="0812..." minlength="10" maxlength="13" pattern="08[0-9]{8,11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka">
             </div>
             <div class="modal-actions">
@@ -225,11 +237,11 @@ require __DIR__ . '/header.php';
                 <input type="text" id="input-nama" placeholder="Masukkan nama lengkap...">
             </div>
             <div class="modal-field">
-                <label>NIM <small style="color:#A0B2C0;font-weight:400;">(maks. 9 karakter)</small></label>
+                <label>NIM <small style="color:#A0B2C0;font-weight:400;">   </small></label>
                 <input type="text" id="input-nim" placeholder="NIM..." maxlength="9">
             </div>
             <div class="modal-field">
-                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(10-13 digit, diawali 08)</small></label>
+                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;"></small></label>
                 <input type="text" id="input-telp" placeholder="0812..." minlength="10" maxlength="13" pattern="08[0-9]{8,11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka">
             </div>
 
@@ -250,11 +262,11 @@ require __DIR__ . '/header.php';
                 <input type="text" id="tambah-existing-nama" placeholder="Masukkan nama lengkap...">
             </div>
             <div class="modal-field">
-                <label>NIM <small style="color:#A0B2C0;font-weight:400;">(maks. 9 karakter)</small></label>
+                <label>NIM <small style="color:#A0B2C0;font-weight:400;"></small></label>
                 <input type="text" id="tambah-existing-nim" placeholder="NIM..." maxlength="9">
             </div>
             <div class="modal-field">
-                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;">(10-13 digit, diawali 08)</small></label>
+                <label>No Telepon <small style="color:#A0B2C0;font-weight:400;"></small></label>
                 <input type="text" id="tambah-existing-telp" placeholder="0812..." minlength="10" maxlength="13" pattern="08[0-9]{8,11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" title="Nomor telepon harus diawali 08 dan terdiri dari 10-13 digit angka">
             </div>
 
@@ -293,6 +305,11 @@ require __DIR__ . '/header.php';
     </form>
 
     <script>
+        // Logged in user info for pre-populating Ketua details
+        const loggedInName = <?= json_encode(ucwords(strtolower($user['nama'] ?? ''))) ?>;
+        const loggedInPhone = <?= json_encode($user['no_tlp'] ?? '') ?>;
+        const loggedInNim = <?= json_encode(explode('@', $user['email'] ?? '')[0] ?? '') ?>;
+
         // ── State ──
         let memberCount = 0;
         const MAX_MEMBERS = 4;
@@ -317,18 +334,66 @@ require __DIR__ . '/header.php';
                     alert('Kelompok sudah penuh (maksimal 4 anggota termasuk ketua).');
                     return;
                 }
+
+                const isKetua = (memberCount === 0);
                 document.querySelector('#modal-overlay h3').textContent =
-                    memberCount === 0 ? 'Tambah Ketua Kelompok' : 'Tambah Anggota';
-                overlay.classList.add('open');
-                document.getElementById('input-nama').focus();
+                    isKetua ? 'Tambah Ketua Kelompok' : 'Tambah Anggota';
+
+                const inputNama = document.getElementById('input-nama');
+                const inputTelp = document.getElementById('input-telp');
+                const inputNim  = document.getElementById('input-nim');
+
+                if (isKetua) {
+                    inputNama.value = loggedInName;
+                    inputNama.readOnly = true;
+                    inputNama.style.backgroundColor = '#f1f5f9';
+
+                    inputTelp.value = loggedInPhone;
+                    inputTelp.readOnly = true;
+                    inputTelp.style.backgroundColor = '#f1f5f9';
+
+                    inputNim.value = loggedInNim;
+                    inputNim.readOnly = true;
+                    inputNim.style.backgroundColor = '#f1f5f9';
+
+                    overlay.classList.add('open');
+                    btnBatal.focus();
+                } else {
+                    inputNama.value = '';
+                    inputNama.readOnly = false;
+                    inputNama.style.backgroundColor = '';
+
+                    inputTelp.value = '';
+                    inputTelp.readOnly = false;
+                    inputTelp.style.backgroundColor = '';
+
+                    inputNim.value = '';
+                    inputNim.readOnly = false;
+                    inputNim.style.backgroundColor = '';
+
+                    overlay.classList.add('open');
+                    inputNama.focus();
+                }
             });
         }
 
         function closeModal() {
             overlay.classList.remove('open');
-            document.getElementById('input-nama').value = '';
-            document.getElementById('input-nim').value  = '';
-            document.getElementById('input-telp').value = '';
+            const inputNama = document.getElementById('input-nama');
+            const inputTelp = document.getElementById('input-telp');
+            const inputNim  = document.getElementById('input-nim');
+
+            inputNama.value = '';
+            inputNama.readOnly = false;
+            inputNama.style.backgroundColor = '';
+
+            inputTelp.value = '';
+            inputTelp.readOnly = false;
+            inputTelp.style.backgroundColor = '';
+
+            inputNim.value = '';
+            inputNim.readOnly = false;
+            inputNim.style.backgroundColor = '';
         }
 
         if (btnBatal) btnBatal.addEventListener('click', closeModal);
@@ -349,31 +414,67 @@ require __DIR__ . '/header.php';
                     return;
                 }
 
-                const slotIndex = memberCount;
-                const label  = badgeLabels[slotIndex];
-                const colors = badgeColors[slotIndex];
+                // Cek duplikat NIM di grid lokal
+                for (let i = 0; i < memberCount; i++) {
+                    const slot = document.getElementById('slot-' + i);
+                    const existingNim = slot.querySelector('.member-grid-nim')?.textContent;
+                    if (existingNim === nim) {
+                        alert('Mahasiswa dengan NIM tersebut sudah ditambahkan ke daftar.');
+                        return;
+                    }
+                }
 
-                const slot = document.getElementById('slot-' + slotIndex);
-                slot.innerHTML = `
-                    <div class="member-grid-card">
-                        <img class="member-grid-avatar"
-                             src="https://ui-avatars.com/api/?name=${encodeURIComponent(nama)}&background=1F3653&color=fff&size=72"
-                             alt="Avatar ${nama}">
-                        <div class="member-grid-name">${nama}</div>
-                        <div class="member-grid-nim">${nim}</div>
-                        <div class="member-grid-phone">${telp || '-'}</div>
-                        <span class="badge-anggota" style="background:${colors.bg};color:${colors.color};">${label}</span>
-                    </div>
-                `;
-                slot.dataset.telp = telp;
-                memberCount++;
-                closeModal();
+                // Set loading state
+                btnSimpan.disabled = true;
+                const originalText = btnSimpan.textContent;
+                btnSimpan.textContent = 'Memeriksa...';
+
+                // AJAX check
+                fetch(`../../backend/actions/mahasiswa_cek_nim.php?nim=${encodeURIComponent(nim)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'exists') {
+                            alert(data.message);
+                        } else if (data.status === 'error') {
+                            alert(data.message);
+                        } else {
+                            // Available, add to grid
+                            const slotIndex = memberCount;
+                            const label  = badgeLabels[slotIndex];
+                            const colors = badgeColors[slotIndex];
+
+                            const slot = document.getElementById('slot-' + slotIndex);
+                            slot.innerHTML = `
+                                <div class="member-grid-card">
+                                    <img class="member-grid-avatar"
+                                         src="https://ui-avatars.com/api/?name=${encodeURIComponent(nama)}&background=1F3653&color=fff&size=72"
+                                         alt="Avatar ${nama}">
+                                    <div class="member-grid-name">${nama}</div>
+                                    <div class="member-grid-nim">${nim}</div>
+                                    <div class="member-grid-phone">${telp || '-'}</div>
+                                    <span class="badge-anggota" style="background:${colors.bg};color:${colors.color};">${label}</span>
+                                </div>
+                            `;
+                            slot.dataset.telp = telp;
+                            memberCount++;
+                            closeModal();
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Terjadi kesalahan koneksi saat memeriksa NIM.');
+                    })
+                    .finally(() => {
+                        btnSimpan.disabled = false;
+                        btnSimpan.textContent = originalText;
+                    });
             });
         }
 
         // ── Submit group (buat kelompok baru) ──
         function submitGroup() {
-            const namaKelompok = document.getElementById('input-nama-kelompok').value.trim();
+            const namaKelompok   = document.getElementById('input-nama-kelompok').value.trim();
+            const tahunAngkatan  = document.getElementById('input-tahun-angkatan').value.trim();
             if (!namaKelompok) {
                 alert('Nama kelompok wajib diisi!');
                 document.getElementById('input-nama-kelompok').focus();
@@ -395,6 +496,9 @@ require __DIR__ . '/header.php';
 
             const container = document.getElementById('form-anggota-container');
             container.innerHTML = `<input type="hidden" name="nama_kelompok" value="${namaKelompok}">`;
+            if (tahunAngkatan) {
+                container.innerHTML += `<input type="hidden" name="tahun_angkatan" value="${tahunAngkatan}">`;
+            }
             members.forEach((member, index) => {
                 container.innerHTML += `
                     <input type="hidden" name="anggota[${index}][nama]"   value="${member.nama}">
@@ -410,14 +514,44 @@ require __DIR__ . '/header.php';
         // ──────────────────────────────────────────
         const editOverlay = document.getElementById('modal-edit-overlay');
 
-        function openEditModal(anggotaId, mahasiswaId, nama, nim, telp) {
-            document.getElementById('edit-input-nama').value = nama;
-            document.getElementById('edit-input-nim').value  = nim;
-            document.getElementById('edit-input-telp').value = telp;
+        function openEditModal(anggotaId, mahasiswaId, nama, nim, telp, peran) {
+            const inputNama = document.getElementById('edit-input-nama');
+            const inputNim  = document.getElementById('edit-input-nim');
+            const inputTelp = document.getElementById('edit-input-telp');
+
+            inputNama.value = nama;
+            inputNim.value  = nim;
+            inputTelp.value = telp;
+
+            if (peran === 'ketua') {
+                inputNama.readOnly = true;
+                inputNama.style.backgroundColor = '#f1f5f9';
+
+                inputNim.readOnly = true;
+                inputNim.style.backgroundColor = '#f1f5f9';
+
+                inputTelp.readOnly = true;
+                inputTelp.style.backgroundColor = '#f1f5f9';
+            } else {
+                inputNama.readOnly = false;
+                inputNama.style.backgroundColor = '';
+
+                inputNim.readOnly = false;
+                inputNim.style.backgroundColor = '';
+
+                inputTelp.readOnly = false;
+                inputTelp.style.backgroundColor = '';
+            }
+
             editOverlay.dataset.anggotaId   = anggotaId;
             editOverlay.dataset.mahasiswaId = mahasiswaId;
+            editOverlay.dataset.originalNim = nim; // Store original NIM
             editOverlay.classList.add('open');
-            document.getElementById('edit-input-nama').focus();
+            if (peran === 'ketua') {
+                document.querySelector('#modal-edit-overlay .btn-simpan').focus();
+            } else {
+                inputNama.focus();
+            }
         }
 
         function closeEditModal() {
@@ -438,12 +572,56 @@ require __DIR__ . '/header.php';
                 return;
             }
 
-            document.getElementById('hf-anggota-id').value   = editOverlay.dataset.anggotaId;
-            document.getElementById('hf-mahasiswa-id').value = editOverlay.dataset.mahasiswaId;
-            document.getElementById('hf-nama').value   = nama;
-            document.getElementById('hf-nim').value    = nim;
-            document.getElementById('hf-no-tlp').value = telp;
-            document.getElementById('form-edit-anggota').submit();
+            const originalNim = editOverlay.dataset.originalNim;
+            const btnSimpanEdit = document.querySelector('#modal-edit-overlay .btn-simpan');
+
+            const submitForm = () => {
+                document.getElementById('hf-anggota-id').value   = editOverlay.dataset.anggotaId;
+                document.getElementById('hf-mahasiswa-id').value = editOverlay.dataset.mahasiswaId;
+                document.getElementById('hf-nama').value   = nama;
+                document.getElementById('hf-nim').value    = nim;
+                document.getElementById('hf-no-tlp').value = telp;
+                document.getElementById('form-edit-anggota').submit();
+            };
+
+            if (nim !== originalNim) {
+                if (btnSimpanEdit) {
+                    btnSimpanEdit.disabled = true;
+                    btnSimpanEdit.textContent = 'Memeriksa...';
+                }
+
+                // AJAX check
+                fetch(`../../backend/actions/mahasiswa_cek_nim.php?nim=${encodeURIComponent(nim)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'exists') {
+                            alert(data.message);
+                            if (btnSimpanEdit) {
+                                btnSimpanEdit.disabled = false;
+                                btnSimpanEdit.textContent = 'SIMPAN';
+                            }
+                        } else if (data.status === 'error') {
+                            alert(data.message);
+                            if (btnSimpanEdit) {
+                                btnSimpanEdit.disabled = false;
+                                btnSimpanEdit.textContent = 'SIMPAN';
+                            }
+                        } else {
+                            // Available, submit form
+                            submitForm();
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Terjadi kesalahan koneksi saat memeriksa NIM.');
+                        if (btnSimpanEdit) {
+                            btnSimpanEdit.disabled = false;
+                            btnSimpanEdit.textContent = 'SIMPAN';
+                        }
+                    });
+            } else {
+                submitForm();
+            }
         }
 
         // ──────────────────────────────────────────
@@ -493,11 +671,74 @@ require __DIR__ . '/header.php';
                 return;
             }
 
-            document.getElementById('hf-tambah-nama').value = nama;
-            document.getElementById('hf-tambah-nim').value  = nim;
-            document.getElementById('hf-tambah-telp').value = telp;
-            document.getElementById('form-tambah-existing').submit();
+            const btnSimpanExisting = document.querySelector('#modal-tambah-existing-overlay .btn-simpan');
+            if (btnSimpanExisting) {
+                btnSimpanExisting.disabled = true;
+                btnSimpanExisting.textContent = 'Memeriksa...';
+            }
+
+            // AJAX check
+            fetch(`../../backend/actions/mahasiswa_cek_nim.php?nim=${encodeURIComponent(nim)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'exists') {
+                        alert(data.message);
+                        if (btnSimpanExisting) {
+                            btnSimpanExisting.disabled = false;
+                            btnSimpanExisting.textContent = 'SIMPAN';
+                        }
+                    } else if (data.status === 'error') {
+                        alert(data.message);
+                        if (btnSimpanExisting) {
+                            btnSimpanExisting.disabled = false;
+                            btnSimpanExisting.textContent = 'SIMPAN';
+                        }
+                    } else {
+                        // Available, submit form
+                        document.getElementById('hf-tambah-nama').value = nama;
+                        document.getElementById('hf-tambah-nim').value  = nim;
+                        document.getElementById('hf-tambah-telp').value = telp;
+                        document.getElementById('form-tambah-existing').submit();
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Terjadi kesalahan koneksi saat memeriksa NIM.');
+                    if (btnSimpanExisting) {
+                        btnSimpanExisting.disabled = false;
+                        btnSimpanExisting.textContent = 'SIMPAN';
+                    }
+                });
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputNamaKelompok = document.getElementById('input-nama-kelompok');
+            if (inputNamaKelompok) { // checking if in create mode
+                const nama = loggedInName;
+                const nim = loggedInNim;
+                const telp = loggedInPhone;
+                
+                const label  = badgeLabels[0];
+                const colors = badgeColors[0];
+
+                const slot = document.getElementById('slot-0');
+                if (slot) {
+                    slot.innerHTML = `
+                        <div class="member-grid-card">
+                            <img class="member-grid-avatar"
+                                 src="https://ui-avatars.com/api/?name=${encodeURIComponent(nama)}&background=1F3653&color=fff&size=72"
+                                 alt="Avatar ${nama}">
+                            <div class="member-grid-name">${nama}</div>
+                            <div class="member-grid-nim">${nim}</div>
+                            <div class="member-grid-phone">${telp || '-'}</div>
+                            <span class="badge-anggota" style="background:${colors.bg};color:${colors.color};">${label}</span>
+                        </div>
+                    `;
+                    slot.dataset.telp = telp;
+                    memberCount = 1;
+                }
+            }
+        });
     </script>
 
     <!-- Hidden form for submitting group data (buat kelompok baru) -->

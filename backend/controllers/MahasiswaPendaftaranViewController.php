@@ -23,6 +23,7 @@ class MahasiswaPendaftaranViewController
     {
         $data = [
             'kelompokId' => null,
+            'status_progress' => null,
             'anggotaList' => [],
             'lokasi' => null,
             'proposal' => null,
@@ -35,7 +36,7 @@ class MahasiswaPendaftaranViewController
             'berkasStatus' => 'belum',
         ];
 
-        $stmt = $this->db->prepare('SELECT id FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
+        $stmt = $this->db->prepare('SELECT id, status_progress FROM kelompok WHERE ketua_user_id = ? LIMIT 1');
         $stmt->bind_param('i', $userId);
         $stmt->execute();
         $r = $stmt->get_result()->fetch_assoc();
@@ -43,6 +44,7 @@ class MahasiswaPendaftaranViewController
         if ($r) {
             $kelId = (int) $r['id'];
             $data['kelompokId'] = $kelId;
+            $data['status_progress'] = $r['status_progress'];
 
             $stmt = $this->db->prepare('SELECT ak.id, m.nama, ak.peran FROM anggota_kelompok ak JOIN mahasiswa m ON ak.mahasiswa_id = m.id WHERE ak.kelompok_id = ? ORDER BY ak.peran ASC, ak.created_at ASC');
             $stmt->bind_param('i', $kelId);

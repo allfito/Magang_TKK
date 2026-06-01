@@ -19,6 +19,23 @@ class Mahasiswa extends BaseModel
     }
 
     /**
+     * Cari kelompok dari mahasiswa berdasarkan NIM.
+     * Mengembalikan data kelompok jika mahasiswa sudah terdaftar di kelompok.
+     */
+    public function findKelompokByNim(string $nim): ?array
+    {
+        return $this->fetchOne(
+            'SELECT k.id, k.nama 
+             FROM anggota_kelompok ak 
+             JOIN mahasiswa m ON ak.mahasiswa_id = m.id 
+             JOIN kelompok k ON ak.kelompok_id = k.id 
+             WHERE m.nim = ? LIMIT 1',
+            's',
+            [$nim]
+        );
+    }
+
+    /**
      * Simpan biodata mahasiswa baru dan kembalikan ID-nya.
      *
      * @throws RuntimeException Jika penyimpanan gagal.

@@ -29,12 +29,14 @@ $plottingStatus = $dashboardData['plottingStatus'];
 function stepClass(string $status): string {
     if ($status === 'disetujui' || $status === 'selesai') return 'active';
     if ($status === 'menunggu') return 'pending';
+    if ($status === 'ditolak_perusahaan' || $status === 'ditolak') return 'rejected';
     return '';
 }
 
 function stepLabel(string $status): string {
     if ($status === 'disetujui' || $status === 'selesai') return 'Disetujui';
     if ($status === 'menunggu') return 'Menunggu';
+    if ($status === 'ditolak_perusahaan') return 'Ditolak Perusahaan';
     if ($status === 'ditolak') return 'Ditolak';
     return 'Belum';
 }
@@ -68,6 +70,9 @@ require __DIR__ . '/header.php';
                     <?php if ($kelompok): ?>
                     <div class="kel-details">
                         <p>Kelompok: <?= htmlspecialchars(ucwords(strtolower($kelompok['nama']))) ?></p>
+                        <?php if (!empty($kelompok['tahun_angkatan'])): ?>
+                        <p>Tahun Angkatan: <?= htmlspecialchars($kelompok['tahun_angkatan']) ?></p>
+                        <?php endif; ?>
                         <p>Ketua Kelompok: <?= htmlspecialchars(ucwords(strtolower($kelompok['ketua_nama']))) ?><?= $isKetua ? ' (anda)' : '' ?></p>
                         <p>Jumlah anggota: <?= count($anggotaList) ?> orang</p>
                     </div>

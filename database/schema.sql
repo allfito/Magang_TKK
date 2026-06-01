@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS dosen (
 CREATE TABLE IF NOT EXISTS kelompok (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama VARCHAR(191) NOT NULL,
+    tahun_angkatan YEAR NULL,
+    status_progress VARCHAR(100) NOT NULL DEFAULT 'Pengajuan Tempat',
     ketua_user_id INT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ketua_user_id) REFERENCES user(id) ON DELETE RESTRICT

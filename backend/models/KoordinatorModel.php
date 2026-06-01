@@ -26,7 +26,7 @@ class KoordinatorModel extends BaseModel
      *
      * @return bool True jika berhasil.
      */
-    public function updateVerifikasi(string $type, string $action, int $id): bool
+    public function updateVerifikasi(string $type, string $action, int $id, string $catatan = ''): bool
     {
         // Verifikasi semua berkas dalam satu kelompok
         if ($type === 'berkas') {
@@ -42,7 +42,15 @@ class KoordinatorModel extends BaseModel
             return false;
         }
 
-        $result = $this->run(self::VERIFIKASI_MAP[$type], 'si', [$action, $id]);
+        if ($type === 'lokasi') {
+            $result = $this->run(
+                'UPDATE pendaftaran_lokasi SET status_verifikasi = ?, catatan = ? WHERE id = ?',
+                'ssi',
+                [$action, $catatan, $id]
+            );
+        } else {
+            $result = $this->run(self::VERIFIKASI_MAP[$type], 'si', [$action, $id]);
+        }
         return $result !== false;
     }
 

@@ -58,6 +58,7 @@ class PendaftaranController extends BaseController
             ]);
 
             $this->pendaftaranModel->createLokasi($kelompokId, $perusahaanId);
+            $this->db->query("UPDATE kelompok SET status_progress = 'Pengajuan Tempat' WHERE id = " . (int)$kelompokId);
             $this->db->commit();
 
             return $this->success('Pendaftaran lokasi magang berhasil dikirim.');
@@ -105,6 +106,7 @@ class PendaftaranController extends BaseController
 
         try {
             $this->pendaftaranModel->createProposal($kelompokId, trim($judul), $filePath);
+            $this->db->query("UPDATE kelompok SET status_progress = 'ACC Pembuatan Proposal' WHERE id = " . (int)$kelompokId);
             return $this->success('Proposal berhasil diunggah.');
         } catch (Exception $e) {
             return $this->error($e->getMessage());
@@ -160,6 +162,7 @@ class PendaftaranController extends BaseController
         }
 
         if ($uploaded > 0) {
+            $this->db->query("UPDATE kelompok SET status_progress = 'Pengiriman Proposal' WHERE id = " . (int)$kelompokId);
             return $this->success("Berhasil mengunggah {$uploaded} berkas.");
         }
 
@@ -216,6 +219,7 @@ class PendaftaranController extends BaseController
                 ]);
 
             $this->pendaftaranModel->createBuktiDiterima($kelompokId, $perusahaanId, $filePath);
+            $this->db->query("UPDATE kelompok SET status_progress = 'Surat Penerimaan Magang' WHERE id = " . (int)$kelompokId);
             $this->db->commit();
 
             return $this->success('Bukti penerimaan berhasil diunggah.');
@@ -244,6 +248,7 @@ class PendaftaranController extends BaseController
                 'proposal' => 'Proposal dihapus. Silakan ajukan ulang.',
                 'berkas'   => 'Berkas dihapus. Silakan ajukan ulang.',
                 'bukti'    => 'Bukti dihapus. Silakan ajukan ulang.',
+                'ditolak_perusahaan' => 'Permohonan ditolak perusahaan telah diproses. Pendaftaran diulang dari Tahap 1.',
             ];
 
             return $this->success($messages[$type] ?? 'Data berhasil dihapus.');

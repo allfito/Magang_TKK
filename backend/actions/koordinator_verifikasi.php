@@ -14,16 +14,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$action = $_POST['action'] ?? '';
-$type   = $_POST['type']   ?? '';
-$id     = (int) ($_POST['id'] ?? 0);
+$action  = $_POST['action'] ?? '';
+$type    = $_POST['type']   ?? '';
+$id      = (int) ($_POST['id'] ?? 0);
+$catatan = trim($_POST['catatan'] ?? '');
 
 // Deteksi apakah request berasal dari AJAX (fetch)
 $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
 $controller = new KoordinatorController();
-$result     = $controller->verifyDocument($action, $type, $id);
+$result     = $controller->verifyDocument($action, $type, $id, $catatan);
 
 if ($isAjax) {
     // Kembalikan JSON untuk AJAX — tanpa redirect

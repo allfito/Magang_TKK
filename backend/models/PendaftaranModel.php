@@ -204,6 +204,48 @@ class PendaftaranModel extends BaseModel
      */
     public function deleteRegistration(int $kelompokId, string $type): void
     {
+        $perusahaanId = null;
+        if ($type === 'lokasi') {
+            $loc = $this->fetchOne('SELECT perusahaan_id FROM pendaftaran_lokasi WHERE kelompok_id = ? LIMIT 1', 'i', [$kelompokId]);
+            $perusahaanId = $loc ? (int) $loc['perusahaan_id'] : null;
+        } elseif ($type === 'bukti') {
+            $bukti = $this->getBuktiDiterima($kelompokId);
+            $perusahaanId = $bukti ? (int) $bukti['perusahaan_id'] : null;
+        }
+
+        if ($type === 'ditolak_perusahaan') {
+            // 1. Hapus bukti diterima
+            $bukti = $this->getBuktiDiterima($kelompokId);
+            $buktiPerusahaanId = $bukti ? (int) $bukti['perusahaan_id'] : null;
+            if ($bukti && !empty($bukti['file_path'])) {
+                FileUploader::deleteFile($bukti['file_path']);
+            }
+            $this->run('DELETE FROM bukti_diterima WHERE kelompok_id = ?', 'i', [$kelompokId]);
+
+            // Hapus perusahaan lama jika tidak digunakan kelompok lain
+            if ($buktiPerusahaanId !== null) {
+                $inUseLoc = $this->fetchOne('SELECT id FROM pendaftaran_lokasi WHERE perusahaan_id = ? LIMIT 1', 'i', [$buktiPerusahaanId]);
+                $inUseBukti = $this->fetchOne('SELECT id FROM bukti_diterima WHERE perusahaan_id = ? LIMIT 1', 'i', [$buktiPerusahaanId]);
+                if (!$inUseLoc && !$inUseBukti) {
+                    $this->run('DELETE FROM perusahaan WHERE id = ?', 'i', [$buktiPerusahaanId]);
+                }
+            }
+
+            // 2. Hapus proposal
+            $proposal = $this->getProposal($kelompokId);
+            if ($proposal && !empty($proposal['file_path'])) {
+                FileUploader::deleteFile($proposal['file_path']);
+            }
+            $this->run('DELETE FROM proposal WHERE kelompok_id = ?', 'i', [$kelompokId]);
+
+            // 3. Update status_verifikasi lokasi menjadi 'ditolak'
+            $this->run("UPDATE pendaftaran_lokasi SET status_verifikasi = 'ditolak' WHERE kelompok_id = ?", 'i', [$kelompokId]);
+
+            // 4. Reset status kelompok ke 'Ditolak Perusahaan'
+            $this->run("UPDATE kelompok SET status_progress = 'Ditolak Perusahaan' WHERE id = ?", 'i', [$kelompokId]);
+            return;
+        }
+
         // Fetch file path before deleting record to ensure physical file can be deleted
         if ($type === 'proposal') {
             $data = $this->getProposal($kelompokId);
@@ -233,6 +275,15 @@ class PendaftaranModel extends BaseModel
         $result = $this->run($queries[$type], 'i', [$kelompokId]);
         if ($result === false) {
             throw new RuntimeException("Gagal menghapus data {$type}.");
+        }
+
+        // Clean up the perusahaan if it is no longer used by anyone else
+        if (($type === 'lokasi' || $type === 'bukti') && $perusahaanId !== null) {
+            $inUseLoc = $this->fetchOne('SELECT id FROM pendaftaran_lokasi WHERE perusahaan_id = ? LIMIT 1', 'i', [$perusahaanId]);
+            $inUseBukti = $this->fetchOne('SELECT id FROM bukti_diterima WHERE perusahaan_id = ? LIMIT 1', 'i', [$perusahaanId]);
+            if (!$inUseLoc && !$inUseBukti) {
+                $this->run('DELETE FROM perusahaan WHERE id = ?', 'i', [$perusahaanId]);
+            }
         }
     }
 

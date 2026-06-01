@@ -11,19 +11,38 @@
                     <span class="page-subtitle">Periksa kelengkapan berkas administrasi setiap kelompok</span>
                 </div>
                 
-                <!-- Sort Controls -->
-                <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
-                    <label for="sort-select" style="font-size: 13px; font-weight: 600; color: #334155;">Urutkan:</label>
-                    <select id="sort-select" onchange="changeSortPage(this.value)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none;">
-                        <option value="tanggal_terbaru" <?= $sortBy === 'tanggal_terbaru' ? 'selected' : '' ?>>📅 Tanggal Terbaru</option>
-                        <option value="tanggal_terlama" <?= $sortBy === 'tanggal_terlama' ? 'selected' : '' ?>>📅 Tanggal Terlama</option>
-                        <option value="nama_a" <?= $sortBy === 'nama_a' ? 'selected' : '' ?>>📖 Nama Kelompok (A-Z)</option>
-                        <option value="nama_z" <?= $sortBy === 'nama_z' ? 'selected' : '' ?>>📖 Nama Kelompok (Z-A)</option>
-                        <option value="ketua_a" <?= $sortBy === 'ketua_a' ? 'selected' : '' ?>>👤 Nama Ketua (A-Z)</option>
-                        <option value="ketua_z" <?= $sortBy === 'ketua_z' ? 'selected' : '' ?>>👤 Nama Ketua (Z-A)</option>
-                        <option value="status_menunggu" <?= $sortBy === 'status_menunggu' ? 'selected' : '' ?>>⏳ Status Menunggu Duluan</option>
-                    </select>
-                    <input type="text" id="search-berkas" placeholder="Cari berkas..." style="padding: 6px 10px; border: 1px solid #DDEAF5; border-radius: 4px; font-size: 13px; font-family: 'Inter', sans-serif;" />
+                <!-- Sort & Filter Controls -->
+                <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <label for="sort-select" style="font-size: 13px; font-weight: 600; color: #334155;">Urutkan:</label>
+                        <select id="sort-select" onchange="changeSortPage(this.value)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none; height: 38px;">
+                            <option value="tanggal_terbaru" <?= $sortBy === 'tanggal_terbaru' ? 'selected' : '' ?>>📅 Tanggal Terbaru</option>
+                            <option value="tanggal_terlama" <?= $sortBy === 'tanggal_terlama' ? 'selected' : '' ?>>📅 Tanggal Terlama</option>
+                            <option value="nama_a" <?= $sortBy === 'nama_a' ? 'selected' : '' ?>>📖 Nama Kelompok (A-Z)</option>
+                            <option value="nama_z" <?= $sortBy === 'nama_z' ? 'selected' : '' ?>>📖 Nama Kelompok (Z-A)</option>
+                            <option value="ketua_a" <?= $sortBy === 'ketua_a' ? 'selected' : '' ?>>👤 Nama Ketua (A-Z)</option>
+                            <option value="ketua_z" <?= $sortBy === 'ketua_z' ? 'selected' : '' ?>>👤 Nama Ketua (Z-A)</option>
+                            <option value="status_menunggu" <?= $sortBy === 'status_menunggu' ? 'selected' : '' ?>>⏳ Status Menunggu Duluan</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; align-items: center; margin-left: auto;">
+                        <select id="filter-angkatan" onchange="applyFilters(true)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none; width: 220px; height: 38px; box-sizing: border-box;">
+                            <option value="ALL">Semua Angkatan</option>
+                            <option value="2024">Angkatan 2024</option>
+                            <option value="2025">Angkatan 2025</option>
+                            <option value="2026">Angkatan 2026</option>
+                            <option value="2027">Angkatan 2027</option>
+                            <option value="2028">Angkatan 2028</option>
+                            <option value="2029">Angkatan 2029</option>
+                            <option value="2030">Angkatan 2030</option>
+                        </select>
+                        
+                        <div class="plot-search-wrap" style="margin: 0; max-width: 250px; flex: 0 0 250px; height: 38px; box-sizing: border-box; display: flex; align-items: center; border: 1.5px solid #DDEAF5; border-radius: 8px; padding: 0 10px; background: white;">
+                            <span class="plot-search-icon" style="color: #94A3B8; margin-right: 8px;">&#128269;</span>
+                            <input type="text" id="search-berkas" placeholder="Cari berkas..." oninput="applyFilters(true)" style="border: none; outline: none; font-size: 13px; font-family: 'Inter', sans-serif; width: 100%;">
+                        </div>
+                    </div>
                 </div>
                 
                 <?php if (empty($berkasGroups)): ?>
@@ -34,8 +53,22 @@
                     </div>
                 <?php else: ?>
                     <?php foreach ($berkasGroups as $berkas): ?>
-                        <?php $statusClass = KoordinatorHelper::statusBadgeClass($berkas['status']); ?>
-                        <details class="card grupo-dropdown" style="margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 2px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <?php 
+                            $statusClass = KoordinatorHelper::statusBadgeClass($berkas['status']); 
+                            $nims = !empty($berkas['nim']) ? explode(', ', $berkas['nim']) : [];
+                            $cohorts = [];
+                            foreach ($nims as $nim) {
+                                $cleanNim = preg_replace('/[^0-9]/', '', $nim);
+                                $searchArea = substr($cleanNim, 2);
+                                if (preg_match('/2[0-9]/', $searchArea, $matches)) {
+                                    $cohorts[] = '20' . $matches[0];
+                                } elseif (preg_match('/2[0-9]/', $cleanNim, $matches)) {
+                                    $cohorts[] = '20' . $matches[0];
+                                }
+                            }
+                            $cohortsAttr = implode(',', array_unique($cohorts));
+                        ?>
+                        <details class="card grupo-dropdown" data-angkatan="<?= $cohortsAttr ?>" style="margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 2px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                             <summary class="card-header-plain" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px; background: linear-gradient(90deg, #F8FBFE 0%, #F1F5F9 100%); cursor: pointer; outline: none; list-style: none; transition: all 0.25s ease; border-radius: 6px; margin: 2px;">
                                 <div style="flex: 1;">
                                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -68,11 +101,31 @@
                                     }
                                 ?>
                                     <?php foreach ($berkasByMahasiswa as $mahasiswa => $files): ?>
+                                        <?php
+                                            $mStatus = 'disetujui';
+                                            $pendingCount = 0;
+                                            $rejectedCount = 0;
+                                            foreach ($files as $f) {
+                                                if ($f['status_verifikasi'] === 'menunggu') {
+                                                    $pendingCount++;
+                                                } elseif ($f['status_verifikasi'] === 'ditolak') {
+                                                    $rejectedCount++;
+                                                }
+                                            }
+                                            if ($rejectedCount > 0) {
+                                                $mStatus = 'ditolak';
+                                            } elseif ($pendingCount > 0) {
+                                                $mStatus = 'menunggu';
+                                            }
+                                        ?>
                                         <details class="mahasiswa-dropdown" style="border-bottom: 1px solid #E2E8F0;">
                                             <summary style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px; background-color: #F1F5F9; cursor: pointer; outline: none; list-style: none; user-select: none; transition: all 0.2s ease;">
                                                 <div style="display: flex; align-items: center; gap: 8px;">
                                                     <i class="fas fa-user-circle" style="color: #0EA5E9; font-size: 16px;"></i>
                                                     <h4 style="margin: 0; font-size: 14px; color: #334155; font-weight: 600;"><?= htmlspecialchars($mahasiswa) ?></h4>
+                                                    <span class="badge <?= KoordinatorHelper::statusBadgeClass($mStatus) ?> student-status-badge" style="font-size:11px; margin-left:8px;">
+                                                        <?= htmlspecialchars(ucfirst($mStatus)) ?>
+                                                    </span>
                                                 </div>
                                                 <div style="display: flex; align-items: center; gap: 15px;">
                                                     <?php $anggotaId = $files[0]['anggota_id']; ?>
@@ -170,6 +223,8 @@
                         </details>
                     <?php endforeach; ?>
                 <?php endif; ?>
+                <!-- Pagination Controls -->
+                <div id="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px 24px;"></div>
             </div><!-- end page-verifikasi-berkas -->
 
 <!-- ===================== AJAX SCRIPT ===================== -->
@@ -182,13 +237,48 @@
      * Sesuaikan dengan kelas CSS yang dipakai KoordinatorHelper::statusBadgeClass()
      */
     const BADGE_CLASSES = {
-        disetujui : 'badge-success',   // ganti sesuai kelas aslinya
-        ditolak   : 'badge-danger',    // ganti sesuai kelas aslinya
-        menunggu  : 'badge-warning',   // ganti sesuai kelas aslinya
+        disetujui : 'badge-success-status',
+        ditolak   : 'badge-danger',
+        menunggu  : 'badge-warning',
     };
 
     /** Semua kelas badge yang mungkin, agar bisa direset */
     const ALL_BADGE_CLASSES = Object.values(BADGE_CLASSES).join(' ');
+
+    /**
+     * Recalculate and update the overall student status badge
+     */
+    function updateStudentOverallBadge(detailsEl) {
+        if (!detailsEl) return;
+        const studentBadge = detailsEl.querySelector('.student-status-badge');
+        if (!studentBadge) return;
+
+        const badges = detailsEl.querySelectorAll('tbody [id^="badge-"]');
+        let pendingCount = 0;
+        let rejectedCount = 0;
+        let approvedCount = 0;
+
+        badges.forEach(b => {
+            const text = b.textContent.trim().toLowerCase();
+            if (text === 'ditolak') {
+                rejectedCount++;
+            } else if (text === 'menunggu') {
+                pendingCount++;
+            } else if (text === 'disetujui') {
+                approvedCount++;
+            }
+        });
+
+        let overallAction = 'disetujui';
+        if (rejectedCount > 0) {
+            overallAction = 'ditolak';
+        } else if (pendingCount > 0) {
+            overallAction = 'menunggu';
+        }
+
+        studentBadge.className = 'badge ' + (BADGE_CLASSES[overallAction] ?? '') + ' student-status-badge';
+        studentBadge.textContent = overallAction.charAt(0).toUpperCase() + overallAction.slice(1);
+    }
 
     /**
      * Update badge status satu berkas satuan
@@ -218,7 +308,7 @@
 
         // Cari badge langsung dari <details> — hindari querySelector('div')
         // yang bisa menangkap div di dalam <summary> (penyebab badges count: 0)
-        detailsMahasiswa.querySelectorAll('[id^="badge-"]').forEach(function (badge) {
+        detailsMahasiswa.querySelectorAll('tbody [id^="badge-"]').forEach(function (badge) {
             badge.className   = 'badge ' + (BADGE_CLASSES[action] ?? '');
             badge.textContent = action.charAt(0).toUpperCase() + action.slice(1);
         });
@@ -227,6 +317,9 @@
         detailsMahasiswa.querySelectorAll('.btn-verifikasi[data-scope="satuan"]').forEach(function (btn) {
             btn.disabled = (btn.dataset.action === action);
         });
+
+        // Update overall student badge
+        updateStudentOverallBadge(detailsMahasiswa);
     }
 
     /**
@@ -264,6 +357,10 @@
                         row.querySelectorAll('.btn-verifikasi').forEach(function (b) {
                             b.disabled = (b.dataset.action === action);
                         });
+
+                        // Update overall student badge
+                        const detailsEl = row.closest('.mahasiswa-dropdown');
+                        updateStudentOverallBadge(detailsEl);
                     }
                 } else {
                     // "Setuju Semua" / "Tolak Semua" — update semua badge dalam blok
@@ -364,5 +461,143 @@
 })();
 </script>
 <!-- ================== END AJAX SCRIPT ================== -->
+
+<script>
+let currentPage = 1;
+const ITEMS_PER_PAGE = 5;
+
+function applyFilters(resetPage = false) {
+    if (resetPage === true) {
+        currentPage = 1;
+    }
+    const searchInput = document.getElementById('search-berkas')?.value.toLowerCase().trim() || '';
+    const angkatanFilter = document.getElementById('filter-angkatan')?.value || 'ALL';
+    const groups = document.querySelectorAll('details.grupo-dropdown');
+    
+    const matchingGroups = [];
+    groups.forEach(group => {
+        let matchesSearch = true;
+        if (searchInput !== '') {
+            const text = group.textContent.toLowerCase();
+            if (!text.includes(searchInput)) {
+                matchesSearch = false;
+            }
+        }
+        
+        let matchesAngkatan = true;
+        if (angkatanFilter !== 'ALL') {
+            const rowCohorts = (group.dataset.angkatan || '').split(',');
+            if (!rowCohorts.includes(angkatanFilter)) {
+                matchesAngkatan = false;
+            }
+        }
+        
+        if (matchesSearch && matchesAngkatan) {
+            matchingGroups.push(group);
+        } else {
+            group.style.display = 'none';
+        }
+    });
+    
+    const totalMatching = matchingGroups.length;
+    const totalPages = Math.ceil(totalMatching / ITEMS_PER_PAGE) || 1;
+    
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    
+    matchingGroups.forEach((group, index) => {
+        if (index >= startIndex && index < endIndex) {
+            group.style.display = '';
+        } else {
+            group.style.display = 'none';
+        }
+    });
+    
+    let noResultContainer = document.getElementById('no-results-berkas-verif');
+    if (noResultContainer) {
+        noResultContainer.style.display = 'none';
+    }
+    
+    renderPaginationControls(totalPages);
+}
+
+function renderPaginationControls(totalPages) {
+    const container = document.getElementById('pagination-controls');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    if (totalPages <= 1) {
+        container.style.display = 'none';
+        return;
+    }
+    container.style.display = 'flex';
+    
+    // Prev Button
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '&laquo; Sebelumnya';
+    prevBtn.style.cssText = 'padding: 8px 14px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; color: #475569; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; outline: none;';
+    if (currentPage === 1) {
+        prevBtn.disabled = true;
+        prevBtn.style.opacity = '0.5';
+        prevBtn.style.cursor = 'not-allowed';
+    } else {
+        prevBtn.addEventListener('click', () => {
+            currentPage--;
+            applyFilters();
+        });
+        prevBtn.addEventListener('mouseover', () => prevBtn.style.background = '#F8FAFC');
+        prevBtn.addEventListener('mouseout', () => prevBtn.style.background = 'white');
+    }
+    container.appendChild(prevBtn);
+    
+    // Page Buttons
+    for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = 'Slide ' + i;
+        pageBtn.style.cssText = 'padding: 8px 14px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;';
+        
+        if (i === currentPage) {
+            pageBtn.style.background = '#1C334D';
+            pageBtn.style.color = 'white';
+            pageBtn.style.borderColor = '#1C334D';
+        } else {
+            pageBtn.style.background = 'white';
+            pageBtn.style.color = '#475569';
+            pageBtn.addEventListener('click', () => {
+                currentPage = i;
+                applyFilters();
+            });
+            pageBtn.addEventListener('mouseover', () => pageBtn.style.background = '#F8FAFC');
+            pageBtn.addEventListener('mouseout', () => pageBtn.style.background = 'white');
+        }
+        container.appendChild(pageBtn);
+    }
+    
+    // Next Button
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = 'Selanjutnya &raquo;';
+    nextBtn.style.cssText = 'padding: 8px 14px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; color: #475569; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; outline: none;';
+    if (currentPage === totalPages) {
+        nextBtn.disabled = true;
+        nextBtn.style.opacity = '0.5';
+        nextBtn.style.cursor = 'not-allowed';
+    } else {
+        nextBtn.addEventListener('click', () => {
+            currentPage++;
+            applyFilters();
+        });
+        nextBtn.addEventListener('mouseover', () => nextBtn.style.background = '#F8FAFC');
+        nextBtn.addEventListener('mouseout', () => nextBtn.style.background = 'white');
+    }
+    container.appendChild(nextBtn);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    applyFilters();
+});
+</script>
 
 <?php include 'footer.php'; ?>
