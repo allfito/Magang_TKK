@@ -62,7 +62,12 @@
                             <tbody>
                                 <?php if (empty($buktiList)): ?>
                                     <tr>
-                                        <td colspan="7" style="text-align:center; padding: 20px; color:#6B7280;">Belum ada pengajuan bukti diterima.</td>
+                                        <td colspan="7" style="text-align:center; padding: 50px 20px; color:#9CA3AF; font-size: 14px;">
+                                            <svg style="display: block; width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                            Belum ada pengajuan bukti diterima
+                                        </td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($buktiList as $bukti): ?>
@@ -204,28 +209,55 @@
                 }
                 container.appendChild(prevBtn);
                 
-                // Page Buttons
-                for (let i = 1; i <= totalPages; i++) {
+                const pageInfo = document.createElement('span');
+                pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+                pageInfo.style.cssText = 'color: #475569; font-size: 13px; font-weight: 600; margin: 0 12px;';
+
+                const pageNumbers = document.createElement('div');
+                pageNumbers.style.display = 'flex';
+                pageNumbers.style.gap = '6px';
+
+                const pages = [];
+                if (totalPages <= 7) {
+                    for (let page = 1; page <= totalPages; page++) pages.push(page);
+                } else {
+                    pages.push(1);
+                    if (currentPage > 4) pages.push('...');
+                    const start = Math.max(2, currentPage - 1);
+                    const end = Math.min(totalPages - 1, currentPage + 1);
+                    for (let page = start; page <= end; page++) pages.push(page);
+                    if (currentPage < totalPages - 3) pages.push('...');
+                    pages.push(totalPages);
+                }
+
+                pages.forEach(item => {
+                    if (item === '...') {
+                        const dot = document.createElement('span');
+                        dot.textContent = '...';
+                        dot.style.cssText = 'padding: 8px 10px; color: #64748B; font-size: 13px; display: inline-flex; align-items: center;';
+                        pageNumbers.appendChild(dot);
+                        return;
+                    }
                     const pageBtn = document.createElement('button');
-                    pageBtn.textContent = 'Slide ' + i;
-                    pageBtn.style.cssText = 'padding: 8px 14px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;';
-                    
-                    if (i === currentPage) {
-                        pageBtn.style.background = '#1C334D';
+                    pageBtn.textContent = item;
+                    pageBtn.style.cssText = 'padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; color: #475569; cursor: pointer; font-size: 13px; font-weight: 600;';
+                    if (item === currentPage) {
+                        pageBtn.style.background = '#2563EB';
                         pageBtn.style.color = 'white';
-                        pageBtn.style.borderColor = '#1C334D';
+                        pageBtn.style.borderColor = '#2563EB';
+                        pageBtn.disabled = true;
+                        pageBtn.style.cursor = 'default';
                     } else {
-                        pageBtn.style.background = 'white';
-                        pageBtn.style.color = '#475569';
                         pageBtn.addEventListener('click', () => {
-                            currentPage = i;
+                            currentPage = item;
                             applyFilters();
                         });
-                        pageBtn.addEventListener('mouseover', () => pageBtn.style.background = '#F8FAFC');
-                        pageBtn.addEventListener('mouseout', () => pageBtn.style.background = 'white');
                     }
-                    container.appendChild(pageBtn);
-                }
+                    pageNumbers.appendChild(pageBtn);
+                });
+
+                container.appendChild(pageNumbers);
+                container.appendChild(pageInfo);
                 
                 // Next Button
                 const nextBtn = document.createElement('button');

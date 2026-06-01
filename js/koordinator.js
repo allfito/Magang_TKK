@@ -54,10 +54,8 @@ function aksiModal(tindakan) {
    SORT PAGE (Dropdown pengurutan)
    -------------------------------------------------- */
 function changeSortPage(sortValue) {
-    // Debug: console.log('Sort value:', sortValue);
     const url = new URL(window.location);
     url.searchParams.set('sort', sortValue);
-    // Debug: console.log('New URL:', url.toString());
     window.location.href = url.toString();
 }
 
@@ -241,20 +239,29 @@ function tutupDetailOverlay(event) {
    FILTER & SEARCH TABEL PLOTTING
    -------------------------------------------------- */
 let filterStatusAktif = 'all';
+let plottingCurrentPage = 1;
+const PLOT_ITEMS_PER_PAGE = 6;
 
 function filterStatus(status, btn) {
     filterStatusAktif = status;
     document.querySelectorAll('.plot-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    filterTabelPlotting();
+    filterTabelPlotting(true);
 }
 
-function filterTabelPlotting() {
-    const q = (document.getElementById('plot-search')?.value || '').toLowerCase();
-    document.querySelectorAll('#tbody-plotting tr').forEach(row => {
-        const namaKelompok = row.cells[0].textContent.toLowerCase();
-        const ketua        = row.cells[1].textContent.toLowerCase();
-        const statusBadge  = row.cells[4].querySelector('.badge')?.textContent.trim().toLowerCase();
+function filterTabelPlotting(resetPage = false) {
+    if (resetPage) plottingCurrentPage = 1;
+    const q = (document.getElementById('plot-search')?.value || '').toLowerCase().trim();
+    const angkatanFilter = document.getElementById('filter-angkatan')?.value || 'all';
+    const rows = Array.from(document.querySelectorAll('#tbody-plotting tr'));
+
+    rows.forEach(row => {
+        if (!row.cells || row.cells.length < 5) return;
+
+        const namaKelompok = (row.cells[0]?.textContent || '').toLowerCase().trim();
+        const ketua        = (row.cells[1]?.textContent || '').toLowerCase().trim();
+        const statusBadge  = (row.cells[4]?.querySelector('.badge')?.textContent || '').trim().toLowerCase();
+        const rowAngkatan  = (row.dataset.angkatan || '').trim();
 
         const matchSearch = namaKelompok.includes(q) || ketua.includes(q);
         const matchStatus =
@@ -262,49 +269,135 @@ function filterTabelPlotting() {
             || (filterStatusAktif === 'selesai'  && statusBadge === 'selesai')
             || (filterStatusAktif === 'menunggu' && statusBadge === 'menunggu');
 
-        row.style.display = (matchSearch && matchStatus) ? '' : 'none';
+        const matchAngkatan =
+            angkatanFilter === 'all'
+            || rowAngkatan === angkatanFilter;
+
+        row.dataset.visible = (matchSearch && matchStatus && matchAngkatan) ? 'true' : 'false';
     });
+
+    paginatePlottingRows(resetPage);
 }
 
-/* --------------------------------------------------
-   REKAP DOSEN PEMBIMBING
-   -------------------------------------------------- */
-function renderRekapDosen() {
-    const container = document.getElementById('dosen-rekap-grid');
-    if (!container) return;
-    const beban = hitungBebanDosen();
-    const MAX   = 3;
+function paginatePlottingRows(resetPage = false) {
+    if (resetPage) plottingCurrentPage = 1;
+    const allRows = Array.from(document.querySelectorAll('#tbody-plotting tr')).filter(row => row.cells && row.cells.length >= 5);
+    const visibleRows = allRows.filter(row => row.dataset.visible === 'true');
+    const noResultRow = document.getElementById('no-results-plotting');
+    const pagination = document.getElementById('plotting-pagination-controls');
 
-    const dosenNames = Object.keys(beban).filter(n => n && n !== '-' && n !== 'Belum ditentukan');
-    
-    const datalistOptions = document.querySelectorAll('#dosen-list option');
-    const allDosenDB = Array.from(datalistOptions).map(opt => opt.value);
-    
-    const allDosen = [...new Set([...allDosenDB, ...dosenNames])];
+    const totalMatching = visibleRows.length;
+    const totalPages = Math.max(1, Math.ceil(totalMatching / PLOT_ITEMS_PER_PAGE));
 
-    container.innerHTML = allDosen.map(nama => {
-        const jml   = beban[nama] || 0;
-        const pct   = Math.min((jml / MAX) * 100, 100);
-        const warna = jml === 0 ? '#28C76F' : jml < MAX ? '#FF9F43' : '#EA5455';
-        const label = jml === 0 ? 'Tersedia' : jml < MAX ? 'Sebagian' : 'Penuh';
-        return `
-            <div class="dosen-rekap-card">
-                <div class="dosen-rekap-header">
-                    <div class="dosen-avatar">${nama.charAt(0)}</div>
-                    <div class="dosen-rekap-info">
-                        <div class="dosen-rekap-nama">${nama}</div>
-                        <div class="dosen-rekap-jml">${jml} kelompok dibimbing</div>
-                    </div>
-                    <span class="dosen-rekap-badge" style="background:${warna}20;color:${warna};border:1px solid ${warna}50">${label}</span>
-                </div>
-                <div class="dosen-progress-wrap">
-                    <div class="dosen-progress-bar" style="width:${pct}%;background:${warna};"></div>
-                </div>
-                <div class="dosen-progress-label">${jml} / ${MAX} kapasitas</div>
-            </div>
-        `;
-    }).join('');
+    if (plottingCurrentPage > totalPages) plottingCurrentPage = totalPages;
+    if (plottingCurrentPage < 1) plottingCurrentPage = 1;
+
+    allRows.forEach(row => row.style.display = 'none');
+    visibleRows.forEach((row, index) => {
+        const startIndex = (plottingCurrentPage - 1) * PLOT_ITEMS_PER_PAGE;
+        const endIndex = startIndex + PLOT_ITEMS_PER_PAGE;
+        row.style.display = (index >= startIndex && index < endIndex) ? '' : 'none';
+    });
+
+    if (noResultRow) {
+        noResultRow.style.display = totalMatching === 0 ? '' : 'none';
+    }
+
+    if (!pagination) return;
+    pagination.innerHTML = '';
+    if (totalMatching <= PLOT_ITEMS_PER_PAGE) {
+        pagination.style.display = 'none';
+        return;
+    }
+
+    pagination.style.display = 'flex';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '« Sebelumnya';
+    prevBtn.style.cssText = 'padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; color: #475569; cursor: pointer; font-size: 13px; font-weight: 600;';
+    prevBtn.disabled = plottingCurrentPage === 1;
+    if (prevBtn.disabled) {
+        prevBtn.style.opacity = '0.5';
+        prevBtn.style.cursor = 'not-allowed';
+    } else {
+        prevBtn.addEventListener('click', () => {
+            plottingCurrentPage -= 1;
+            paginatePlottingRows();
+        });
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = 'Berikutnya »';
+    nextBtn.style.cssText = 'padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; color: #475569; cursor: pointer; font-size: 13px; font-weight: 600;';
+    nextBtn.disabled = plottingCurrentPage === totalPages;
+    if (nextBtn.disabled) {
+        nextBtn.style.opacity = '0.5';
+        nextBtn.style.cursor = 'not-allowed';
+    } else {
+        nextBtn.addEventListener('click', () => {
+            plottingCurrentPage += 1;
+            paginatePlottingRows();
+        });
+    }
+
+    const pageInfo = document.createElement('span');
+    pageInfo.textContent = `Halaman ${plottingCurrentPage} dari ${totalPages}`;
+    pageInfo.style.cssText = 'color: #475569; font-size: 13px; font-weight: 600; margin: 0 12px;';
+
+    const pageNumbers = document.createElement('div');
+    pageNumbers.style.display = 'flex';
+    pageNumbers.style.gap = '6px';
+
+    const pages = [];
+    if (totalPages <= 7) {
+        for (let page = 1; page <= totalPages; page++) pages.push(page);
+    } else {
+        pages.push(1);
+        if (plottingCurrentPage > 4) pages.push('...');
+
+        const start = Math.max(2, plottingCurrentPage - 1);
+        const end = Math.min(totalPages - 1, plottingCurrentPage + 1);
+        for (let page = start; page <= end; page++) {
+            pages.push(page);
+        }
+
+        if (plottingCurrentPage < totalPages - 3) pages.push('...');
+        pages.push(totalPages);
+    }
+
+    pages.forEach(item => {
+        if (item === '...') {
+            const dot = document.createElement('span');
+            dot.textContent = '...';
+            dot.style.cssText = 'padding: 8px 10px; color: #64748B; font-size: 13px; display: inline-flex; align-items: center;';
+            pageNumbers.appendChild(dot);
+            return;
+        }
+
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = item;
+        pageBtn.style.cssText = 'padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; color: #475569; cursor: pointer; font-size: 13px; font-weight: 600;';
+        if (item === plottingCurrentPage) {
+            pageBtn.style.background = '#2563EB';
+            pageBtn.style.color = 'white';
+            pageBtn.style.borderColor = '#2563EB';
+            pageBtn.disabled = true;
+            pageBtn.style.cursor = 'default';
+        } else {
+            pageBtn.addEventListener('click', () => {
+                plottingCurrentPage = item;
+                paginatePlottingRows();
+            });
+        }
+        pageNumbers.appendChild(pageBtn);
+    });
+
+    pagination.appendChild(prevBtn);
+    pagination.appendChild(pageNumbers);
+    pagination.appendChild(pageInfo);
+    pagination.appendChild(nextBtn);
 }
+
 
 /* --------------------------------------------------
    UPDATE STAT CARDS (hitung menunggu dari tabel)
@@ -399,6 +492,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBerkas = document.getElementById('search-berkas');
     if (searchBerkas) {
         searchBerkas.addEventListener('input', () => filterBerkasDetails(searchBerkas.value));
+    }
+
+    if (document.getElementById('tbody-plotting')) {
+        filterTabelPlotting(true);
+        window.addEventListener('resize', () => filterTabelPlotting(true));
     }
     // Generic table filter function
     function filterTable(tableSelector, query) {

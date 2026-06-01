@@ -284,6 +284,7 @@ class KoordinatorViewController extends BaseController
         }
         
         $sql = "SELECT k.id AS kelompok_id, k.nama AS kelompok_nama, u.nama AS ketua_nama,
+                k.tahun_angkatan,
                 COALESCE(per.nama, '') AS lokasi, COALESCE(d.nama, '') AS dosen_pembimbing,
                 pl.id AS plotting_id, d.id AS dosen_id,
                 COUNT(a.id) AS anggota_count,
@@ -295,7 +296,7 @@ class KoordinatorViewController extends BaseController
                 LEFT JOIN perusahaan per ON plok.perusahaan_id = per.id
                 LEFT JOIN anggota_kelompok a ON a.kelompok_id = k.id
                 JOIN user u ON k.ketua_user_id = u.id
-                GROUP BY k.id, k.nama, u.id, u.nama, per.nama, d.nama, pl.id, d.id
+                GROUP BY k.id, k.nama, k.tahun_angkatan, u.id, u.nama, per.nama, d.nama, pl.id, d.id
                 ORDER BY " . $orderBy;
         $result = $this->db->query($sql);
         $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];

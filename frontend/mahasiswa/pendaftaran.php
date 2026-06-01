@@ -65,12 +65,6 @@ $step4Status = $buktiDb['status_verifikasi'] ?? 'belum';
 $step5Open = ($step4Open && $step4Status === 'disetujui');
 $step5Done = ($plotting !== null);
 
-function stepBadge($status) {
-    if ($status === 'disetujui') return '<span class="badge badge-success-status" style="background:#28C76F;color:white;">Disetujui</span>';
-    if ($status === 'ditolak') return '<span class="badge badge-danger">Ditolak</span>';
-    return '<span class="badge badge-warning">Menunggu Verifikasi</span>';
-}
-
 $successMsg = $_SESSION['success'] ?? '';
 $errorMsg = $_SESSION['error'] ?? '';
 unset($_SESSION['success'], $_SESSION['error']);
@@ -1093,34 +1087,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                 } else {
                     badge.style.color = '#FF6B6B';
                 }
-            }
-        }
-
-        function nextStep(current) {
-            // Validasi & isi data completed dulu
-            if (!isiCompleted(current)) return;
-
-            const currentHeader = document.getElementById(`header-${current}`);
-            const currentForm = document.getElementById(`form-${current}`);
-            const currentCompleted = document.getElementById(`completed-${current}`);
-
-            // Keep header dark (matches Tahap 1 style - header stays dark when done)
-            // No class change needed since t-header-dark is correct for done state
-
-            // Sembunyikan form, tampilkan ringkasan
-            if (currentForm) currentForm.style.display = 'none';
-            if (currentCompleted) currentCompleted.style.display = 'block';
-
-            // Buka tahap berikutnya
-            const next = current + 1;
-            const nextContainer = document.getElementById(`step-${next}`);
-            if (nextContainer) {
-                nextContainer.classList.remove('locked');
-                const nextHeader = document.getElementById(`header-${next}`);
-                const nextForm = document.getElementById(`form-${next}`);
-                if (nextHeader) { nextHeader.classList.remove('t-header-white'); nextHeader.classList.add('t-header-dark'); }
-                if (nextForm) nextForm.style.display = 'block';
-                nextContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
 

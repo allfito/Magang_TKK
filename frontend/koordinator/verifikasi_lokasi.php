@@ -14,15 +14,11 @@
                 <!-- Sort & Filter Controls -->
                 <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <label for="sort-select" style="font-size: 13px; font-weight: 600; color: #334155;">Urutkan:</label>
-                        <select id="sort-select" onchange="changeSortPage(this.value)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none; height: 38px;">
-                            <option value="tanggal_terbaru" <?= $sortBy === 'tanggal_terbaru' ? 'selected' : '' ?>>📅 Tanggal Terbaru</option>
-                            <option value="tanggal_terlama" <?= $sortBy === 'tanggal_terlama' ? 'selected' : '' ?>>📅 Tanggal Terlama</option>
-                            <option value="nama_a" <?= $sortBy === 'nama_a' ? 'selected' : '' ?>>📖 Nama Kelompok (A-Z)</option>
-                            <option value="nama_z" <?= $sortBy === 'nama_z' ? 'selected' : '' ?>>📖 Nama Kelompok (Z-A)</option>
-                            <option value="ketua_a" <?= $sortBy === 'ketua_a' ? 'selected' : '' ?>>👤 Nama Ketua (A-Z)</option>
-                            <option value="ketua_z" <?= $sortBy === 'ketua_z' ? 'selected' : '' ?>>👤 Nama Ketua (Z-A)</option>
-                            <option value="status_menunggu" <?= $sortBy === 'status_menunggu' ? 'selected' : '' ?>>⏳ Status Menunggu Duluan</option>
+                        <label for="filter-status" style="font-size: 13px; font-weight: 600; color: #334155;">Status:</label>
+                        <select id="filter-status" onchange="applyFilters(true)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none; height: 38px; width: 180px;">
+                            <option value="ALL">Semua Status</option>
+                            <option value="sudah">Sudah</option>
+                            <option value="belum">Belum</option>
                         </select>
                     </div>
                     
@@ -58,11 +54,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (empty($locations)): ?>
-                                    <tr>
-                                        <td colspan="5" style="text-align:center; padding: 30px; color:#6B7280;">Belum ada pengajuan lokasi.</td>
-                                    </tr>
-                                <?php else: ?>
+                                <tr id="no-results-row-verif" style="display: none;">
+                                    <td colspan="5" style="text-align:center; padding: 50px 20px; color:#9CA3AF; font-size: 14px; line-height: 1.6;">
+                                        <svg style="display: block; width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Belum ada pengajuan lokasi<br><span style="font-size: 13px;">atau tidak ada data yang cocok dengan filter</span>
+                                    </td>
+                                </tr>
+                                <?php if (!empty($locations)): ?>
                                      <?php foreach ($locations as $location): ?>
                                          <?php 
                                              $statusClass = KoordinatorHelper::statusBadgeClass($location['status_verifikasi']); 
@@ -79,7 +79,7 @@
                                              }
                                              $cohortsAttr = implode(',', array_unique($cohorts));
                                          ?>
-                                         <tr class="verif-row" data-angkatan="<?= $cohortsAttr ?>">
+                                         <tr class="verif-row" data-angkatan="<?= $cohortsAttr ?>" data-status="<?= htmlspecialchars($location['status_verifikasi']) ?>">
                                             <td>
                                                 <strong style="display:block; margin-bottom: 4px; font-size: 14px; color: #1E293B;"><?= htmlspecialchars($location['kelompok_nama']) ?></strong>
                                                 <span style="color: #64748B;">Ketua: <?= htmlspecialchars($location['ketua_nama']) ?></span><br>
@@ -128,8 +128,8 @@
                                                      </button>
                                                  </div>
                                              </td>
-                                        </tr>
-                                    <?php endforeach; ?>
+                                         </tr>
+                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -174,7 +174,19 @@
 
             <script>
             let currentPage = 1;
-            const ITEMS_PER_PAGE = 5;
+
+            function calculateItemsPerPage(itemSelector, minItems = 5) {
+                const items = Array.from(document.querySelectorAll(itemSelector));
+                if (!items.length) return minItems;
+                const pageWrapper = document.querySelector('.page.active') || items[0].closest('.page');
+                const topOffset = pageWrapper ? pageWrapper.getBoundingClientRect().top : 0;
+                const availableHeight = Math.max(window.innerHeight - topOffset - 240, 240);
+                const sampleItems = items.filter(item => item.offsetHeight > 0).slice(0, 3);
+                const measureItems = sampleItems.length ? sampleItems : items.slice(0, 3);
+                const averageHeight = measureItems.reduce((sum, item) => sum + item.getBoundingClientRect().height, 0) / measureItems.length || 60;
+                const count = Math.max(minItems, Math.floor(availableHeight / averageHeight));
+                return Math.min(count, 20);
+            }
 
             function applyFilters(resetPage = false) {
                 if (resetPage === true) {
@@ -202,7 +214,22 @@
                         }
                     }
                     
-                    if (matchesSearch && matchesAngkatan) {
+                    let matchesStatus = true;
+                    const statusFilter = document.getElementById('filter-status')?.value || 'ALL';
+                    if (statusFilter !== 'ALL') {
+                        const rowStatus = (row.dataset.status || '').toLowerCase();
+                        if (statusFilter === 'sudah') {
+                            if (rowStatus !== 'disetujui') {
+                                matchesStatus = false;
+                            }
+                        } else if (statusFilter === 'belum') {
+                            if (rowStatus === 'disetujui') {
+                                matchesStatus = false;
+                            }
+                        }
+                    }
+                    
+                    if (matchesSearch && matchesAngkatan && matchesStatus) {
                         matchingRows.push(row);
                     } else {
                         row.style.display = 'none';
@@ -210,13 +237,14 @@
                 });
                 
                 const totalMatching = matchingRows.length;
-                const totalPages = Math.ceil(totalMatching / ITEMS_PER_PAGE) || 1;
+                const itemsPerPage = calculateItemsPerPage('#tabel-lokasi tbody tr.verif-row');
+                const totalPages = Math.ceil(totalMatching / itemsPerPage) || 1;
                 
                 if (currentPage > totalPages) currentPage = totalPages;
                 if (currentPage < 1) currentPage = 1;
                 
-                const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-                const endIndex = startIndex + ITEMS_PER_PAGE;
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
                 
                 matchingRows.forEach((row, index) => {
                     if (index >= startIndex && index < endIndex) {
@@ -228,7 +256,7 @@
                 
                 const noResultRow = document.getElementById('no-results-row-verif');
                 if (noResultRow) {
-                    noResultRow.style.display = 'none';
+                    noResultRow.style.display = (totalMatching === 0) ? '' : 'none';
                 }
                 
                 renderPaginationControls(totalPages);
@@ -263,28 +291,55 @@
                 }
                 container.appendChild(prevBtn);
                 
-                // Page Buttons
-                for (let i = 1; i <= totalPages; i++) {
+                const pageInfo = document.createElement('span');
+                pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+                pageInfo.style.cssText = 'color: #475569; font-size: 13px; font-weight: 600; margin: 0 12px;';
+
+                const pageNumbers = document.createElement('div');
+                pageNumbers.style.display = 'flex';
+                pageNumbers.style.gap = '6px';
+
+                const pages = [];
+                if (totalPages <= 7) {
+                    for (let page = 1; page <= totalPages; page++) pages.push(page);
+                } else {
+                    pages.push(1);
+                    if (currentPage > 4) pages.push('...');
+                    const start = Math.max(2, currentPage - 1);
+                    const end = Math.min(totalPages - 1, currentPage + 1);
+                    for (let page = start; page <= end; page++) pages.push(page);
+                    if (currentPage < totalPages - 3) pages.push('...');
+                    pages.push(totalPages);
+                }
+
+                pages.forEach(item => {
+                    if (item === '...') {
+                        const dot = document.createElement('span');
+                        dot.textContent = '...';
+                        dot.style.cssText = 'padding: 8px 10px; color: #64748B; font-size: 13px; display: inline-flex; align-items: center;';
+                        pageNumbers.appendChild(dot);
+                        return;
+                    }
                     const pageBtn = document.createElement('button');
-                    pageBtn.textContent = 'Slide ' + i;
-                    pageBtn.style.cssText = 'padding: 8px 14px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;';
-                    
-                    if (i === currentPage) {
-                        pageBtn.style.background = '#1C334D';
+                    pageBtn.textContent = item;
+                    pageBtn.style.cssText = 'padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; color: #475569; cursor: pointer; font-size: 13px; font-weight: 600;';
+                    if (item === currentPage) {
+                        pageBtn.style.background = '#2563EB';
                         pageBtn.style.color = 'white';
-                        pageBtn.style.borderColor = '#1C334D';
+                        pageBtn.style.borderColor = '#2563EB';
+                        pageBtn.disabled = true;
+                        pageBtn.style.cursor = 'default';
                     } else {
-                        pageBtn.style.background = 'white';
-                        pageBtn.style.color = '#475569';
                         pageBtn.addEventListener('click', () => {
-                            currentPage = i;
+                            currentPage = item;
                             applyFilters();
                         });
-                        pageBtn.addEventListener('mouseover', () => pageBtn.style.background = '#F8FAFC');
-                        pageBtn.addEventListener('mouseout', () => pageBtn.style.background = 'white');
                     }
-                    container.appendChild(pageBtn);
-                }
+                    pageNumbers.appendChild(pageBtn);
+                });
+
+                container.appendChild(pageNumbers);
+                container.appendChild(pageInfo);
                 
                 // Next Button
                 const nextBtn = document.createElement('button');

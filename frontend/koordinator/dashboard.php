@@ -200,13 +200,18 @@ $namaUser    = ucwords(strtolower(trim($currentUser['nama'] ?? 'Koordinator')));
                                     <th>Progress</th>
                                     <th>NAMA DAN KONTAK PERSON</th>
                                     <th>Status Verifikasi</th>
-                                    <th>Aksi</th>
+                                    <th>Detail</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($pendingGroups)): ?>
                                     <tr>
-                                        <td colspan="12" style="text-align:center; padding: 20px; color:#6B7280;">Belum ada kelompok terdaftar.</td>
+                                        <td colspan="12" style="text-align:center; padding: 50px 20px; color:#9CA3AF; font-size: 14px;">
+                                            <svg style="display: block; width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Belum ada kelompok terdaftar
+                                        </td>
                                     </tr>
                                 <?php else: ?>
                                     <?php 
@@ -380,18 +385,6 @@ $namaUser    = ucwords(strtolower(trim($currentUser['nama'] ?? 'Koordinator')));
 
                 <!-- Toast and AJAX script for inline progress update -->
                 <script>
-                    const STATUS_STYLES = {
-                        'DI TOLAK': { bg: '#FEE2E2', color: '#EF4444' },
-                        'REVISI TEMPAT': { bg: '#FEF9C3', color: '#CA8A04' },
-                        'Pengajuan Tempat': { bg: '#E0F2FE', color: '#0369A1' },
-                        'ACC Pembuatan Proposal': { bg: '#E2E8F0', color: '#475569' },
-                        'Pengurusan Surat Pengantar': { bg: '#FFEDD5', color: '#C2410C' },
-                        'Pengiriman Proposal': { bg: '#FFEDD5', color: '#C2410C' },
-                        'Surat Penerimaan Magang': { bg: '#D1FAE5', color: '#065F46' },
-                        'Pengajuan di Tolak Lokasi': { bg: '#FEE2E2', color: '#EF4444' },
-                        'Ditolak Perusahaan': { bg: '#FEE2E2', color: '#EF4444' }
-                    };
-
                     let activeProgressFilter = 'ALL';
                     let currentPage = 1;
                     const GROUPS_PER_PAGE = 5;
@@ -518,11 +511,6 @@ $namaUser    = ucwords(strtolower(trim($currentUser['nama'] ?? 'Koordinator')));
                         });
                         
                         // Render no results message if needed
-                        const noResultRow = document.getElementById('no-results-row-dashboard');
-                        if (noResultRow) {
-                            noResultRow.style.display = 'none';
-                        }
-                        
                         renderPaginationControls(totalPages);
                     }
 
@@ -562,28 +550,55 @@ $namaUser    = ucwords(strtolower(trim($currentUser['nama'] ?? 'Koordinator')));
                         }
                         container.appendChild(prevBtn);
                         
-                        // Page Buttons
-                        for (let i = 1; i <= totalPages; i++) {
+                        const pageInfo = document.createElement('span');
+                        pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+                        pageInfo.style.cssText = 'color: #475569; font-size: 13px; font-weight: 600; margin: 0 12px;';
+
+                        const pageNumbers = document.createElement('div');
+                        pageNumbers.style.display = 'flex';
+                        pageNumbers.style.gap = '6px';
+
+                        const pages = [];
+                        if (totalPages <= 7) {
+                            for (let page = 1; page <= totalPages; page++) pages.push(page);
+                        } else {
+                            pages.push(1);
+                            if (currentPage > 4) pages.push('...');
+                            const start = Math.max(2, currentPage - 1);
+                            const end = Math.min(totalPages - 1, currentPage + 1);
+                            for (let page = start; page <= end; page++) pages.push(page);
+                            if (currentPage < totalPages - 3) pages.push('...');
+                            pages.push(totalPages);
+                        }
+
+                        pages.forEach(item => {
+                            if (item === '...') {
+                                const dot = document.createElement('span');
+                                dot.textContent = '...';
+                                dot.style.cssText = 'padding: 8px 10px; color: #64748B; font-size: 13px; display: inline-flex; align-items: center;';
+                                pageNumbers.appendChild(dot);
+                                return;
+                            }
                             const pageBtn = document.createElement('button');
-                            pageBtn.textContent = 'Slide ' + i;
-                            pageBtn.style.cssText = 'padding: 8px 14px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;';
-                            
-                            if (i === currentPage) {
-                                pageBtn.style.background = '#1C334D';
+                            pageBtn.textContent = item;
+                            pageBtn.style.cssText = 'padding: 8px 12px; border: 1px solid #E2E8F0; border-radius: 6px; background: white; color: #475569; cursor: pointer; font-size: 13px; font-weight: 600;';
+                            if (item === currentPage) {
+                                pageBtn.style.background = '#2563EB';
                                 pageBtn.style.color = 'white';
-                                pageBtn.style.borderColor = '#1C334D';
+                                pageBtn.style.borderColor = '#2563EB';
+                                pageBtn.disabled = true;
+                                pageBtn.style.cursor = 'default';
                             } else {
-                                pageBtn.style.background = 'white';
-                                pageBtn.style.color = '#475569';
                                 pageBtn.addEventListener('click', () => {
-                                    currentPage = i;
+                                    currentPage = item;
                                     applyFiltersAndPagination();
                                 });
-                                pageBtn.addEventListener('mouseover', () => pageBtn.style.background = '#F8FAFC');
-                                pageBtn.addEventListener('mouseout', () => pageBtn.style.background = 'white');
                             }
-                            container.appendChild(pageBtn);
-                        }
+                            pageNumbers.appendChild(pageBtn);
+                        });
+
+                        container.appendChild(pageNumbers);
+                        container.appendChild(pageInfo);
                         
                         // Next Button
                         const nextBtn = document.createElement('button');
@@ -605,90 +620,8 @@ $namaUser    = ucwords(strtolower(trim($currentUser['nama'] ?? 'Koordinator')));
                     }
 
                     document.addEventListener('DOMContentLoaded', () => {
-                        document.querySelectorAll('.progress-select').forEach(select => {
-                            applySelectStyles(select);
-                        });
                         applyFiltersAndPagination();
                     });
-
-                    function applySelectStyles(select) {
-                        const val = select.value;
-                        const style = STATUS_STYLES[val] || { bg: '#F1F5F9', color: '#475569' };
-                        select.style.backgroundColor = style.bg;
-                        select.style.color = style.color;
-                    }
-
-                    function updateProgress(select, kelompokId) {
-                        applySelectStyles(select);
-                        const progress = select.value;
-
-                        // Disable temporarily
-                        select.disabled = true;
-
-                        const body = new URLSearchParams({ kelompok_id: kelompokId, progress: progress });
-
-                        fetch('../../backend/actions/koordinator_update_progress.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: body.toString()
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                showToast(data.message || 'Progress berhasil diperbarui.', 'success');
-                                
-                                // Update stat counts dynamically on screen
-                                const oldVal = select.dataset.originalVal;
-                                const newVal = progress;
-                                if (oldVal !== newVal) {
-                                    updateStatCount(oldVal, -1);
-                                    updateStatCount(newVal, 1);
-                                    select.dataset.originalVal = newVal;
-                                    
-                                    // Update table row data attribute
-                                    const row = select.closest('tr');
-                                    if (row) {
-                                        row.dataset.progress = newVal;
-                                    }
-                                }
-                            } else {
-                                alert(data.message || 'Gagal memperbarui progress.');
-                                select.value = select.dataset.originalVal;
-                                applySelectStyles(select);
-                            }
-                        })
-                        .catch(err => {
-                            console.error('AJAX error:', err);
-                            alert('Terjadi kesalahan koneksi saat memperbarui progress.');
-                            select.value = select.dataset.originalVal;
-                            applySelectStyles(select);
-                        })
-                        .finally(() => {
-                            select.disabled = false;
-                        });
-                    }
-
-                    function updateStatCount(statusName, change) {
-                        let cardId = '';
-                        if (statusName === 'Pengajuan Tempat') cardId = 'num-pengajuan';
-                        else if (statusName === 'ACC Pembuatan Proposal') cardId = 'num-acc';
-                        else if (statusName === 'Pengurusan Surat Pengantar') cardId = 'num-pengurusan';
-                        else if (statusName === 'Pengiriman Proposal') cardId = 'num-pengiriman';
-                        else if (statusName === 'Surat Penerimaan Magang') cardId = 'num-penerimaan';
-                        else if (statusName === 'REVISI TEMPAT') cardId = 'num-revisi';
-                        else if (statusName === 'DI TOLAK' || statusName === 'Pengajuan di Tolak Lokasi' || statusName === 'Ditolak Perusahaan') cardId = 'num-ditolak';
-                        
-                        if (cardId) {
-                            const el = document.getElementById(cardId);
-                            if (el) {
-                                let val = parseInt(el.textContent, 10) || 0;
-                                el.textContent = Math.max(0, val + change);
-                            }
-                        }
-                    }
 
                     function filterByProgress(progressName) {
                         activeProgressFilter = progressName;
@@ -719,48 +652,6 @@ $namaUser    = ucwords(strtolower(trim($currentUser['nama'] ?? 'Koordinator')));
                         }
 
                         applyFiltersAndPagination();
-                    }
-
-                    function showToast(msg, type) {
-                        let container = document.getElementById('toast-container');
-                        if (!container) {
-                            container = document.createElement('div');
-                            container.id = 'toast-container';
-                            container.style.cssText = 'position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px;';
-                            document.body.appendChild(container);
-                        }
-
-                        const toast = document.createElement('div');
-                        toast.textContent = msg;
-                        toast.style.cssText = [
-                            'padding:10px 18px',
-                            'border-radius:6px',
-                            'font-size:13px',
-                            'font-family:Inter,sans-serif',
-                            'font-weight:500',
-                            'box-shadow:0 4px 12px rgba(0,0,0,.15)',
-                            'opacity:0',
-                            'transform:translateY(8px)',
-                            'transition:opacity .25s,transform .25s',
-                            type === 'success'
-                                ? 'background:#D1FAE5;color:#065F46;border:1px solid #10B981'
-                                : 'background:#FEE2E2;color:#991B1B;border:1px solid #EF4444'
-                        ].join(';');
-
-                        container.appendChild(toast);
-
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                                toast.style.opacity = '1';
-                                toast.style.transform = 'translateY(0)';
-                            });
-                        });
-
-                        setTimeout(() => {
-                            toast.style.opacity = '0';
-                            toast.style.transform = 'translateY(8px)';
-                            setTimeout(() => { toast.remove(); }, 300);
-                        }, 3000);
                     }
                 </script>
 

@@ -34,13 +34,6 @@ class Session
         unset($_SESSION[$key]);
     }
 
-    public static function flash(string $key): mixed
-    {
-        $value = self::get($key);
-        self::remove($key);
-        return $value;
-    }
-
     public static function setFlash(string $type, string $message): void
     {
         self::set($type, $message);

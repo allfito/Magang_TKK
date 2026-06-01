@@ -45,13 +45,15 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
                         <button class="btn" style="background:#10B981; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;" onclick="document.getElementById('modal-tambah-dosen').classList.add('open')">&#43; Tambah Dosen</button>
-                        <label for="sort-plotting" style="font-size: 13px; font-weight: 600; color: #334155; white-space: nowrap; margin-left: 10px;">Urutkan:</label>
-                        <select id="sort-plotting" onchange="changeSortPage(this.value)" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none;">
-                            <option value="nama_a" <?= $sortBy === 'nama_a' ? 'selected' : '' ?>>📖 Nama Kelompok (A-Z)</option>
-                            <option value="nama_z" <?= $sortBy === 'nama_z' ? 'selected' : '' ?>>📖 Nama Kelompok (Z-A)</option>
-                            <option value="ketua_a" <?= $sortBy === 'ketua_a' ? 'selected' : '' ?>>👤 Nama Ketua (A-Z)</option>
-                            <option value="ketua_z" <?= $sortBy === 'ketua_z' ? 'selected' : '' ?>>👤 Nama Ketua (Z-A)</option>
-                            <option value="status_selesai" <?= $sortBy === 'status_selesai' ? 'selected' : '' ?>>✅ Status Sudah Diplot</option>
+                        <select id="filter-angkatan" onchange="filterTabelPlotting()" style="padding: 8px 12px; border: 1.5px solid #DDEAF5; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #333; background: white; cursor: pointer; outline: none;">
+                            <option value="all">Semua Angkatan</option>
+                            <option value="2024">Angkatan 2024</option>
+                            <option value="2025">Angkatan 2025</option>
+                            <option value="2026">Angkatan 2026</option>
+                            <option value="2027">Angkatan 2027</option>
+                            <option value="2028">Angkatan 2028</option>
+                            <option value="2029">Angkatan 2029</option>
+                            <option value="2030">Angkatan 2030</option>
                         </select>
                     </div>
                 </div>
@@ -73,12 +75,17 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <tbody id="tbody-plotting">
                                 <?php if (empty($plottingGroups)): ?>
                                     <tr>
-                                        <td colspan="7" style="text-align:center; padding: 20px; color:#6B7280;">Belum ada kelompok untuk plotting.</td>
+                                        <td colspan="7" style="text-align:center; padding: 50px 20px; color:#9CA3AF; font-size: 14px;">
+                                            <svg style="display: block; width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Belum ada kelompok untuk plotting
+                                        </td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($plottingGroups as $group): ?>
                                         <?php $statusClass = KoordinatorHelper::statusBadgeClass($group['status']); ?>
-                                        <tr>
+                                        <tr data-angkatan="<?= htmlspecialchars($group['tahun_angkatan'] ?? '') ?>">
                                              <td><?= htmlspecialchars(ucwords(strtolower($group['kelompok_nama']))) ?></td>
                                              <td><?= htmlspecialchars(ucwords(strtolower($group['ketua_nama']))) ?></td>
                                              <td><?= (int) $group['anggota_count'] ?></td>
@@ -99,9 +106,18 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
+                                    <tr id="no-results-plotting" style="display: none;">
+                                        <td colspan="6" style="text-align:center; padding: 50px 20px; color:#9CA3AF; font-size: 14px;">
+                                            <svg style="display: block; width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Tidak ada kelompok yang cocok dengan filter saat ini
+                                        </td>
+                                    </tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
+                        <div id="plotting-pagination-controls" style="display:none; justify-content:center; align-items:center; gap: 8px; padding: 16px 20px; border-top: 1px solid #E2E8F0; background: #F8FAFC;"></div>
                     </div>
                 </div>
 
@@ -113,7 +129,12 @@ unset($_SESSION['success'], $_SESSION['error']);
                     <div class="card-body">
                         <div class="dosen-rekap-grid" id="dosen-rekap-grid">
                         <?php if (empty($plottingSummary)): ?>
-                            <div style="grid-column:1/-1; padding:20px; text-align:center; color:#6B7280;">Belum ada data plotting untuk dosen pembimbing.</div>
+                            <div style="grid-column:1/-1; padding:50px 20px; text-align:center; color:#9CA3AF;">
+                                <svg style="display: block; width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Belum ada data plotting untuk dosen pembimbing
+                            </div>
                         <?php else: ?>
                             <?php foreach ($plottingSummary as $summary): ?>
                                 <div class="dosen-rekap-card">
@@ -137,8 +158,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                             $allDosenList = KoordinatorHelper::getAllDosen();
                             if (empty($allDosenList)): 
                             ?>
-                                <div style="width: 100%; text-align: center; padding: 30px; color: #94A3B8;">
-                                    Belum ada dosen yang terdaftar.
+                                <div style="width: 100%; text-align: center; padding: 50px 20px; color: #9CA3AF; font-size: 14px;">
+                                    <svg style="display: block; width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Belum ada dosen yang terdaftar
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($allDosenList as $dosenItem): ?>
